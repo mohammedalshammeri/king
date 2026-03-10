@@ -3,8 +3,20 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { PaginatedResponse } from '../../common/dto';
 import { ChatMessagesQueryDto, SendMessageDto, StartChatDto } from './dto/chat.dto';
 import { NotificationsService } from '../notifications/notifications.service';
-import { NotificationType } from '@prisma/client';
+import { NotificationType, Prisma } from '@prisma/client';
 import { ChatsGateway } from './chats.gateway';
+
+type UserDisplay = {
+  email?: string | null;
+  individualProfile?: {
+    fullName?: string | null;
+    avatarUrl?: string | null;
+  } | null;
+  showroomProfile?: {
+    showroomName?: string | null;
+    logoUrl?: string | null;
+  } | null;
+};
 
 @Injectable()
 export class ChatsService {
@@ -14,7 +26,7 @@ export class ChatsService {
     private readonly chatsGateway: ChatsGateway,
   ) {}
 
-  private getDisplayName(user: any): string {
+  private getDisplayName(user: UserDisplay | null | undefined): string {
     return (
       user?.individualProfile?.fullName ||
       user?.showroomProfile?.showroomName ||
@@ -23,8 +35,8 @@ export class ChatsService {
     );
   }
 
-  private getAvatar(user: any): string | undefined {
-    return user?.individualProfile?.avatarUrl || user?.showroomProfile?.logoUrl;
+  private getAvatar(user: UserDisplay | null | undefined): string | undefined {
+    return (user?.individualProfile?.avatarUrl ?? user?.showroomProfile?.logoUrl) ?? undefined;
   }
 
   private orderPair(a: string, b: string): [string, string] {
@@ -97,39 +109,43 @@ export class ChatsService {
   }
 
   async getMyChats(userId: string) {
+    const threadInclude = {
+      listing: {
+        select: {
+          id: true,
+          title: true,
+          media: { orderBy: { sortOrder: 'asc' }, take: 1 },
+        },
+      },
+      userA: {
+        select: {
+          id: true,
+          email: true,
+          individualProfile: { select: { fullName: true, avatarUrl: true } },
+          showroomProfile: { select: { showroomName: true, logoUrl: true } },
+        },
+      },
+      userB: {
+        select: {
+          id: true,
+          email: true,
+          individualProfile: { select: { fullName: true, avatarUrl: true } },
+          showroomProfile: { select: { showroomName: true, logoUrl: true } },
+        },
+      },
+    } satisfies Prisma.ChatThreadInclude;
+
+    type ThreadWithInclude = Prisma.ChatThreadGetPayload<{ include: typeof threadInclude }>;
+
     const threads = await this.prisma.chatThread.findMany({
       where: {
         OR: [{ userAId: userId }, { userBId: userId }],
       },
-      include: {
-        listing: {
-          select: {
-            id: true,
-            title: true,
-            media: { orderBy: { sortOrder: 'asc' }, take: 1 },
-          },
-        },
-        userA: {
-          select: {
-            id: true,
-            email: true,
-            individualProfile: { select: { fullName: true, avatarUrl: true } },
-            showroomProfile: { select: { showroomName: true, logoUrl: true } },
-          },
-        },
-        userB: {
-          select: {
-            id: true,
-            email: true,
-            individualProfile: { select: { fullName: true, avatarUrl: true } },
-            showroomProfile: { select: { showroomName: true, logoUrl: true } },
-          },
-        },
-      },
+      include: threadInclude,
       orderBy: { updatedAt: 'desc' },
     });
 
-    const threadIds = threads.map((t: any) => t.id);
+    const threadIds = threads.map((t: ThreadWithInclude) => t.id);
     const unreadCounts = threadIds.length
       ? await this.prisma.chatMessage.groupBy({
           by: ['threadId'],
@@ -142,9 +158,9 @@ export class ChatsService {
         })
       : [];
 
-    const unreadMap = new Map(unreadCounts.map((c: any) => [c.threadId, c._count._all]));
+    const unreadMap = new Map<string, number>(unreadCounts.map((c) => [c.threadId, c._count._all]));
 
-    return threads.map((thread: any) => {
+    return (threads as ThreadWithInclude[]).map((thread) => {
       const otherUser = thread.userA.id === userId ? thread.userB : thread.userA;
       return {
         id: thread.id,
@@ -226,7 +242,7 @@ export class ChatsService {
     });
 
     this.chatsGateway.sendMessagesReadToRoom(threadId);
-    
+
     return { success: true };
   }
 

@@ -7,7 +7,7 @@ import { CreateAdminVideoDto } from './dto/create-admin-video.dto';
 export class AdminVideosService {
   constructor(
     private prisma: PrismaService,
-    private cloudinary: CloudinaryService
+    private cloudinary: CloudinaryService,
   ) {}
 
   async create(file: Express.Multer.File, dto: CreateAdminVideoDto) {
@@ -18,7 +18,7 @@ export class AdminVideosService {
 
     // Simple thumbnail generation heuristic for Cloudinary videos
     // Replacing file extension with .jpg usually gets the poster image
-    const thumbnailUrl = result.secureUrl.replace(/\.[^/.]+$/, ".jpg");
+    const thumbnailUrl = result.secureUrl.replace(/\.[^/.]+$/, '.jpg');
 
     return this.prisma.adminVideo.create({
       data: {

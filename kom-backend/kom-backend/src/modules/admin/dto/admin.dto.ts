@@ -11,7 +11,7 @@ import {
   IsEnum,
   ValidateNested,
 } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { UserRole } from '@prisma/client';
 import { PaginationDto } from '../../../common/dto';
 
@@ -33,7 +33,7 @@ export class AdminPermissionsDto {
 }
 
 export class CreateAdminDto {
-  @ApiProperty({ example: 'admin@kom.bh' })
+  @ApiProperty({ example: 'info@kotm.app' })
   @IsEmail()
   @IsNotEmpty()
   email: string;

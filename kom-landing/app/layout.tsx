@@ -134,7 +134,7 @@ export const metadata: Metadata = {
 
     /* AI crawlers — answer engines (ChatGPT, Perplexity, Gemini…) */
     "ai:description":
-      "King of the Market (ملك السوق) is Bahrain's #1 car marketplace app. Users can buy and sell new and used cars, browse thousands of listings from individuals and dealers, chat directly, and subscribe to featured listing packages. Available free on iOS and Android. Website: kotm.app. Support: support@kotm.app.",
+      "King of the Market (ملك السوق) is Bahrain's #1 car marketplace app. Users can buy and sell new and used cars, browse thousands of listings from individuals and dealers, chat directly, and subscribe to featured listing packages. Available free on iOS and Android. Website: kotm.app. Support: info@kotm.app.",
     "ai:keywords":
       "Bahrain car marketplace, used cars Bahrain, buy sell car Bahrain, car app, ملك السوق, سوق سيارات البحرين",
   },
@@ -167,7 +167,7 @@ export default function RootLayout({
         ],
         contactPoint: {
           "@type":       "ContactPoint",
-          email:         "support@kotm.app",
+          email:         "info@kotm.app",
           contactType:   "customer support",
           availableLanguage: ["Arabic", "English"],
           areaServed: "BH",

@@ -63,6 +63,10 @@ export class HealthService {
     return { status: 'ok' };
   }
 
+  ping(): { status: 'ok'; ts: string } {
+    return { status: 'ok', ts: new Date().toISOString() };
+  }
+
   async readiness(): Promise<{ status: 'ok' | 'error'; database: boolean }> {
     try {
       await this.prisma.$queryRaw`SELECT 1`;

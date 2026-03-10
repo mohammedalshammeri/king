@@ -29,7 +29,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     // Since we're overriding to async, we must await the super result if it returns a promise
     // But AuthGuard.canActivate returns boolean | Promise<boolean> | Observable<boolean>
-    // We can cast the result to Promise<boolean> or await it 
+    // We can cast the result to Promise<boolean> or await it
     const result = await super.canActivate(context);
     return result as boolean;
   }

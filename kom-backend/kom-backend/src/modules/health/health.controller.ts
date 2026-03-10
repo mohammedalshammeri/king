@@ -8,9 +8,9 @@ import { Public } from '../../common/decorators';
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
-  @Get()
+  @Get('check')
   @Public()
-  @ApiOperation({ summary: 'Health check' })
+  @ApiOperation({ summary: 'Full health check (includes DB)' })
   @ApiResponse({ status: 200, description: 'Service is healthy' })
   @ApiResponse({ status: 503, description: 'Service is unhealthy' })
   async check(): Promise<HealthCheck> {

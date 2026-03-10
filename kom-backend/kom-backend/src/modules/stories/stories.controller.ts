@@ -1,6 +1,19 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { StoriesService } from './stories.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -8,6 +21,11 @@ import { CurrentUser, Roles } from '../../common/decorators';
 import { UserRole } from '@prisma/client';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { CreateStoryDto } from './dto/create-story.dto';
+
+type CurrentUserPayload = {
+  id: string;
+  role: UserRole;
+};
 
 @ApiTags('Stories')
 @Controller('stories')
@@ -18,7 +36,7 @@ export class StoriesController {
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get active stories feed' })
-  async getFeed(@CurrentUser() user: any) {
+  async getFeed(@CurrentUser() user?: CurrentUserPayload | null) {
     return this.storiesService.findAllActive(user?.id);
   }
 
@@ -28,7 +46,7 @@ export class StoriesController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   async create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: CurrentUserPayload,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -45,13 +63,13 @@ export class StoriesController {
   @Post(':id/view')
   @UseGuards(JwtAuthGuard)
   async view(@Param('id') id: string) {
-      return this.storiesService.markAsViewed(id);
+    return this.storiesService.markAsViewed(id);
   }
 
   @Post(':id/like')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  async toggleLike(@CurrentUser() user: any, @Param('id') id: string) {
+  async toggleLike(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
     return this.storiesService.toggleLike(user.id, id);
   }
 
@@ -59,7 +77,7 @@ export class StoriesController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   async addComment(
-    @CurrentUser() user: any,
+    @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
     @Body('text') text: string,
   ) {
@@ -74,7 +92,7 @@ export class StoriesController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  async remove(@CurrentUser() user: any, @Param('id') id: string) {
+  async remove(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
     return this.storiesService.remove(user.id, id);
   }
 }
@@ -87,6 +105,11 @@ export class StoriesController {
 export class AdminStoriesController {
   constructor(private readonly storiesService: StoriesService) {}
 
+  @Get('active')
+  async getActive() {
+    return this.storiesService.findAllActiveAdmin();
+  }
+
   @Get('pending')
   async getPending() {
     return this.storiesService.findAllPending();
@@ -98,13 +121,22 @@ export class AdminStoriesController {
   }
 
   @Patch(':id/approve')
-  async approve(@CurrentUser() user: any, @Param('id') id: string) {
+  async approve(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
     return this.storiesService.approve(id, user.id);
   }
 
   @Patch(':id/reject')
-  async reject(@CurrentUser() user: any, @Param('id') id: string, @Body('reason') reason: string) {
+  async reject(
+    @CurrentUser() user: CurrentUserPayload,
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+  ) {
     return this.storiesService.reject(id, user.id, reason);
+  }
+
+  @Delete(':id')
+  async deleteStory(@Param('id') id: string) {
+    return this.storiesService.deleteStoryAdmin(id);
   }
 
   // Comment Moderation
@@ -119,12 +151,12 @@ export class AdminStoriesController {
   }
 
   @Patch('comments/:id/approve')
-  async approveComment(@CurrentUser() user: any, @Param('id') id: string) {
+  async approveComment(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
     return this.storiesService.approveComment(id, user.id);
   }
 
   @Patch('comments/:id/reject')
-  async rejectComment(@CurrentUser() user: any, @Param('id') id: string) {
+  async rejectComment(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
     return this.storiesService.rejectComment(id, user.id);
   }
 

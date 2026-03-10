@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../email/email.service';
 import { UserRole, Prisma, ListingStatus } from '@prisma/client';
 import { PaginatedResponse, PaginationDto } from '../../common/dto';
 import * as bcrypt from 'bcrypt';
@@ -23,6 +24,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly emailService: EmailService,
   ) {}
 
   async fixShowrooms() {
@@ -312,7 +314,13 @@ export class AdminService {
   }
 
   async approveUser(adminId: string, userId: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        individualProfile: { select: { fullName: true } },
+        showroomProfile: { select: { showroomName: true } },
+      },
+    });
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -338,17 +346,30 @@ export class AdminService {
       },
     });
 
-    // Notify user (Optional: Implement notification service for approval)
-    // await this.notificationsService.notifyAccountApproved(userId);
+    // Send approval email
+    const displayName =
+      user.individualProfile?.fullName || user.showroomProfile?.showroomName || user.email;
+    this.emailService.sendAccountApproved(user.email, displayName).catch(() => {});
 
     return { message: 'User approved successfully' };
   }
 
   async rejectUser(adminId: string, userId: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        individualProfile: { select: { fullName: true } },
+        showroomProfile: { select: { showroomName: true } },
+      },
+    });
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
+    // Send rejection email BEFORE deleting (so we still have email/name)
+    const displayName =
+      user.individualProfile?.fullName || user.showroomProfile?.showroomName || user.email;
+    this.emailService.sendAccountRejected(user.email, displayName).catch(() => {});
 
     // Capture data for log before delete
     const userData = { email: user.email, role: user.role };

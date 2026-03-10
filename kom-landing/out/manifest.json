@@ -1,0 +1,58 @@
+{
+  "name": "King of the Market",
+  "short_name": "ملك السوق",
+  "description": "سوق السيارات الأول في البحرين – بيع واشترِ سيارتك بكل سهولة",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#D4AF37",
+  "orientation": "portrait",
+  "lang": "ar",
+  "dir": "rtl",
+  "scope": "/",
+  "categories": ["automotive", "shopping", "business"],
+  "iarc_rating_id": "",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "label": "King of the Market – سوق السيارات في البحرين"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "بحث عن سيارة",
+      "short_name": "بحث",
+      "description": "تصفح إعلانات السيارات",
+      "url": "/?source=shortcut",
+      "icons": [{ "src": "/logo.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=app.kotm.kom",
+      "id": "app.kotm.kom"
+    },
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/app/king-of-the-market/id0000000000"
+    }
+  ],
+  "prefer_related_applications": true
+}

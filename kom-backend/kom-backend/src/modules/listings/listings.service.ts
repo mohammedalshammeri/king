@@ -27,7 +27,6 @@ import {
 import { PaginatedResponse } from '../../common/dto';
 import { PackagesService } from '../packages/packages.service';
 
-
 @Injectable()
 export class ListingsService {
   constructor(
@@ -172,7 +171,11 @@ export class ListingsService {
     return carDetails;
   }
 
-  async upsertMotorcycleDetails(userId: string, listingId: string, dto: CreateMotorcycleDetailsDto) {
+  async upsertMotorcycleDetails(
+    userId: string,
+    listingId: string,
+    dto: CreateMotorcycleDetailsDto,
+  ) {
     const _listing = await this.validateListingOwnership(userId, listingId, ListingType.MOTORCYCLE);
 
     const motorcycleDetails = await this.prisma.motorcycleDetails.upsert({
@@ -293,6 +296,18 @@ export class ListingsService {
       if (!check.allowed) {
         throw new ForbiddenException(check.reason);
       }
+      // Deduct one listing from merchant's subscription counter
+      await this.packagesService.incrementListingsUsed(userId);
+    }
+
+    // Check individual listing credits (individual users must have purchased credits)
+    if (listing.owner?.role === UserRole.USER_INDIVIDUAL) {
+      const check = await this.packagesService.canIndividualPost(userId);
+      if (!check.allowed) {
+        throw new ForbiddenException(check.reason);
+      }
+      // Deduct one credit from the individual's oldest active bundle
+      await this.packagesService.incrementIndividualCreditsUsed(userId);
     }
 
     // Validate listing completeness
@@ -485,6 +500,67 @@ export class ListingsService {
     return updated;
   }
 
+  /**
+   * Called when a user responds to a sold-check notification.
+   * - isSold = true  → listing marked as SOLD and removed from feed
+   * - isSold = false → soldCheckCount reset to 0, listing stays APPROVED
+   */
+  async respondToSoldCheck(userId: string, listingId: string, isSold: boolean) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+    });
+
+    if (!listing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    if (listing.ownerId !== userId) {
+      throw new ForbiddenException('You can only respond to your own listings');
+    }
+
+    if (listing.status !== ListingStatus.APPROVED) {
+      throw new BadRequestException('This listing is no longer active');
+    }
+
+    if (isSold) {
+      // Mark as sold → removes from public feed
+      const updated = await this.prisma.listing.update({
+        where: { id: listingId },
+        data: {
+          status: ListingStatus.SOLD,
+          soldCheckCount: 0,
+          lastSoldCheckAt: null,
+        },
+      });
+
+      await this.prisma.notification
+        .create({
+          data: {
+            userId,
+            type: NotificationType.SYSTEM,
+            title: 'تم تحديث إعلانك',
+            body: `تم تسجيل بيع إعلانك "${listing.title}" بنجاح.`,
+            metadata: { listingId: listing.id },
+            isRead: false,
+          },
+        })
+        .catch(() => {});
+
+      return { status: 'sold', listing: updated };
+    } else {
+      // Still not sold → reset counter, listing keeps running
+      const updated = await this.prisma.listing.update({
+        where: { id: listingId },
+        data: {
+          soldCheckCount: 0,
+          lastSoldCheckAt: new Date(),
+        },
+      });
+
+      return { status: 'still_active', listing: updated };
+    }
+  }
+
   async getPublicListings(query: ListingQueryDto) {
     const { page = 1, limit = 20 } = query;
     const skip = (page - 1) * limit;
@@ -585,7 +661,7 @@ export class ListingsService {
     const include = {
       media: {
         orderBy: { sortOrder: 'asc' },
-        take: 1,
+        take: 5,
       },
       carDetails: true,
       plateDetails: true,
@@ -598,9 +674,11 @@ export class ListingsService {
           showroomProfile: { select: { showroomName: true, logoUrl: true } },
         },
       },
-    } as any;
+    } satisfies Prisma.ListingInclude;
 
-    let listings: any[] = [];
+    type ListingWithInclude = Prisma.ListingGetPayload<{ include: typeof include }>;
+
+    let listings: ListingWithInclude[] = [];
     let total = 0;
 
     // 2. Handle Search Query Logic
@@ -613,13 +691,13 @@ export class ListingsService {
         // --- SINGLE WORD: SEARCH ONLY BRAND (MAKE) ---
         // Per user request: Restrict single-word search strictly to the Brand (Make).
         // This avoids irrelevant matches like "Ford Taurus" appearing for "T".
-        
+
         const localWhere: Prisma.ListingWhereInput = {
-             ...baseWhere,
-             OR: [
-                { carDetails: { make: { startsWith: term, mode: 'insensitive' } } },
-                { motorcycleDetails: { make: { startsWith: term, mode: 'insensitive' } } },
-             ]
+          ...baseWhere,
+          OR: [
+            { carDetails: { make: { startsWith: term, mode: 'insensitive' } } },
+            { motorcycleDetails: { make: { startsWith: term, mode: 'insensitive' } } },
+          ],
         };
 
         [listings, total] = await Promise.all([
@@ -632,7 +710,6 @@ export class ListingsService {
           }),
           this.prisma.listing.count({ where: localWhere }),
         ]);
-
       } else {
         // --- MULTI WORD SEARCH (Existing Logic) ---
         const makePart = searchTerms[0];
@@ -668,7 +745,6 @@ export class ListingsService {
           this.prisma.listing.count({ where: mwWhere }),
         ]);
       }
-
     } else {
       // --- NO SEARCH ---
       [listings, total] = await Promise.all([
@@ -983,11 +1059,7 @@ export class ListingsService {
   }
 
   async getMyFavorites(userId: string, query: ListingQueryDto) {
-    const {
-      page = 1,
-      limit = 20,
-      type,
-    } = query;
+    const { page = 1, limit = 20, type } = query;
 
     const skip = (page - 1) * limit;
 

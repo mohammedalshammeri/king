@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Delete, Param, Body, UseGuards, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { AdminVideosService } from './admin-videos.service';

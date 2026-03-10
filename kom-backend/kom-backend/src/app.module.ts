@@ -24,6 +24,9 @@ import { AdminVideosModule } from './modules/admin-videos/admin-videos.module';
 import { AdvertisementsModule } from './modules/advertisements/advertisements.module';
 import { PackagesModule } from './modules/packages/packages.module';
 import { FeaturedModule } from './modules/featured/featured.module';
+import { EmailModule } from './modules/email/email.module';
+import { LuckModule } from './modules/luck/luck.module';
+import { PublicHealthModule } from './health/health.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -60,6 +63,7 @@ import configuration from './config/configuration';
     ScheduleModule.forRoot(),
 
     // Feature modules
+    PublicHealthModule,
     AuthModule,
     UsersModule,
     ListingsModule,
@@ -77,6 +81,8 @@ import configuration from './config/configuration';
     AdvertisementsModule,
     PackagesModule,
     FeaturedModule,
+    EmailModule,
+    LuckModule,
   ],
   providers: [
     {

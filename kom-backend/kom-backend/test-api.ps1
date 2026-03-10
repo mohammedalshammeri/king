@@ -49,12 +49,21 @@ Write-Host "--- HEALTH & AUTH ---" -ForegroundColor Cyan
 $r = Test-Endpoint "1. Health Check" "GET" "$base/health"
 if ($r.Success) { $passed++ } else { $failed++ }
 
-$r = Test-Endpoint "2. Login Super Admin" "POST" "$base/auth/login" '{"email":"admin@kom.bh","password":"SuperAdmin123!"}'
-if ($r.Success) { 
-    $adminToken = $r.Data.accessToken 
-    $adminRefresh = $r.Data.refreshToken
-    $passed++ 
-} else { $failed++ }
+$superAdminEmail = $env:SUPER_ADMIN_EMAIL
+$superAdminPassword = $env:SUPER_ADMIN_PASSWORD
+
+if ([string]::IsNullOrWhiteSpace($superAdminEmail) -or [string]::IsNullOrWhiteSpace($superAdminPassword)) {
+    Write-Host "[SKIP] 2. Login Super Admin - set SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD env vars" -ForegroundColor Yellow
+    $skipped++
+} else {
+    $superAdminBody = "{`"email`":`"$superAdminEmail`",`"password`":`"$superAdminPassword`"}"
+    $r = Test-Endpoint "2. Login Super Admin" "POST" "$base/auth/login" $superAdminBody
+    if ($r.Success) {
+        $adminToken = $r.Data.accessToken
+        $adminRefresh = $r.Data.refreshToken
+        $passed++
+    } else { $failed++ }
+}
 
 $r = Test-Endpoint "3. Login Individual User" "POST" "$base/auth/login" '{"email":"individual@test.com","password":"Test123!"}'
 if ($r.Success) { 

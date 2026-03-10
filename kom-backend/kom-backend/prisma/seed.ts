@@ -7,7 +7,7 @@ async function main() {
   console.log('🌱 Starting seed...');
 
   // Create Super Admin from environment variables
-  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || 'admin@kom.bh';
+  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || 'info@kotm.app';
   const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || 'SecureAdminPassword123!';
 
   const existingSuperAdmin = await prisma.user.findUnique({

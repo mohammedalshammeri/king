@@ -244,10 +244,7 @@ export class UsersService {
     return user;
   }
 
-  async uploadAvatar(
-    userId: string,
-    file: { buffer: Buffer; mimetype?: string; size?: number },
-  ) {
+  async uploadAvatar(userId: string, file: { buffer: Buffer; mimetype?: string; size?: number }) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -273,8 +270,14 @@ export class UsersService {
         folder,
         resourceType,
       });
-    } catch (err: any) {
-      const message = err?.message || 'Image upload failed';
+    } catch (err: unknown) {
+      const message =
+        typeof err === 'object' &&
+        err !== null &&
+        'message' in err &&
+        typeof (err as { message?: unknown }).message === 'string'
+          ? (err as { message: string }).message
+          : 'Image upload failed';
       throw new BadRequestException(message);
     }
 

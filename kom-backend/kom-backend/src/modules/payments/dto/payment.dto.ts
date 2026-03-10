@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsIn, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class InitiatePaymentDto {
   @ApiProperty({ example: 'uuid-of-listing' })
@@ -16,6 +16,20 @@ export class InitiatePaymentDto {
 
 export class InitiateSubscriptionPaymentDto {
   @ApiProperty({ example: 'uuid-of-package' })
+  @IsString()
+  @IsNotEmpty()
+  @IsUUID()
+  packageId: string;
+
+  @ApiPropertyOptional({ example: '1', description: 'Duration choice: 1, 3, 6, or 12 months' })
+  @IsOptional()
+  @IsString()
+  @IsIn(['1', '3', '6', '12'])
+  durationChoice?: '1' | '3' | '6' | '12';
+}
+
+export class InitiateIndividualPackagePaymentDto {
+  @ApiProperty({ example: 'uuid-of-individual-package' })
   @IsString()
   @IsNotEmpty()
   @IsUUID()

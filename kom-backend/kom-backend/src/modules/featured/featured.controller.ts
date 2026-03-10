@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Param,
-  Body,
-  UseGuards,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { FeaturedService } from './featured.service';
 import { CreateFeaturedPackageDto } from './dto/create-featured-package.dto';
@@ -55,7 +45,10 @@ export class FeaturedController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update a featured package (admin)' })
-  async update(@Param('id') id: string, @Body() dto: Partial<CreateFeaturedPackageDto> & { isActive?: boolean }) {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: Partial<CreateFeaturedPackageDto> & { isActive?: boolean },
+  ) {
     return this.featuredService.updatePackage(id, dto);
   }
 

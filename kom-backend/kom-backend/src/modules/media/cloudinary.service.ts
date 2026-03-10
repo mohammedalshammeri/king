@@ -54,13 +54,27 @@ export class CloudinaryService {
         },
         (error, result) => {
           if (error || !result) {
-            const message =
-              (error as any)?.message ||
-              (error as any)?.error?.message ||
-              'Cloudinary upload failed';
+            const message = (() => {
+              if (typeof error === 'object' && error !== null) {
+                const errObj = error as Record<string, unknown>;
+                const directMessage = errObj['message'];
+                if (typeof directMessage === 'string') return directMessage;
+
+                const nested = errObj['error'];
+                if (typeof nested === 'object' && nested !== null) {
+                  const nestedMessage = (nested as Record<string, unknown>)['message'];
+                  if (typeof nestedMessage === 'string') return nestedMessage;
+                }
+              }
+
+              return 'Cloudinary upload failed';
+            })();
 
             // Common misconfiguration: cloud name doesn't match the API key/secret account.
-            if (typeof message === 'string' && message.toLowerCase().includes('invalid cloud_name')) {
+            if (
+              typeof message === 'string' &&
+              message.toLowerCase().includes('invalid cloud_name')
+            ) {
               reject(
                 new BadRequestException(
                   'Cloudinary configuration error: Invalid cloud name. Set CLOUDINARY_CLOUD_NAME to your Cloudinary account cloud name (the one shown in Cloudinary dashboard), then restart the backend.',
@@ -79,7 +93,10 @@ export class CloudinaryService {
             bytes: result.bytes,
             width: result.width,
             height: result.height,
-            duration: (result as any).duration,
+            duration: (() => {
+              const duration = (result as unknown as { duration?: unknown }).duration;
+              return typeof duration === 'number' ? duration : undefined;
+            })(),
           });
         },
       );

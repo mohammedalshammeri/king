@@ -9,7 +9,14 @@ import {
   UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { MediaService } from './media.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

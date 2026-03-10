@@ -1,12 +1,18 @@
 async function check() {
   try {
+    const email = process.env.SUPER_ADMIN_EMAIL || 'info@kotm.app';
+    const password = process.env.SUPER_ADMIN_PASSWORD;
+    if (!password) {
+      throw new Error('Missing SUPER_ADMIN_PASSWORD in environment');
+    }
+
     console.log('Logging in...');
     const loginRes = await fetch('http://127.0.0.1:3000/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: 'admin@kom.bh',
-        password: 'SuperAdmin123!'
+        email,
+        password,
       })
     });
 

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PackagesService } from '../packages/packages.service';
+import { EmailService } from '../email/email.service';
 import { ListingStatus, Prisma, UserRole } from '@prisma/client';
 import { PaginatedResponse } from '../../common/dto';
 import { PendingListingsQueryDto, RejectListingDto, AcceptedListingsQueryDto } from './dto';
@@ -12,6 +13,7 @@ export class ModerationService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly packagesService: PackagesService,
+    private readonly emailService: EmailService,
   ) {}
 
   async getPendingListings(query: PendingListingsQueryDto) {
@@ -114,7 +116,7 @@ export class ModerationService {
             },
           },
         },
-        orderBy: {  postedAt: 'desc' }, // Newest first
+        orderBy: { postedAt: 'desc' }, // Newest first
         skip,
         take: limit,
       }),
@@ -227,8 +229,27 @@ export class ModerationService {
       listing.title,
     );
 
+    // Also nudge owner to feature their listing
+    this.notificationsService
+      .notifyFeatureListing(listing.ownerId, listing.id, listing.title)
+      .catch(() => {});
+
+    // Send approval email
+    const ownerUser = await this.prisma.user.findUnique({
+      where: { id: listing.ownerId },
+      select: { email: true },
+    });
+    if (ownerUser?.email) {
+      this.emailService
+        .sendListingApproved(ownerUser.email, listing.title, listing.id)
+        .catch(() => {});
+    }
+
     // If owner is a showroom merchant, increment their subscription listings used counter
-    const owner = await this.prisma.user.findUnique({ where: { id: listing.ownerId }, select: { role: true } });
+    const owner = await this.prisma.user.findUnique({
+      where: { id: listing.ownerId },
+      select: { role: true },
+    });
     if (owner?.role === UserRole.USER_SHOWROOM) {
       await this.packagesService.incrementListingsUsed(listing.ownerId);
     }
@@ -281,6 +302,17 @@ export class ModerationService {
       listing.title,
       dto.reason,
     );
+
+    // Send rejection email
+    const ownerUser = await this.prisma.user.findUnique({
+      where: { id: listing.ownerId },
+      select: { email: true },
+    });
+    if (ownerUser?.email) {
+      this.emailService
+        .sendListingRejected(ownerUser.email, listing.title, dto.reason)
+        .catch(() => {});
+    }
 
     return updated;
   }

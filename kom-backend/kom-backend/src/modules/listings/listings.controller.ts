@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { ListingsService } from './listings.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser, Public } from '../../common/decorators';
@@ -203,6 +203,26 @@ export class ListingsController {
   @ApiResponse({ status: 200, description: 'Listing marked as sold' })
   async markAsSold(@CurrentUser('id') userId: string, @Param('id') id: string) {
     return this.listingsService.markAsSold(userId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/sold-check-response')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Respond to a sold-check notification (is it sold or still active?)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { isSold: { type: 'boolean', example: true } },
+      required: ['isSold'],
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Response recorded. Listing updated accordingly.' })
+  async respondToSoldCheck(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+    @Body('isSold') isSold: boolean,
+  ) {
+    return this.listingsService.respondToSoldCheck(userId, id, isSold);
   }
 
   // Generic :id route MUST be last to avoid catching specific routes like /favorites

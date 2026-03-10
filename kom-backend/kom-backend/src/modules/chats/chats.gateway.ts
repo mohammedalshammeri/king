@@ -28,32 +28,26 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('joinRoom')
-  handleJoinRoom(
-    @MessageBody() data: { roomId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
+  handleJoinRoom(@MessageBody() data: { roomId: string }, @ConnectedSocket() client: Socket) {
     const { roomId } = data;
     if (roomId) {
-        client.join(roomId);
-        this.logger.log(`Client ${client.id} joined room: ${roomId}`);
+      client.join(roomId);
+      this.logger.log(`Client ${client.id} joined room: ${roomId}`);
     }
   }
 
   @SubscribeMessage('leaveRoom')
-  handleLeaveRoom(
-    @MessageBody() data: { roomId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
+  handleLeaveRoom(@MessageBody() data: { roomId: string }, @ConnectedSocket() client: Socket) {
     const { roomId } = data;
     if (roomId) {
-        client.leave(roomId);
-        this.logger.log(`Client ${client.id} left room: ${roomId}`);
+      client.leave(roomId);
+      this.logger.log(`Client ${client.id} left room: ${roomId}`);
     }
   }
 
-  sendMessageToRoom(roomId: string, message: any) {
+  sendMessageToRoom(roomId: string, message: unknown) {
     if (this.server) {
-        this.server.to(roomId).emit('newMessage', message);
+      this.server.to(roomId).emit('newMessage', message);
     }
   }
 

@@ -18,7 +18,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
     // LOGGING FOR DEBUGGING
     const secret = configService.get<string>('jwt.accessSecret');
-    console.log('[JwtStrategy] Initialized with secret:', secret ? '***' + secret.slice(-5) : 'UNDEFINED');
+    console.log(
+      '[JwtStrategy] Initialized with secret:',
+      secret ? '***' + secret.slice(-5) : 'UNDEFINED',
+    );
   }
 
   async validate(payload: TokenPayload) {
@@ -33,8 +36,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
       return user;
     } catch (error) {
-       console.error('[JwtStrategy] Validation error:', error);
-       throw error;
+      console.error('[JwtStrategy] Validation error:', error);
+      throw error;
     }
   }
 }

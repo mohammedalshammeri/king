@@ -46,16 +46,10 @@ export class AdvertisementsService {
     return this.prisma.advertisement.findMany({
       where: {
         isActive: true,
-        OR: [
-          { startDate: null },
-          { startDate: { lte: now } },
-        ],
+        OR: [{ startDate: null }, { startDate: { lte: now } }],
         AND: [
           {
-            OR: [
-              { endDate: null },
-              { endDate: { gte: now } },
-            ],
+            OR: [{ endDate: null }, { endDate: { gte: now } }],
           },
         ],
       },

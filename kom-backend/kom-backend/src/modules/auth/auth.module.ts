@@ -7,11 +7,15 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { EmailModule } from '../email/email.module';
+import { LuckModule } from '../luck/luck.module';
 
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     NotificationsModule,
+    EmailModule,
+    LuckModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

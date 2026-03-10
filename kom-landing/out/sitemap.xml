@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+  xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0">
+
+  <!-- ── Home ── -->
+  <url>
+    <loc>https://kotm.app/</loc>
+    <lastmod>2026-02-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="ar"      href="https://kotm.app/"/>
+    <xhtml:link rel="alternate" hreflang="ar-BH"   href="https://kotm.app/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://kotm.app/"/>
+    <image:image>
+      <image:loc>https://kotm.app/og-image.png</image:loc>
+      <image:title>King of the Market – ملك السوق | سوق السيارات في البحرين</image:title>
+      <image:caption>تطبيق سوق السيارات الأول في البحرين</image:caption>
+    </image:image>
+  </url>
+
+  <!-- ── Privacy Policy ── -->
+  <url>
+    <loc>https://kotm.app/privacy/</loc>
+    <lastmod>2026-02-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- ── Terms ── -->
+  <url>
+    <loc>https://kotm.app/terms/</loc>
+    <lastmod>2026-02-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- ── Support ── -->
+  <url>
+    <loc>https://kotm.app/support/</loc>
+    <lastmod>2026-02-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>

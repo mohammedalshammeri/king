@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, RequestMethod } from '@nestjs/common';
 import { json, urlencoded } from 'express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
@@ -14,7 +14,10 @@ async function bootstrap() {
 
   // Global prefix
   const apiPrefix = process.env.API_PREFIX || 'api/v1';
-  app.setGlobalPrefix(apiPrefix);
+  // Keep a public, non-prefixed GET /health for uptime pings
+  app.setGlobalPrefix(apiPrefix, {
+    exclude: [{ path: 'health', method: RequestMethod.GET }],
+  });
 
   // CORS
   app.enableCors({

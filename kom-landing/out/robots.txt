@@ -1,0 +1,44 @@
+# King of the Market – kotm.app
+# robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+# Sitemap
+Sitemap: https://kotm.app/sitemap.xml
+
+# ── AI Crawlers – Answer Engine Optimization ──────────────────────────────────
+# Allow ChatGPT / OpenAI
+User-agent: GPTBot
+Allow: /
+
+# Allow Google Bard / Gemini
+User-agent: Google-Extended
+Allow: /
+
+# Allow Bing / Copilot
+User-agent: bingbot
+Allow: /
+
+# Allow Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+# Allow Anthropic Claude
+User-agent: Claude-Web
+Allow: /
+
+# Allow Meta AI
+User-agent: FacebookExternalHit
+Allow: /
+
+# Allow Common Crawl (used by many AI companies)
+User-agent: CCBot
+Allow: /
+
+# Allow Applebot (Siri, Spotlight)
+User-agent: Applebot
+Allow: /

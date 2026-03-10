@@ -44,7 +44,9 @@ export class MediaService {
       listing.status !== ListingStatus.REJECTED &&
       listing.status !== ListingStatus.APPROVED
     ) {
-      throw new BadRequestException('Can only upload media to draft, rejected, or approved listings');
+      throw new BadRequestException(
+        'Can only upload media to draft, rejected, or approved listings',
+      );
     }
 
     if (!file || !file.buffer) {
@@ -103,13 +105,19 @@ export class MediaService {
         folder,
         resourceType,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Convert unexpected Cloudinary errors into a clear 400 for the client.
       if (err instanceof BadRequestException) {
         throw err;
       }
 
-      const message = err?.message || 'Media upload failed';
+      const message =
+        typeof err === 'object' &&
+        err !== null &&
+        'message' in err &&
+        typeof (err as { message?: unknown }).message === 'string'
+          ? (err as { message: string }).message
+          : 'Media upload failed';
       throw new BadRequestException(message);
     }
 
@@ -154,7 +162,9 @@ export class MediaService {
       listing.status !== ListingStatus.REJECTED &&
       listing.status !== ListingStatus.APPROVED
     ) {
-      throw new BadRequestException('Can only upload media to draft, rejected, or approved listings');
+      throw new BadRequestException(
+        'Can only upload media to draft, rejected, or approved listings',
+      );
     }
 
     // Validate content type
@@ -268,7 +278,9 @@ export class MediaService {
       media.listing.status !== ListingStatus.REJECTED &&
       media.listing.status !== ListingStatus.APPROVED
     ) {
-      throw new BadRequestException('Can only delete media from draft, rejected, or approved listings');
+      throw new BadRequestException(
+        'Can only delete media from draft, rejected, or approved listings',
+      );
     }
 
     // Delete from S3

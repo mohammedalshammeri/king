@@ -1,1 +1,26 @@
 node_modules
+
+# Large generated files
+*.zip
+*.tar.gz
+*.tgz
+
+# Build artifacts
+.next/
+out/
+dist/
+
+# Local scripts with secrets
+upload-logo.js
+upload-logo2.js
+logo-url.txt
+script_output*.txt
+
+# Test scripts (not needed in repo)
+test-create-10-users.js
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Credentials
+credentials/

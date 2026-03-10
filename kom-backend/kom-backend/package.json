@@ -14,7 +14,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/main.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
@@ -28,7 +28,7 @@
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force",
-    "postinstall": "prisma generate && node scripts/sync-prisma-client.js"
+    "postinstall": "node -e \"if(process.env.SKIP_POSTINSTALL){console.log('[postinstall] SKIP_POSTINSTALL=1, skipping');process.exit(0)};const cp=require('child_process');cp.execSync('npx prisma generate',{stdio:'inherit'});cp.execSync('node scripts/sync-prisma-client.js',{stdio:'inherit'});\""
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.490.0",
@@ -53,6 +53,7 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.1",
+    "resend": "^6.9.2",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
@@ -83,7 +84,7 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.3.3"
+    "typescript": "~5.3.3"
   },
   "jest": {
     "moduleFileExtensions": [

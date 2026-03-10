@@ -24,6 +24,7 @@ import { UserRole } from '@prisma/client';
 import {
   InitiatePaymentDto,
   InitiateSubscriptionPaymentDto,
+  InitiateIndividualPackagePaymentDto,
   InitiateFeaturedPaymentDto,
   SubmitBenefitProofDto,
   ReviewPaymentDto,
@@ -51,21 +52,18 @@ export class PaymentsController {
   @Post('listing-fee/initiate')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Initiate listing fee payment' })
-  initiateListingFeePayment(
-    @CurrentUser('id') userId: string,
-    @Body() dto: InitiatePaymentDto,
-  ) {
+  initiateListingFeePayment(@CurrentUser('id') userId: string, @Body() dto: InitiatePaymentDto) {
     return this.paymentsService.initiateListingFeePayment(userId, dto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('upload-proof-image')
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }))
+  @UseInterceptors(
+    FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Upload payment proof image and get URL' })
-  async uploadProofImage(
-    @UploadedFile() file: Express.Multer.File,
-  ) {
+  async uploadProofImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file provided');
     const url = await this.paymentsService.uploadProofImage(file.buffer, file.mimetype);
     return { url };
@@ -91,6 +89,17 @@ export class PaymentsController {
     @Body() dto: InitiateSubscriptionPaymentDto,
   ) {
     return this.paymentsService.initiateSubscriptionPayment(userId, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('individual-package/initiate')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Initiate individual listing package payment via Benefit transfer' })
+  initiateIndividualPackagePayment(
+    @CurrentUser('id') userId: string,
+    @Body() dto: InitiateIndividualPackagePaymentDto,
+  ) {
+    return this.paymentsService.initiateIndividualPackagePayment(userId, dto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -126,10 +135,7 @@ export class PaymentsController {
   @Get('listing/:listingId')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get transactions for a listing' })
-  getListingTransactions(
-    @CurrentUser('id') userId: string,
-    @Param('listingId') listingId: string,
-  ) {
+  getListingTransactions(@CurrentUser('id') userId: string, @Param('listingId') listingId: string) {
     return this.paymentsService.getListingTransactions(userId, listingId);
   }
 
@@ -185,10 +191,7 @@ export class PaymentsController {
   @Public()
   @Post('webhook/:provider')
   @ApiOperation({ summary: 'Payment provider webhook (public)' })
-  handleWebhook(
-    @Param('provider') provider: string,
-    @Body() payload: Record<string, unknown>,
-  ) {
+  handleWebhook(@Param('provider') provider: string, @Body() payload: Record<string, unknown>) {
     return this.paymentsService.handlePaymentWebhook(provider, payload);
   }
 }

@@ -9,4 +9,3 @@ import { ChatsGateway } from './chats.gateway';
   exports: [ChatsService],
 })
 export class ChatsModule {}
-

@@ -1,6 +1,12 @@
 # King of the Market (KOM) Backend API
 
-A complete backend API for the **King of the Market** car marketplace in Bahrain. This API supports two frontends: a mobile app (iOS/Android) and a web dashboard for admin moderation.
+A complete backend API for the **King of the Market** car marketplace in Bahrain.
+
+## Uptime Monitoring
+
+`GET /health` — lightweight endpoint (no DB, always HTTP 200) used to keep the Fly.io machine warm on the free plan.
+Configure UptimeRobot to ping `https://api.kotm.app/health` every 5 minutes.
+This endpoint must remain public (no auth required). This API supports two frontends: a mobile app (iOS/Android) and a web dashboard for admin moderation.
 
 ## Features
 
@@ -64,7 +70,7 @@ S3_SECRET_ACCESS_KEY="your-secret-key"
 S3_BUCKET_NAME="kom-media"
 
 # Super Admin (created on seed)
-SUPER_ADMIN_EMAIL="admin@kom.bh"
+SUPER_ADMIN_EMAIL="info@kotm.app"
 SUPER_ADMIN_PASSWORD="SecurePassword123!"
 
 # Optional

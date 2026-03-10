@@ -147,7 +147,7 @@ export default function TermsPage() {
         <Section title="١٢. التواصل معنا">
           <p>لأي استفسار يتعلق بهذه الشروط:</p>
           <ul className="list-none space-y-2 mt-3 pr-4">
-            <li>📧 البريد الإلكتروني: <a href="mailto:support@kotm.app" className="text-gold hover:underline">support@kotm.app</a></li>
+            <li>📧 البريد الإلكتروني: <a href="mailto:info@kotm.app" className="text-gold hover:underline">info@kotm.app</a></li>
             <li>🌐 الموقع الإلكتروني: <a href="https://kotm.app" className="text-gold hover:underline">kotm.app</a></li>
           </ul>
         </Section>

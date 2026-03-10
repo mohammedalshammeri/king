@@ -8,10 +8,12 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CloudinaryService } from '../media/cloudinary.service';
-import { PaymentStatus, ListingType, Currency, NotificationType, UserRole } from '@prisma/client';
+import { EmailService } from '../email/email.service';
+import { PaymentStatus, Currency, NotificationType, UserRole } from '@prisma/client';
 import {
   InitiatePaymentDto,
   InitiateSubscriptionPaymentDto,
+  InitiateIndividualPackagePaymentDto,
   InitiateFeaturedPaymentDto,
   SubmitBenefitProofDto,
   ReviewPaymentDto,
@@ -25,6 +27,7 @@ export class PaymentsService {
     private readonly configService: ConfigService,
     private readonly notificationsService: NotificationsService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly emailService: EmailService,
   ) {}
 
   // ─── Benefit IBAN ────────────────────────────────────────────────────────────
@@ -54,8 +57,10 @@ export class PaymentsService {
     });
 
     if (!listing) throw new NotFoundException('Listing not found');
-    if (listing.ownerId !== userId) throw new ForbiddenException('You can only pay for your own listings');
-    if (listing.paymentTransactions.length > 0) throw new BadRequestException('Payment already submitted for this listing');
+    if (listing.ownerId !== userId)
+      throw new ForbiddenException('You can only pay for your own listings');
+    if (listing.paymentTransactions.length > 0)
+      throw new BadRequestException('Payment already submitted for this listing');
 
     const listingFee = this.configService.get<number>('payment.listingFeeBhd') || 3;
 
@@ -86,8 +91,10 @@ export class PaymentsService {
     ]);
 
     if (!listing) throw new NotFoundException('Listing not found');
-    if (listing.ownerId !== userId) throw new ForbiddenException('You can only feature your own listings');
-    if (!pkg || !pkg.isActive) throw new NotFoundException('Featured package not found or inactive');
+    if (listing.ownerId !== userId)
+      throw new ForbiddenException('You can only feature your own listings');
+    if (!pkg || !pkg.isActive)
+      throw new NotFoundException('Featured package not found or inactive');
 
     const transaction = await this.prisma.paymentTransaction.create({
       data: {
@@ -122,6 +129,27 @@ export class PaymentsService {
     const pkg = await this.prisma.subscriptionPackage.findUnique({ where: { id: dto.packageId } });
     if (!pkg || !pkg.isActive) throw new NotFoundException('Package not found or inactive');
 
+    // Resolve amount based on durationChoice
+    const durationChoice = dto.durationChoice ?? '1';
+    let amount: number;
+    let totalDays: number;
+    if (durationChoice === '3') {
+      if (!pkg.price3Months) throw new Error('هذه الباقة لا تدعم الاشتراك لـ 3 أشهر');
+      amount = Number(pkg.price3Months);
+      totalDays = (pkg.durationDays ?? 30) * 3;
+    } else if (durationChoice === '6') {
+      if (!pkg.price6Months) throw new Error('هذه الباقة لا تدعم الاشتراك لـ 6 أشهر');
+      amount = Number(pkg.price6Months);
+      totalDays = (pkg.durationDays ?? 30) * 6;
+    } else if (durationChoice === '12') {
+      if (!pkg.price12Months) throw new Error('هذه الباقة لا تدعم الاشتراك لسنة كاملة');
+      amount = Number(pkg.price12Months);
+      totalDays = (pkg.durationDays ?? 30) * 12;
+    } else {
+      amount = Number(pkg.priceMonthly);
+      totalDays = pkg.durationDays ?? 30;
+    }
+
     // Check for existing pending payment for this package
     const existingPending = await this.prisma.paymentTransaction.findFirst({
       where: {
@@ -137,13 +165,59 @@ export class PaymentsService {
         userId,
         subscriptionId: dto.packageId,
         paymentType: 'SUBSCRIPTION',
-        amount: pkg.priceMonthly,
+        amount,
         currency: Currency.BHD,
         status: PaymentStatus.PENDING,
         provider: 'benefit',
         metadata: {
           packageName: pkg.name,
-          durationDays: pkg.durationDays,
+          durationDays: totalDays,
+          durationChoice,
+          initiatedAt: new Date().toISOString(),
+        },
+      },
+    });
+
+    const ibanData = await this.getBenefitIban();
+    return { transaction, ...ibanData };
+  }
+
+  // ─── Initiate individual package payment ─────────────────────────────────────
+
+  async initiateIndividualPackagePayment(userId: string, dto: InitiateIndividualPackagePaymentDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== UserRole.USER_INDIVIDUAL) {
+      throw new ForbiddenException('Only individual accounts can purchase listing packages');
+    }
+
+    const pkg = await this.prisma.individualListingPackage.findUnique({
+      where: { id: dto.packageId },
+    });
+    if (!pkg || !pkg.isActive) throw new NotFoundException('Package not found or inactive');
+
+    // Check for existing pending payment for same package
+    const existingPending = await this.prisma.paymentTransaction.findFirst({
+      where: {
+        userId,
+        paymentType: 'INDIVIDUAL_PACKAGE',
+        status: { in: [PaymentStatus.PENDING, PaymentStatus.PENDING_PROOF] },
+        metadata: { path: ['packageId'], equals: dto.packageId },
+      },
+    });
+    if (existingPending) return { transaction: existingPending, ...(await this.getBenefitIban()) };
+
+    const transaction = await this.prisma.paymentTransaction.create({
+      data: {
+        userId,
+        paymentType: 'INDIVIDUAL_PACKAGE',
+        amount: Number(pkg.price),
+        currency: Currency.BHD,
+        status: PaymentStatus.PENDING,
+        provider: 'benefit',
+        metadata: {
+          packageId: pkg.id,
+          packageName: pkg.name,
+          listingCount: pkg.listingCount,
           initiatedAt: new Date().toISOString(),
         },
       },
@@ -207,22 +281,33 @@ export class PaymentsService {
     },
   } as const;
 
-  private async enrichWithPackage<T extends { paymentType: string; subscriptionId: string | null }>(items: T[]) {
-    const packageIds = [...new Set(
-      items
-        .filter(t => t.paymentType === 'SUBSCRIPTION' && t.subscriptionId)
-        .map(t => t.subscriptionId!),
-    )];
+  private async enrichWithPackage<T extends { paymentType: string; subscriptionId: string | null }>(
+    items: T[],
+  ) {
+    const packageIds = [
+      ...new Set(
+        items
+          .filter((t) => t.paymentType === 'SUBSCRIPTION' && t.subscriptionId)
+          .map((t) => t.subscriptionId!),
+      ),
+    ];
 
-    const packages = packageIds.length > 0
-      ? await this.prisma.subscriptionPackage.findMany({
-          where: { id: { in: packageIds } },
-          select: { id: true, name: true, priceMonthly: true, durationDays: true, maxListings: true },
-        })
-      : [];
+    const packages =
+      packageIds.length > 0
+        ? await this.prisma.subscriptionPackage.findMany({
+            where: { id: { in: packageIds } },
+            select: {
+              id: true,
+              name: true,
+              priceMonthly: true,
+              durationDays: true,
+              maxListings: true,
+            },
+          })
+        : [];
 
-    const pkgMap = Object.fromEntries(packages.map(p => [p.id, p]));
-    return items.map(t => ({
+    const pkgMap = Object.fromEntries(packages.map((p) => [p.id, p]));
+    return items.map((t) => ({
       ...t,
       subscriptionPackage: t.subscriptionId ? (pkgMap[t.subscriptionId] ?? null) : null,
     }));
@@ -270,6 +355,13 @@ export class PaymentsService {
       throw new BadRequestException('Transaction is not awaiting review');
     }
 
+    // Fetch user email for notifications
+    const user = await this.prisma.user.findUnique({
+      where: { id: transaction.userId },
+      select: { email: true },
+    });
+    const userEmail = user?.email;
+
     if (dto.action === 'APPROVE') {
       // Update transaction to PAID
       const updated = await this.prisma.paymentTransaction.update({
@@ -285,7 +377,7 @@ export class PaymentsService {
 
       // If featured listing payment → mark listing as featured
       if (transaction.paymentType === 'FEATURED_LISTING' && transaction.listingId) {
-        const meta = transaction.metadata as Record<string, any> | null;
+        const meta = transaction.metadata as Record<string, unknown> | null;
         const featuredPackageId = meta?.packageId as string | undefined;
         const durationDays = (meta?.durationDays as number | undefined) ?? 7;
         if (featuredPackageId) {
@@ -330,18 +422,60 @@ export class PaymentsService {
         }
       }
 
+      // If individual package payment → create IndividualPurchase record
+      if (transaction.paymentType === 'INDIVIDUAL_PACKAGE') {
+        const meta = transaction.metadata as Record<string, unknown> | null;
+        const packageId = meta?.packageId as string | undefined;
+        const listingCount = meta?.listingCount as number | undefined;
+        if (packageId && listingCount) {
+          await this.prisma.individualPurchase.create({
+            data: {
+              userId: transaction.userId,
+              packageId,
+              creditsTotal: listingCount,
+              creditsUsed: 0,
+              paidAmount: transaction.amount,
+              status: 'ACTIVE',
+            },
+          });
+        }
+      }
+
       // Notify user
       await this.notificationsService.createNotification(
         transaction.userId,
         NotificationType.PAYMENT_APPROVED,
         'تم تأكيد الدفع ✅',
         `تم تأكيد تحويلك البنكي بمبلغ ${transaction.amount} د.ب. ${
-          transaction.paymentType === 'SUBSCRIPTION' ? 'اشتراكك أصبح نشطاً.' :
-          transaction.paymentType === 'FEATURED_LISTING' ? 'تم تمييز إعلانك.' :
-          'تم تفعيل إعلانك.'
+          transaction.paymentType === 'SUBSCRIPTION'
+            ? 'اشتراكك أصبح نشطاً.'
+            : transaction.paymentType === 'FEATURED_LISTING'
+              ? 'تم تمييز إعلانك.'
+              : transaction.paymentType === 'INDIVIDUAL_PACKAGE'
+                ? 'تم إضافة رصيد إعلاناتك.'
+                : 'تم تفعيل إعلانك.'
         }`,
         { transactionId },
       );
+
+      // Send email
+      if (userEmail) {
+        const meta = transaction.metadata as Record<string, unknown> | null;
+        const packageName =
+          (meta?.packageName as string | undefined) ??
+          (transaction.paymentType === 'LISTING_FEE'
+            ? 'رسوم نشر الإعلان'
+            : transaction.paymentType === 'SUBSCRIPTION'
+              ? 'اشتراك معرض'
+              : transaction.paymentType === 'FEATURED_LISTING'
+                ? 'تمييز الإعلان'
+                : transaction.paymentType === 'INDIVIDUAL_PACKAGE'
+                  ? 'باقة إعلانات'
+                  : 'دفعة');
+        this.emailService
+          .sendPaymentConfirmed(userEmail, packageName, Number(transaction.amount))
+          .catch(() => {});
+      }
 
       return updated;
     } else {
@@ -364,6 +498,13 @@ export class PaymentsService {
         `تم رفض إثبات التحويل.${dto.note ? ' السبب: ' + dto.note : ''} يمكنك إعادة المحاولة.`,
         { transactionId, reason: dto.note },
       );
+
+      // Send email
+      if (userEmail) {
+        this.emailService
+          .sendPaymentRejected(userEmail, Number(transaction.amount), dto.note)
+          .catch(() => {});
+      }
 
       return updated;
     }
@@ -396,7 +537,8 @@ export class PaymentsService {
   async getListingTransactions(userId: string, listingId: string) {
     const listing = await this.prisma.listing.findUnique({ where: { id: listingId } });
     if (!listing) throw new NotFoundException('Listing not found');
-    if (listing.ownerId !== userId) throw new ForbiddenException('You can only view your own listing transactions');
+    if (listing.ownerId !== userId)
+      throw new ForbiddenException('You can only view your own listing transactions');
 
     return this.prisma.paymentTransaction.findMany({
       where: { listingId },
@@ -410,7 +552,9 @@ export class PaymentsService {
   }
 
   async markPaymentAsPaid(transactionId: string, dto: ManualPaymentDto) {
-    const transaction = await this.prisma.paymentTransaction.findUnique({ where: { id: transactionId } });
+    const transaction = await this.prisma.paymentTransaction.findUnique({
+      where: { id: transactionId },
+    });
     if (!transaction) throw new NotFoundException('Transaction not found');
     if (transaction.status === PaymentStatus.PAID) throw new BadRequestException('Already paid');
 
@@ -438,7 +582,7 @@ export class PaymentsService {
     return !!paidTransaction;
   }
 
-  async uploadProofImage(buffer: Buffer, mimeType: string): Promise<string> {
+  async uploadProofImage(buffer: Buffer, _mimeType: string): Promise<string> {
     const result = await this.cloudinaryService.uploadBuffer(buffer, {
       folder: 'payment-proofs',
       resourceType: 'image',

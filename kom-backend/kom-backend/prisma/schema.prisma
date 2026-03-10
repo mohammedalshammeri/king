@@ -100,6 +100,11 @@ enum SubscriptionStatus {
   CANCELLED
 }
 
+enum IndividualPurchaseStatus {
+  ACTIVE
+  EXHAUSTED
+}
+
 enum NotificationType {
   LISTING_APPROVED
   LISTING_REJECTED
@@ -119,6 +124,8 @@ enum NotificationType {
   NEW_MESSAGE
   BROADCAST
   SYSTEM
+  LISTING_SOLD_CHECK
+  LUCK_WINNER
 }
 
 enum ReportStatus {
@@ -191,10 +198,12 @@ model User {
   chatThreadsB      ChatThread[]       @relation("ChatUserB")
   chatMessages      ChatMessage[]      @relation("ChatMessageSender")
   paymentTransactions PaymentTransaction[]
+  luckEntry            LuckEntry?
 
   // Subscriptions (for showroom merchants)
-  subscription      Subscription?
-  broadcastLogs     BroadcastLog[]
+  subscription          Subscription?
+  individualPurchases   IndividualPurchase[]
+  broadcastLogs         BroadcastLog[]
 
   @@index([email])
   @@index([phone])
@@ -272,6 +281,8 @@ model Listing {
   expiresAt            DateTime?
   rejectedAt           DateTime?
   rejectionReason      String?
+  soldCheckCount       Int               @default(0)
+  lastSoldCheckAt      DateTime?
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
@@ -300,10 +311,15 @@ model SubscriptionPackage {
   id              String   @id @default(uuid())
   name            String
   description     String?
-  priceMonthly    Decimal  @db.Decimal(10, 3)
+  priceMonthly    Decimal  @db.Decimal(10, 3)        // 1 month price
+  price3Months    Decimal? @db.Decimal(10, 3)        // 3 months price (optional discount)
+  price6Months    Decimal? @db.Decimal(10, 3)        // 6 months price (optional discount)
+  price12Months   Decimal? @db.Decimal(10, 3)        // 12 months price (optional discount)
+  discountNote    String?                            // e.g. "وفّر 20%" shown on UI
   currency        Currency @default(BHD)
-  maxListings     Int      // max active listings allowed
-  durationDays    Int      @default(30)
+  maxListings     Int      // max active listings allowed per period
+  maxStories      Int      @default(3)              // max stories per subscription cycle
+  durationDays    Int      @default(30)              // base period in days (30 = 1 month)
   isActive        Boolean  @default(true)
   sortOrder       Int      @default(0)
   createdAt       DateTime @default(now())
@@ -319,6 +335,7 @@ model Subscription {
   userId           String             @unique
   packageId        String
   status           SubscriptionStatus @default(ACTIVE)
+  durationChoice   String             @default("1") // "1", "3", "6", "12" months
   startDate        DateTime
   endDate          DateTime
   listingsUsed     Int                @default(0)
@@ -332,6 +349,46 @@ model Subscription {
   @@index([userId])
   @@index([status])
   @@index([endDate])
+}
+
+// Listing credit packages for individual users (non-showroom)
+model IndividualListingPackage {
+  id           String   @id @default(uuid())
+  name         String   // e.g. "إعلان واحد", "5 إعلانات", "10 إعلانات"
+  description  String?
+  listingCount Int      // number of listing credits included
+  maxStories   Int      @default(2)              // max stories per package purchase
+  price        Decimal  @db.Decimal(10, 3)
+  currency     Currency @default(BHD)
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  purchases    IndividualPurchase[]
+
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+// Tracks credit bundles purchased by individual users
+model IndividualPurchase {
+  id             String                   @id @default(uuid())
+  userId         String
+  packageId      String
+  creditsTotal   Int                      // total credits in this purchase
+  creditsUsed    Int                      @default(0)
+  paidAmount     Decimal                  @db.Decimal(10, 3)
+  status         IndividualPurchaseStatus @default(ACTIVE)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  user    User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package IndividualListingPackage @relation(fields: [packageId], references: [id])
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([status])
 }
 
 model ChatThread {
@@ -772,6 +829,31 @@ model BroadcastLog {
   sentBy User @relation(fields: [sentByUserId], references: [id], onDelete: Cascade)
 
   @@index([createdAt])
+}
+
+// ==================== LUCK SYSTEM ====================
+
+model LuckFeature {
+  id         String    @id @default(uuid())
+  isEnabled  Boolean   @default(false)
+  winnerId   String?   // userId of winner
+  winnerCode String?
+  drawnAt    DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model LuckEntry {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  code      String   @unique
+  isWinner  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([isWinner])
 }
 
 model SystemSetting {

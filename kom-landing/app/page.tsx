@@ -191,7 +191,7 @@ const faqSchema = {
       name: "كيف أتواصل مع دعم التطبيق؟",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "يمكنك التواصل مع فريق الدعم عبر البريد الإلكتروني support@kotm.app أو عبر صفحة الدعم داخل التطبيق.",
+        text: "يمكنك التواصل مع فريق الدعم عبر البريد الإلكتروني info@kotm.app أو عبر صفحة الدعم داخل التطبيق.",
       },
     },
     {
@@ -379,7 +379,7 @@ export default function HomePage() {
             <FaqItem q="على أي أجهزة يعمل التطبيق؟" a="يعمل التطبيق على أجهزة iPhone وiPad عبر App Store، وعلى أجهزة Android عبر Google Play Store." />
             <FaqItem q="هل يمكن للمعارض استخدام التطبيق؟" a="نعم، يوفر التطبيق حسابات خاصة للمعارض مع مميزات إضافية كإضافة كتالوج كامل من السيارات وإبراز المعرض في نتائج البحث." />
             <FaqItem q="ما هي طرق الدفع المتاحة؟" a="يدعم التطبيق الدفع عبر بطاقات الائتمان وتحويل Benefit Pay المحلي في البحرين لباقات الاشتراك." />
-            <FaqItem q="كيف أتواصل مع دعم التطبيق؟" a="يمكنك التواصل عبر البريد الإلكتروني support@kotm.app أو زيارة صفحة الدعم على kotm.app/support." />
+            <FaqItem q="كيف أتواصل مع دعم التطبيق؟" a="يمكنك التواصل عبر البريد الإلكتروني info@kotm.app أو زيارة صفحة الدعم على kotm.app/support." />
             <FaqItem q="هل بيانات المستخدم آمنة؟" a="نعم، نستخدم تشفيراً كاملاً لحماية بياناتك ولا نشاركها مع أطراف ثالثة. راجع سياسة الخصوصية على kotm.app/privacy للتفاصيل." />
           </div>
         </div>
@@ -420,7 +420,7 @@ export default function HomePage() {
           <div className="mt-8 text-center text-xs text-slate-600">
             © {new Date().getFullYear()} King of the Market – جميع الحقوق محفوظة · المنامة، البحرين
             <span className="mx-2">·</span>
-            <a href="mailto:support@kotm.app" className="hover:text-gold transition-colors">support@kotm.app</a>
+            <a href="mailto:info@kotm.app" className="hover:text-gold transition-colors">info@kotm.app</a>
           </div>
         </div>
       </footer>

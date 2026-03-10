@@ -4,7 +4,6 @@ import {
   ConflictException,
   BadRequestException,
   ForbiddenException,
-  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -12,6 +11,8 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../email/email.service';
+import { LuckService } from '../luck/luck.service';
 import { NotificationType, UserRole } from '@prisma/client';
 import { RegisterDto, LoginDto, RefreshTokenDto, AuthResponseDto, TokenPayload } from './dto';
 
@@ -22,10 +23,12 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly notificationsService: NotificationsService,
+    private readonly emailService: EmailService,
+    private readonly luckService: LuckService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
-    // Check if user already exists
+    // Check if user already exists (same email → any role blocked)
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [{ email: dto.email }, dto.phone ? { phone: dto.phone } : undefined].filter(
@@ -35,6 +38,13 @@ export class AuthService {
     });
 
     if (existingUser) {
+      if (existingUser.email === dto.email) {
+        throw new ConflictException(
+          existingUser.role === UserRole.USER_SHOWROOM
+            ? 'هذا البريد الإلكتروني مسجل بحساب تاجر مسبقاً. لا يمكن إنشاء حساب آخر بنفس البريد.'
+            : 'هذا البريد الإلكتروني مسجل بحساب فرد مسبقاً. لا يمكن إنشاء حساب آخر بنفس البريد.',
+        );
+      }
       throw new ConflictException('User with this email or phone already exists');
     }
 
@@ -52,7 +62,8 @@ export class AuthService {
           phone: dto.phone,
           passwordHash: hashedPassword,
           role,
-          isActive: role === UserRole.USER_SHOWROOM ? false : true,
+          // Both roles require admin approval before they can log in
+          isActive: false,
         },
       });
 
@@ -89,8 +100,8 @@ export class AuthService {
       NotificationType.SYSTEM,
       'تسجيل حساب جديد',
       role === UserRole.USER_SHOWROOM
-        ? `تم تسجيل معرض جديد (${user.email}) ويحتاج للمراجعة.`
-        : `تم تسجيل حساب فرد جديد (${user.email}).`,
+        ? `تم تسجيل معرض جديد (${user.email}) ويحتاج للمراجعة والموافقة.`
+        : `تم تسجيل حساب فرد جديد (${user.email}) ويحتاج للمراجعة والموافقة.`,
       {
         userId: user.id,
         email: user.email,
@@ -99,35 +110,25 @@ export class AuthService {
       },
     );
 
-    if (role === UserRole.USER_SHOWROOM) {
-      return {
-        user: {
-          id: user.id,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
-        },
-        accessToken: null as any, // Not issuing tokens for pending showrooms
-        refreshToken: null as any,
-        message: 'Registration successful. Your account is under review.',
-      } as any;
-    }
+    // Assign luck code if feature is active
+    const luckCode = await this.luckService.assignCodeToNewUser(user.id);
 
-    // Generate tokens
-    const tokens = await this.generateTokens(user.id, user.email, user.role);
-
-    // Save refresh token
-    await this.saveRefreshToken(user.id, tokens.refreshToken);
-
+    // Both roles return PENDING — no tokens issued until admin approves
     return {
       user: {
         id: user.id,
         email: user.email,
         phone: user.phone,
         role: user.role,
+        luckCode: luckCode ?? undefined,
       },
-      ...tokens,
-    };
+      accessToken: null as unknown as string,
+      refreshToken: null as unknown as string,
+      message:
+        role === UserRole.USER_SHOWROOM
+          ? 'Registration successful. Your showroom account is under review.'
+          : 'Registration successful. Your account is pending admin approval.',
+    } as unknown as AuthResponseDto;
   }
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
@@ -300,13 +301,8 @@ export class AuthService {
       },
     });
 
-    // TODO: Send email with reset link
-    // For now, log the token (in production, send via email service)
-    console.log(`Password reset token for ${email}: ${resetToken}`);
-    console.log(`Reset link: http://localhost:3000/reset-password?token=${resetToken}`);
-    
-    // In production, you would send an email like this:
-    // await this.emailService.sendPasswordReset(email, resetToken);
+    // Send password reset email via Resend
+    await this.emailService.sendPasswordReset(email, resetToken);
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {

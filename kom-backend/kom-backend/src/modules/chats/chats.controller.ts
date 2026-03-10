@@ -40,10 +40,7 @@ export class ChatsController {
   @Post(':id/read')
   @ApiOperation({ summary: 'Mark messages as read' })
   @ApiResponse({ status: 200, description: 'Messages marked as read' })
-  async markMessagesAsRead(
-    @CurrentUser('id') userId: string,
-    @Param('id') threadId: string,
-  ) {
+  async markMessagesAsRead(@CurrentUser('id') userId: string, @Param('id') threadId: string) {
     return this.chatsService.markMessagesAsRead(userId, threadId);
   }
 

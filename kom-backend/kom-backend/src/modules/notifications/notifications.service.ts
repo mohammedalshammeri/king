@@ -132,9 +132,19 @@ export class NotificationsService {
     return this.createNotification(
       userId,
       NotificationType.LISTING_APPROVED,
-      'Listing Approved',
-      `Your listing "${listingTitle}" has been approved and is now live.`,
+      'تم قبول إعلانك ✅',
+      `تم قبول إعلانك "${listingTitle}" وهو الآن متاح للجميع.`,
       { listingId },
+    );
+  }
+
+  async notifyFeatureListing(userId: string, listingId: string, listingTitle: string) {
+    return this.createNotification(
+      userId,
+      NotificationType.SYSTEM,
+      '⭐ ميّز إعلانك ليظهر في الأعلى',
+      `إعلانك "${listingTitle}" مقبول! ميّزه الآن ليظهر في أعلى نتائج البحث بنجمة مميزة.`,
+      { listingId, action: 'FEATURE_LISTING' },
     );
   }
 
@@ -204,11 +214,7 @@ export class NotificationsService {
     );
   }
 
-  async notifyStoryRejected(
-    userId: string,
-    storyId: string,
-    reason?: string,
-  ) {
+  async notifyStoryRejected(userId: string, storyId: string, reason?: string) {
     return this.createNotification(
       userId,
       NotificationType.STORY_REJECTED,
@@ -251,7 +257,9 @@ export class NotificationsService {
 
     // Send push notifications (fire-and-forget)
     void Promise.allSettled(
-      users.map((u) => this.pushService.sendPushNotification(u.id, title, body, { type: 'BROADCAST' })),
+      users.map((u) =>
+        this.pushService.sendPushNotification(u.id, title, body, { type: 'BROADCAST' }),
+      ),
     );
 
     // Log the broadcast
@@ -298,9 +306,7 @@ export class NotificationsService {
     }
 
     await Promise.all(
-      admins.map((admin) =>
-        this.createNotification(admin.id, type, title, body, metadata, false),
-      ),
+      admins.map((admin) => this.createNotification(admin.id, type, title, body, metadata, false)),
     );
 
     return { count: admins.length };

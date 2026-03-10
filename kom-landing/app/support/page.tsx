@@ -39,13 +39,13 @@ export default function SupportPage() {
         {/* Contact cards */}
         <div className="grid gap-4 sm:grid-cols-2 mb-14">
           <a
-            href="mailto:support@kotm.app"
+            href="mailto:info@kotm.app"
             className="flex items-center gap-4 bg-gold/10 border border-gold/30 rounded-2xl p-5 hover:bg-gold/20 transition-colors"
           >
             <div className="text-3xl">📧</div>
             <div>
               <div className="font-bold text-white text-base">البريد الإلكتروني</div>
-              <div className="text-gold text-sm font-semibold">support@kotm.app</div>
+              <div className="text-gold text-sm font-semibold">info@kotm.app</div>
               <div className="text-slate-500 text-xs mt-1">نرد خلال 24 ساعة</div>
             </div>
           </a>
@@ -73,7 +73,7 @@ export default function SupportPage() {
             />
             <FaqItem
               q="لم تُفعَّل باقتي رغم الدفع، ماذا أفعل؟"
-              a="تواصل معنا عبر البريد الإلكتروني support@kotm.app مع ذكر رقم الطلب وصورة إثبات التحويل البنكي. سيقوم فريقنا بمعالجة طلبك في أسرع وقت."
+              a="تواصل معنا عبر البريد الإلكتروني info@kotm.app مع ذكر رقم الطلب وصورة إثبات التحويل البنكي. سيقوم فريقنا بمعالجة طلبك في أسرع وقت."
             />
             <FaqItem
               q="كيف أحذف إعلاني؟"
@@ -89,7 +89,7 @@ export default function SupportPage() {
             />
             <FaqItem
               q="كيف أبلّغ عن إعلان مزوّر؟"
-              a="افتح الإعلان المشبوه وانقر على قائمة الخيارات (···) ثم 'إبلاغ'. يمكنك أيضاً مراسلتنا مباشرة على support@kotm.app."
+              a="افتح الإعلان المشبوه وانقر على قائمة الخيارات (···) ثم 'إبلاغ'. يمكنك أيضاً مراسلتنا مباشرة على info@kotm.app."
             />
             <FaqItem
               q="كيف أحذف حسابي؟"
@@ -111,7 +111,7 @@ export default function SupportPage() {
             <strong className="text-white">ما يُحتفظ به:</strong> سجلات المعاملات المالية لمدة سنتين (متطلب قانوني).
           </p>
           <a
-            href="mailto:support@kotm.app?subject=طلب حذف الحساب&body=أطلب حذف حسابي وجميع بياناتي من تطبيق KOM.%0A%0Aالبريد الإلكتروني المرتبط بالحساب: [أدخل بريدك هنا]"
+            href="mailto:info@kotm.app?subject=طلب حذف الحساب&body=أطلب حذف حسابي وجميع بياناتي من تطبيق KOM.%0A%0Aالبريد الإلكتروني المرتبط بالحساب: [أدخل بريدك هنا]"
             className="inline-block bg-red-500/80 hover:bg-red-500 text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-colors"
           >
             إرسال طلب حذف الحساب
@@ -122,7 +122,7 @@ export default function SupportPage() {
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
           <p className="text-slate-300 text-sm leading-relaxed">
             لم تجد إجابة على سؤالك؟ راسلنا مباشرة على{" "}
-            <a href="mailto:support@kotm.app" className="text-gold font-bold hover:underline">support@kotm.app</a>{" "}
+            <a href="mailto:info@kotm.app" className="text-gold font-bold hover:underline">info@kotm.app</a>{" "}
             وسيتواصل معك فريقنا في أقرب وقت.
           </p>
         </div>

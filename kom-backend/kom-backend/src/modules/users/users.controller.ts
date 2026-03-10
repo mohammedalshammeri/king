@@ -1,5 +1,23 @@
-import { Controller, Get, Patch, Post, Delete, Body, Param, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { UsersService } from './users.service';

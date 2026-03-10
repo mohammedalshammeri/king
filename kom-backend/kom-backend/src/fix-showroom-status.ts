@@ -1,4 +1,3 @@
-
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -12,20 +11,20 @@ async function main() {
       isActive: true,
     },
     include: {
-        showroomProfile: true
-    }
+      showroomProfile: true,
+    },
   });
 
   console.log(`Found ${activeShowrooms.length} active showroom accounts.`);
 
   for (const user of activeShowrooms) {
     console.log(`- Fixing user: ${user.email} (${user.showroomProfile?.showroomName})`);
-    
+
     await prisma.user.update({
       where: { id: user.id },
       data: { isActive: false },
     });
-    
+
     console.log(`  ✅ Set isActive = false`);
   }
 
