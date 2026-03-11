@@ -76,6 +76,15 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Delete('me')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Delete current user account and all data' })
+  @ApiResponse({ status: 200, description: 'Account deleted' })
+  async deleteMyAccount(@CurrentUser('id') userId: string) {
+    return this.usersService.deleteMyAccount(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('me/phones')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Add showroom contact phone (Showroom only)' })
