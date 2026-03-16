@@ -6,13 +6,13 @@ workflows:
     working_directory: kom-mobile-app
 
     environment:
+      groups:
+        - expo-credentials
       vars:
         EXPO_PUBLIC_API_URL: https://api.kotm.app
         EAS_PROJECT_ID: 38364066-6118-4eb7-ad6a-22eeecd37a69
         APP_STORE_CONNECT_ISSUER_ID: 9391dad5-7a3b-4176-a7bd-cf0af733285b
         APP_STORE_CONNECT_KEY_IDENTIFIER: J6TS4PCQ4L
-        # APP_STORE_CONNECT_PRIVATE_KEY: add this in Codemagic UI → Environment variables (secret)
-        # EXPO_TOKEN: add this in Codemagic UI → Environment variables (secret)
       node: 20.18.0
 
     scripts:
