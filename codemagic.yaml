@@ -24,7 +24,6 @@ workflows:
 
       - name: Build iOS IPA (local on Codemagic Mac)
         script: |
-          eas init --id 38364066-6118-4eb7-ad6a-22eeecd37a69 --non-interactive
           eas build \
             --platform ios \
             --profile production \
