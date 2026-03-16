@@ -1,0 +1,30 @@
+{
+  "runId": "1773514749742-7odwrx",
+  "apiBase": "http://127.0.0.1:3002/api/v1",
+  "passed": 7,
+  "failed": 0,
+  "failures": [],
+  "notes": {
+    "potentialCreditBug": {
+      "name": "Individual listing flow works and detects failed submit credit behavior",
+      "ok": true,
+      "details": {
+        "failedSubmitStatus": 400,
+        "failedSubmitErrors": {
+          "success": false,
+          "error": {
+            "code": "BAD_REQUEST",
+            "message": "Listing validation failed",
+            "timestamp": "2026-03-14T18:59:41.654Z",
+            "path": "/api/v1/listings/b5bbcf34-253b-4939-ba26-3a6be92a785a/submit"
+          }
+        },
+        "creditsBeforeFailedSubmit": 2,
+        "creditsAfterFailedSubmit": 2,
+        "validSubmissionStatus": "PENDING_REVIEW",
+        "approvedStatus": "APPROVED",
+        "publicStatus": "APPROVED"
+      }
+    }
+  }
+}

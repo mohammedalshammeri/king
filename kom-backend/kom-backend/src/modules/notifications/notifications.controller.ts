@@ -16,7 +16,7 @@ import { NotificationsService } from './notifications.service';
 import { PushService } from './push.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
-import { CurrentUser, Roles } from '../../common/decorators';
+import { CurrentUser, Public, Roles } from '../../common/decorators';
 import { PaginationDto } from '../../common/dto';
 import { RegisterDeviceDto } from './dto';
 import { UserRole } from '@prisma/client';
@@ -100,6 +100,16 @@ export class NotificationsController {
   async registerDeviceToken(@CurrentUser('id') userId: string, @Body() dto: RegisterDeviceDto) {
     await this.pushService.registerDeviceToken(userId, dto.token, dto.platform);
     return { message: 'Device token registered successfully' };
+  }
+
+  @Post('devices/token/guest')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Register device token for anonymous/guest users (no auth required)' })
+  @ApiResponse({ status: 200, description: 'Guest device token registered' })
+  async registerGuestDeviceToken(@Body() dto: RegisterDeviceDto) {
+    await this.pushService.registerDeviceToken(null, dto.token, dto.platform);
+    return { message: 'Guest device token registered successfully' };
   }
 
   @Delete('devices/token')

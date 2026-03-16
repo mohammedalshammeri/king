@@ -7,6 +7,7 @@ import { CurrentUser, Public } from '../../common/decorators';
 import {
   RegisterDto,
   LoginDto,
+  RestoreAccountDto,
   RefreshTokenDto,
   LogoutDto,
   ForgotPasswordDto,
@@ -40,6 +41,16 @@ export class AuthController {
   @ApiResponse({ status: 403, description: 'Account banned or inactive' })
   async login(@Body() dto: LoginDto): Promise<AuthResponseDto> {
     return this.authService.login(dto);
+  }
+
+  @Public()
+  @Post('restore-account')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore a recently deleted account' })
+  @ApiResponse({ status: 200, description: 'Account restored successfully', type: AuthResponseDto })
+  @ApiResponse({ status: 409, description: 'Account is pending deletion and can be restored' })
+  async restoreAccount(@Body() dto: RestoreAccountDto): Promise<AuthResponseDto> {
+    return this.authService.restoreAccount(dto);
   }
 
   @Public()

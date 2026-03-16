@@ -4,6 +4,7 @@ import {
   ConflictException,
   BadRequestException,
   ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -15,6 +16,17 @@ import { EmailService } from '../email/email.service';
 import { LuckService } from '../luck/luck.service';
 import { NotificationType, UserRole } from '@prisma/client';
 import { RegisterDto, LoginDto, RefreshTokenDto, AuthResponseDto, TokenPayload } from './dto';
+
+const ACCOUNT_DELETION_PREFIX = 'ACCOUNT_DELETION_PENDING::';
+const ACCOUNT_DELETION_GRACE_DAYS = 30;
+
+type PendingDeletionMetadata = {
+  originalEmail: string;
+  originalPhone: string | null;
+  requestedAt: string;
+  restoreUntil: string;
+  originalIsActive: boolean;
+};
 
 @Injectable()
 export class AuthService {
@@ -28,10 +40,17 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
+    const normalizedEmail = this.normalizeEmail(dto.email);
+
+    const pendingDeletedUser = await this.findPendingDeletedAccountByEmail(normalizedEmail);
+    if (pendingDeletedUser) {
+      this.throwPendingDeletionException(pendingDeletedUser);
+    }
+
     // Check if user already exists (same email → any role blocked)
     const existingUser = await this.prisma.user.findFirst({
       where: {
-        OR: [{ email: dto.email }, dto.phone ? { phone: dto.phone } : undefined].filter(
+        OR: [{ email: normalizedEmail }, dto.phone ? { phone: dto.phone } : undefined].filter(
           (condition): condition is { email: string } | { phone: string } => Boolean(condition),
         ),
       },
@@ -58,12 +77,12 @@ export class AuthService {
     const user = await this.prisma.$transaction(async (prisma) => {
       const newUser = await prisma.user.create({
         data: {
-          email: dto.email,
+          email: normalizedEmail,
           phone: dto.phone,
           passwordHash: hashedPassword,
           role,
-          // Both roles require admin approval before they can log in
-          isActive: false,
+          // Both individual and showroom accounts are active immediately.
+          isActive: true,
         },
       });
 
@@ -96,24 +115,40 @@ export class AuthService {
       return newUser;
     });
 
-    await this.notificationsService.notifyAdmins(
-      NotificationType.SYSTEM,
-      'تسجيل حساب جديد',
-      role === UserRole.USER_SHOWROOM
-        ? `تم تسجيل معرض جديد (${user.email}) ويحتاج للمراجعة والموافقة.`
-        : `تم تسجيل حساب فرد جديد (${user.email}) ويحتاج للمراجعة والموافقة.`,
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-        userType: role === UserRole.USER_SHOWROOM ? 'SHOWROOM' : 'INDIVIDUAL',
-      },
-    );
+    if (role === UserRole.USER_SHOWROOM) {
+      await this.notificationsService.notifyAdmins(
+        NotificationType.SYSTEM,
+        'تسجيل معرض جديد',
+        `تم تسجيل معرض جديد (${user.email}) وهو مفعل مباشرة.`,
+        {
+          userId: user.id,
+          email: user.email,
+          role: user.role,
+          userType: 'SHOWROOM',
+        },
+      );
+    } else if (role === UserRole.USER_INDIVIDUAL) {
+      await this.notificationsService.notifyAdmins(
+        NotificationType.SYSTEM,
+        'مستخدم فردي جديد',
+        `تم تسجيل مستخدم فردي جديد (${user.email}).`,
+        {
+          userId: user.id,
+          email: user.email,
+          role: user.role,
+          userType: 'INDIVIDUAL',
+        },
+      );
+    }
 
     // Assign luck code if feature is active
     const luckCode = await this.luckService.assignCodeToNewUser(user.id);
 
-    // Both roles return PENDING — no tokens issued until admin approves
+    // Both individual and showroom users receive tokens immediately.
+    const tokens = await this.generateTokens(user.id, user.email, user.role);
+    await this.saveRefreshToken(user.id, tokens.refreshToken);
+    await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+
     return {
       user: {
         id: user.id,
@@ -122,24 +157,29 @@ export class AuthService {
         role: user.role,
         luckCode: luckCode ?? undefined,
       },
-      accessToken: null as unknown as string,
-      refreshToken: null as unknown as string,
-      message:
-        role === UserRole.USER_SHOWROOM
-          ? 'Registration successful. Your showroom account is under review.'
-          : 'Registration successful. Your account is pending admin approval.',
-    } as unknown as AuthResponseDto;
+      ...tokens,
+      message: 'Registration successful. Welcome to King of the Market!',
+    };
   }
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
+    const normalizedEmail = this.normalizeEmail(dto.email);
+
     // Find user by email
     const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { email: normalizedEmail },
       include: {
         individualProfile: true,
         showroomProfile: true,
       },
     });
+
+    if (!user) {
+      const pendingDeletedUser = await this.findPendingDeletedAccountByEmail(normalizedEmail);
+      if (pendingDeletedUser) {
+        this.throwPendingDeletionException(pendingDeletedUser);
+      }
+    }
 
     if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Invalid credentials');
@@ -181,6 +221,78 @@ export class AuthService {
         role: user.role,
       },
       ...tokens,
+    };
+  }
+
+  async restoreAccount(dto: { email: string; password: string }): Promise<AuthResponseDto> {
+    const normalizedEmail = this.normalizeEmail(dto.email);
+    const user = await this.findPendingDeletedAccountByEmail(normalizedEmail);
+
+    if (!user) {
+      throw new NotFoundException('No recently deleted account found for this email');
+    }
+
+    const metadata = this.parsePendingDeletionMetadata(user.bannedReason);
+    if (!metadata || !this.isWithinDeletionWindow(metadata)) {
+      throw new ConflictException('The account can no longer be restored. Please register again.');
+    }
+
+    if (!user.passwordHash) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const emailTaken = await this.prisma.user.findFirst({
+      where: { id: { not: user.id }, email: normalizedEmail },
+      select: { id: true },
+    });
+
+    if (emailTaken) {
+      throw new ConflictException('This email is already in use by another account');
+    }
+
+    if (metadata.originalPhone) {
+      const phoneTaken = await this.prisma.user.findFirst({
+        where: { id: { not: user.id }, phone: metadata.originalPhone },
+        select: { id: true },
+      });
+
+      if (phoneTaken) {
+        throw new ConflictException('The phone number is already in use by another account');
+      }
+    }
+
+    const restoredUser = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        email: metadata.originalEmail,
+        phone: metadata.originalPhone,
+        isActive: metadata.originalIsActive,
+        isBanned: false,
+        bannedReason: null,
+        bannedAt: null,
+        lastLoginAt: new Date(),
+      },
+    });
+
+    await this.prisma.refreshToken.deleteMany({ where: { userId: restoredUser.id } });
+
+    const tokens = await this.generateTokens(restoredUser.id, restoredUser.email, restoredUser.role);
+    await this.saveRefreshToken(restoredUser.id, tokens.refreshToken);
+
+    return {
+      user: {
+        id: restoredUser.id,
+        email: restoredUser.email,
+        phone: restoredUser.phone,
+        role: restoredUser.role,
+      },
+      ...tokens,
+      message: 'Your account has been restored successfully.',
     };
   }
 
@@ -421,6 +533,73 @@ export class AuthService {
         where: { id: { in: tokens.map((t) => t.id) } },
       });
     }
+  }
+
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  private parsePendingDeletionMetadata(reason?: string | null): PendingDeletionMetadata | null {
+    if (!reason || !reason.startsWith(ACCOUNT_DELETION_PREFIX)) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(reason.slice(ACCOUNT_DELETION_PREFIX.length)) as PendingDeletionMetadata;
+    } catch {
+      return null;
+    }
+  }
+
+  private isWithinDeletionWindow(metadata: PendingDeletionMetadata): boolean {
+    return new Date(metadata.restoreUntil).getTime() > Date.now();
+  }
+
+  private async findPendingDeletedAccountByEmail(email: string) {
+    const candidate = await this.prisma.user.findFirst({
+      where: {
+        isBanned: true,
+        bannedReason: { contains: email },
+      },
+    });
+
+    if (!candidate) {
+      return null;
+    }
+
+    const metadata = this.parsePendingDeletionMetadata(candidate.bannedReason);
+    if (!metadata || metadata.originalEmail !== email) {
+      return null;
+    }
+
+    if (!this.isWithinDeletionWindow(metadata)) {
+      return null;
+    }
+
+    return candidate;
+  }
+
+  private throwPendingDeletionException(user: {
+    bannedReason?: string | null;
+  }) {
+    const metadata = this.parsePendingDeletionMetadata(user.bannedReason);
+    if (!metadata) {
+      throw new ConflictException('This account is pending deletion.');
+    }
+
+    const restoreUntil = new Date(metadata.restoreUntil);
+    const msLeft = Math.max(restoreUntil.getTime() - Date.now(), 0);
+    const daysLeft = Math.ceil(msLeft / (24 * 60 * 60 * 1000));
+
+    throw new ConflictException({
+      message: `تم حذف هذا الحساب مؤقتاً. يمكنك استرجاعه خلال ${daysLeft} يوم.`,
+      error: 'ACCOUNT_RECOVERY_REQUIRED',
+      details: {
+        restoreUntil: metadata.restoreUntil,
+        daysLeft,
+        canRestore: true,
+      },
+    });
   }
 
   private calculateExpirationDate(expiresIn: string): Date {

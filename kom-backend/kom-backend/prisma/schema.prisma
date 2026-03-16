@@ -659,7 +659,7 @@ model AuditLog {
 
 model DeviceToken {
   id        String   @id @default(uuid())
-  userId    String
+  userId    String?  // nullable — anonymous users have no userId
   token     String   @unique
   platform  String   // "ios" or "android"
   isActive  Boolean  @default(true)
@@ -667,7 +667,7 @@ model DeviceToken {
   updatedAt DateTime @updatedAt
 
   // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([token])

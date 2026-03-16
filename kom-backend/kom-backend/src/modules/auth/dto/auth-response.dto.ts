@@ -62,6 +62,9 @@ export class AuthUserDto {
 
   @ApiProperty({ enum: UserRole })
   role: UserRole;
+
+  @ApiPropertyOptional()
+  luckCode?: string;
 }
 
 export class AuthResponseDto {
@@ -73,6 +76,9 @@ export class AuthResponseDto {
 
   @ApiProperty()
   refreshToken: string;
+
+  @ApiPropertyOptional()
+  message?: string;
 }
 
 export interface TokenPayload {

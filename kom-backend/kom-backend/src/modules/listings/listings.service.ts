@@ -290,24 +290,19 @@ export class ListingsService {
       throw new BadRequestException('Listing cannot be submitted in current status');
     }
 
-    // Check merchant subscription (showroom users must have an active subscription)
+    // Check posting eligibility before deeper validation, but do not deduct anything yet.
     if (listing.owner?.role === UserRole.USER_SHOWROOM) {
       const check = await this.packagesService.canMerchantPost(userId);
       if (!check.allowed) {
         throw new ForbiddenException(check.reason);
       }
-      // Deduct one listing from merchant's subscription counter
-      await this.packagesService.incrementListingsUsed(userId);
     }
 
-    // Check individual listing credits (individual users must have purchased credits)
     if (listing.owner?.role === UserRole.USER_INDIVIDUAL) {
       const check = await this.packagesService.canIndividualPost(userId);
       if (!check.allowed) {
         throw new ForbiddenException(check.reason);
       }
-      // Deduct one credit from the individual's oldest active bundle
-      await this.packagesService.incrementIndividualCreditsUsed(userId);
     }
 
     // Validate listing completeness
@@ -378,6 +373,14 @@ export class ListingsService {
         message: 'Listing validation failed',
         errors,
       });
+    }
+
+    if (listing.owner?.role === UserRole.USER_SHOWROOM) {
+      await this.packagesService.incrementListingsUsed(userId);
+    }
+
+    if (listing.owner?.role === UserRole.USER_INDIVIDUAL) {
+      await this.packagesService.incrementIndividualCreditsUsed(userId);
     }
 
     // Submit for review

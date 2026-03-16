@@ -100,6 +100,18 @@ export class LoginDto {
   password: string;
 }
 
+export class RestoreAccountDto {
+  @ApiProperty({ example: 'user@example.com' })
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty({ example: 'SecurePassword123!' })
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+}
+
 export class RefreshTokenDto {
   @ApiProperty()
   @IsString()

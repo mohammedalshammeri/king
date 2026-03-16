@@ -97,26 +97,48 @@ export class PushService {
   }
 
   async registerDeviceToken(
-    userId: string,
+    userId: string | null,
     token: string,
     platform: 'ios' | 'android',
   ): Promise<void> {
-    // Upsert device token
     await this.prisma.deviceToken.upsert({
       where: { token },
       create: {
-        userId,
+        ...(userId ? { userId } : {}),
         token,
         platform,
         isActive: true,
       },
       update: {
-        userId,
+        ...(userId ? { userId } : {}),
         platform,
         isActive: true,
         updatedAt: new Date(),
       },
     });
+  }
+
+  async sendPushToGuestTokens(
+    title: string,
+    body: string,
+    data?: Record<string, unknown>,
+  ): Promise<number> {
+    const guestTokens = await this.prisma.deviceToken.findMany({
+      where: { userId: null, isActive: true },
+    });
+    for (const device of guestTokens) {
+      try {
+        await this.sendToDevice(device.token, device.platform, title, body, data);
+      } catch (error) {
+        if (this.isInvalidTokenError(error)) {
+          await this.prisma.deviceToken.update({
+            where: { id: device.id },
+            data: { isActive: false },
+          });
+        }
+      }
+    }
+    return guestTokens.length;
   }
 
   async unregisterDeviceToken(token: string): Promise<void> {

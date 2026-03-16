@@ -1,0 +1,97 @@
+[
+  {
+    "name": "Admin login works",
+    "ok": true,
+    "details": {
+      "adminRole": "SUPER_ADMIN",
+      "adminEmail": "info@kotm.app"
+    }
+  },
+  {
+    "name": "Individual and showroom register with immediate access tokens",
+    "ok": true,
+    "details": {
+      "individualHasToken": true,
+      "showroomHasToken": true,
+      "individualRole": "USER_INDIVIDUAL",
+      "showroomRole": "USER_SHOWROOM"
+    }
+  },
+  {
+    "name": "Admin can create test packages",
+    "ok": true,
+    "details": {
+      "individualPackageId": "4f982fd6-cc4c-43a3-bd47-f282235ebb8b",
+      "showroomPackageId": "8d30a5e9-5112-4141-87a9-b3b6a14e8a27"
+    }
+  },
+  {
+    "name": "Payment proof review activates credits and showroom subscription",
+    "ok": true,
+    "details": {
+      "pendingReviewCountAfterIndividualProof": 1,
+      "creditsBundles": 1,
+      "subscriptionStatus": "ACTIVE",
+      "transactionsCount": 1
+    }
+  },
+  {
+    "name": "Individual listing flow works and detects failed submit credit behavior",
+    "ok": true,
+    "details": {
+      "failedSubmitStatus": 400,
+      "failedSubmitErrors": {
+        "success": false,
+        "error": {
+          "code": "BAD_REQUEST",
+          "message": "Listing validation failed",
+          "timestamp": "2026-03-14T18:59:41.654Z",
+          "path": "/api/v1/listings/b5bbcf34-253b-4939-ba26-3a6be92a785a/submit"
+        }
+      },
+      "creditsBeforeFailedSubmit": 2,
+      "creditsAfterFailedSubmit": 2,
+      "validSubmissionStatus": "PENDING_REVIEW",
+      "approvedStatus": "APPROVED",
+      "publicStatus": "APPROVED"
+    }
+  },
+  {
+    "name": "Showroom listing, favorites, chat, public profile, and sold flow work",
+    "ok": true,
+    "details": {
+      "favoriteBefore": {
+        "isFavorited": false,
+        "favoritesCount": 0
+      },
+      "favoriteAfter": {
+        "isFavorited": true,
+        "favoritesCount": 1
+      },
+      "favoritesCount": 1,
+      "chatThreadId": "ec4fc8b4-8907-464f-bdb0-6da4b2c16701",
+      "showroomChatCount": 1,
+      "messageCount": 0,
+      "showroomPublicName": "Smoke Showroom 1773514749742-7odwrx",
+      "soldStatus": "SOLD",
+      "favoriteAfterRemoval": {
+        "isFavorited": false,
+        "favoritesCount": 0
+      }
+    }
+  },
+  {
+    "name": "Video story upload, approval, likes, comments, and feed work",
+    "ok": true,
+    "details": {
+      "storyStatus": "PENDING",
+      "likeResult": {
+        "isLiked": true,
+        "likesCount": 1
+      },
+      "commentId": "3245c7a3-6c93-4694-97c2-6ee597c60b69",
+      "approvedCommentsCount": 1,
+      "feedGroups": 8
+    }
+  }
+]

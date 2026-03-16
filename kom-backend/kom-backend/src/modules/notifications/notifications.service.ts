@@ -255,12 +255,15 @@ export class NotificationsService {
       skipDuplicates: true,
     });
 
-    // Send push notifications (fire-and-forget)
+    // Send push notifications to registered users (fire-and-forget)
     void Promise.allSettled(
       users.map((u) =>
         this.pushService.sendPushNotification(u.id, title, body, { type: 'BROADCAST' }),
       ),
     );
+
+    // Also push to guest (anonymous) tokens
+    void this.pushService.sendPushToGuestTokens(title, body, { type: 'BROADCAST' });
 
     // Log the broadcast
     await this.prisma.broadcastLog.create({

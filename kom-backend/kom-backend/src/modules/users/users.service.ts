@@ -4,6 +4,9 @@ import { CloudinaryService } from '../media/cloudinary.service';
 import { UserRole } from '@prisma/client';
 import { UpdateProfileDto, UpdateShowroomPhoneDto } from './dto';
 
+const ACCOUNT_DELETION_PREFIX = 'ACCOUNT_DELETION_PENDING::';
+const ACCOUNT_DELETION_GRACE_DAYS = 30;
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -157,8 +160,39 @@ export class UsersService {
   async deleteMyAccount(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
-    await this.prisma.user.delete({ where: { id: userId } });
-    return { message: 'Account deleted successfully' };
+
+    const requestedAt = new Date();
+    const restoreUntil = new Date(requestedAt.getTime() + ACCOUNT_DELETION_GRACE_DAYS * 24 * 60 * 60 * 1000);
+    const metadata = {
+      originalEmail: user.email,
+      originalPhone: user.phone ?? null,
+      requestedAt: requestedAt.toISOString(),
+      restoreUntil: restoreUntil.toISOString(),
+      originalIsActive: user.isActive,
+    };
+
+    const archivedEmail = `deleted.${requestedAt.getTime()}.${user.id}@deleted.local`;
+    const archivedPhone = user.phone ? `deleted.${requestedAt.getTime()}.${user.phone}` : null;
+
+    await this.prisma.$transaction([
+      this.prisma.refreshToken.deleteMany({ where: { userId } }),
+      this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          email: archivedEmail,
+          phone: archivedPhone,
+          isActive: false,
+          isBanned: true,
+          bannedReason: `${ACCOUNT_DELETION_PREFIX}${JSON.stringify(metadata)}`,
+          bannedAt: requestedAt,
+        },
+      }),
+    ]);
+
+    return {
+      message: 'Account scheduled for deletion and can be restored within 30 days',
+      restoreUntil: restoreUntil.toISOString(),
+    };
   }
 
   async removeShowroomPhone(userId: string, phoneId: string) {

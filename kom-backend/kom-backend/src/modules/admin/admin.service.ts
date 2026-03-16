@@ -19,6 +19,8 @@ import {
   UpdateSystemSettingDto,
 } from './dto';
 
+const ACCOUNT_DELETION_PREFIX = 'ACCOUNT_DELETION_PENDING::';
+
 @Injectable()
 export class AdminService {
   constructor(
@@ -217,6 +219,9 @@ export class AdminService {
 
     const where: Prisma.UserWhereInput = {
       role: { in: [UserRole.USER_INDIVIDUAL, UserRole.USER_SHOWROOM] },
+      NOT: {
+        bannedReason: { startsWith: ACCOUNT_DELETION_PREFIX },
+      },
     };
 
     if (query.role) {
