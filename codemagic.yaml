@@ -10,6 +10,7 @@ workflows:
         - expo
       vars:
         EXPO_PUBLIC_API_URL: https://api.kotm.app
+        EXPO_TOKEN: $EXPO_TOKEN
       node: 20.18.0
 
     scripts:
@@ -29,17 +30,19 @@ workflows:
       - name: Build iOS
         script: |
           echo "EXPO_TOKEN length: ${#EXPO_TOKEN}"
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "ERROR: EXPO_TOKEN is not set!"
+            exit 1
+          fi
           npx eas build \
             --platform ios \
             --profile production \
             --non-interactive \
-            --wait \
-            --token $EXPO_TOKEN
+            --wait
 
       - name: Submit to App Store
         script: |
           npx eas submit \
             --platform ios \
             --latest \
-            --non-interactive \
-            --token $EXPO_TOKEN
+            --non-interactive
