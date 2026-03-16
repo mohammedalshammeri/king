@@ -19,8 +19,16 @@ workflows:
       - name: Install EAS CLI
         script: npm install -g eas-cli
 
+      - name: Verify project files
+        script: |
+          pwd
+          ls -la
+          cat app.json
+          cat eas.json
+
       - name: Build iOS
         script: |
+          export EXPO_TOKEN=$EXPO_TOKEN
           npx eas build \
             --platform ios \
             --profile production \
@@ -29,6 +37,7 @@ workflows:
 
       - name: Submit to App Store
         script: |
+          export EXPO_TOKEN=$EXPO_TOKEN
           npx eas submit \
             --platform ios \
             --latest \
