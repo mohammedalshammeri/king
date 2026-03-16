@@ -37,8 +37,7 @@ workflows:
             --platform ios \
             --profile production \
             --non-interactive \
-            --local \
-            --output /tmp/KOM.ipa
+            
 
       - name: Submit to App Store
         script: |
