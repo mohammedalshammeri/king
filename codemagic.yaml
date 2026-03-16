@@ -22,14 +22,21 @@ workflows:
       - name: Install EAS CLI
         script: npm install -g eas-cli@latest
 
-      - name: Build and Submit iOS via EAS
+      - name: Build iOS IPA (local on Codemagic Mac)
         script: |
-          echo "EXPO_TOKEN is set: $(if [ -n "$EXPO_TOKEN" ]; then echo YES; else echo NO; fi)"
           eas build \
             --platform ios \
             --profile production \
             --non-interactive \
-            --auto-submit
+            --local \
+            --output /tmp/KOM.ipa
+
+      - name: Submit to App Store
+        script: |
+          eas submit \
+            --platform ios \
+            --path /tmp/KOM.ipa \
+            --non-interactive
 
     artifacts:
-      - "**/*.ipa"
+      - /tmp/KOM.ipa
