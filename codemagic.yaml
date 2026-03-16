@@ -30,22 +30,19 @@ workflows:
         script: |
           npx expo login -u $EXPO_USERNAME -p $EXPO_PASSWORD
 
-      - name: Build iOS IPA (local on Codemagic Mac)
+      - name: Build iOS
         script: |
           cd kom-mobile-app
           eas build \
             --platform ios \
             --profile production \
             --non-interactive \
-            
+            --wait
 
       - name: Submit to App Store
         script: |
           cd kom-mobile-app
           eas submit \
             --platform ios \
-            --path /tmp/KOM.ipa \
+            --latest \
             --non-interactive
-
-    artifacts:
-      - /tmp/KOM.ipa
