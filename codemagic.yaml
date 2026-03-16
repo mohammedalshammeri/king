@@ -25,25 +25,30 @@ workflows:
 
       - name: Install EAS CLI
         script: |
-          npm install -g eas-cli@latest
+          npm install -g eas-cli
 
       - name: Expo login
         script: |
           npx expo login -u $EXPO_USERNAME -p $EXPO_PASSWORD
 
+      - name: Check Expo project
+        script: |
+          cd kom-mobile-app
+          npx eas project:info
+
       - name: Build iOS
         script: |
+          cd kom-mobile-app
           npx eas build \
             --platform ios \
             --profile production \
             --non-interactive \
-            --wait \
-            --cwd kom-mobile-app
+            --wait
 
       - name: Submit to App Store
         script: |
+          cd kom-mobile-app
           npx eas submit \
             --platform ios \
             --latest \
-            --non-interactive \
-            --cwd kom-mobile-app
+            --non-interactive
