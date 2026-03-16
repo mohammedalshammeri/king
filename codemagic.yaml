@@ -28,17 +28,18 @@ workflows:
 
       - name: Build iOS
         script: |
-          export EXPO_TOKEN=$EXPO_TOKEN
+          echo "EXPO_TOKEN length: ${#EXPO_TOKEN}"
           npx eas build \
             --platform ios \
             --profile production \
             --non-interactive \
-            --wait
+            --wait \
+            --token $EXPO_TOKEN
 
       - name: Submit to App Store
         script: |
-          export EXPO_TOKEN=$EXPO_TOKEN
           npx eas submit \
             --platform ios \
             --latest \
-            --non-interactive
+            --non-interactive \
+            --token $EXPO_TOKEN
