@@ -7,11 +7,9 @@ workflows:
 
     environment:
       groups:
-        - expo-credentials
+        - expo
       vars:
         EXPO_PUBLIC_API_URL: https://api.kotm.app
-        EXPO_USERNAME: bsmc.bh
-        EXPO_PASSWORD: Asdf@12341234
       node: 20.18.0
 
     scripts:
@@ -20,10 +18,6 @@ workflows:
 
       - name: Install EAS CLI
         script: npm install -g eas-cli
-
-      - name: Expo login
-        script: |
-          npx expo login -u $EXPO_USERNAME -p $EXPO_PASSWORD
 
       - name: Build iOS
         script: |
