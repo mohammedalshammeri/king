@@ -10,7 +10,6 @@ workflows:
         - expo
       vars:
         EXPO_PUBLIC_API_URL: https://api.kotm.app
-        EXPO_TOKEN: $EXPO_TOKEN
       node: 20.18.0
 
     scripts:
