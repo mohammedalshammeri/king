@@ -22,21 +22,14 @@ workflows:
       - name: Install EAS CLI
         script: npm install -g eas-cli@latest
 
-      - name: Build iOS IPA (EAS local)
+      - name: Build and Submit iOS via EAS
         script: |
+          echo "EXPO_TOKEN is set: $(if [ -n "$EXPO_TOKEN" ]; then echo YES; else echo NO; fi)"
           eas build \
             --platform ios \
             --profile production \
             --non-interactive \
-            --local \
-            --output $CM_BUILD_DIR/KOM.ipa
+            --auto-submit
 
     artifacts:
-      - $CM_BUILD_DIR/*.ipa
-
-    publishing:
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_testflight: true
+      - "**/*.ipa"
