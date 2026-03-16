@@ -1,0 +1,173 @@
+{
+  "expo": {
+    "name": "King of the Market",
+    "slug": "kom-mobile-app",
+    "version": "1.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "kotm",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "primaryColor": "#D4AF37",
+    "description": "King of the Market | ملك السوق – سوق السيارات الأول في البحرين. بيع واشترِ سيارتك بكل سهولة مع آلاف الإعلانات من الأفراد والمعارض.",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "ios": {
+      "bundleIdentifier": "app.kotm.kom",
+      "buildNumber": "13",
+      "supportsTablet": false,
+      "requireFullScreen": true,
+      "infoPlist": {
+        "CFBundleDisplayName": "King of the Market",
+        "CFBundleDevelopmentRegion": "ar",
+        "CFBundleLocalizations": [
+          "ar",
+          "en"
+        ],
+        "NSCameraUsageDescription": "يحتاج تطبيق King of the Market للوصول إلى الكاميرا لتصوير السيارات ورفعها مع الإعلانات.",
+        "NSPhotoLibraryUsageDescription": "يحتاج تطبيق King of the Market للوصول إلى معرض الصور لاختيار صور السيارات لإعلاناتك.",
+        "NSPhotoLibraryAddUsageDescription": "يحتاج تطبيق King of the Market لحفظ الصور في معرض الصور.",
+        "NSLocationWhenInUseUsageDescription": "يستخدم تطبيق King of the Market موقعك لعرض الإعلانات القريبة منك.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "يستخدم تطبيق King of the Market موقعك لعرض الإعلانات القريبة منك.",
+        "NSMicrophoneUsageDescription": "يحتاج تطبيق King of the Market للوصول إلى الميكروفون لتسجيل مقاطع فيديو للسيارات.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "C617.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryDiskSpace",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "E174.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "35F9.1"
+            ]
+          }
+        ],
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeName",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeEmailAddress",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypePhoneNumber",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypePhotosOrVideos",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          }
+        ],
+        "NSPrivacyTracking": false
+      }
+    },
+    "android": {
+      "package": "app.kotm.kom",
+      "versionCode": 11,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0f172a"
+      },
+      "edgeToEdgeEnabled": false,
+      "softwareKeyboardLayoutMode": "resize",
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.VIBRATE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "androidNavigationBar": {
+      "backgroundColor": "#0f172a",
+      "barStyle": "light-content"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-video",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#D4AF37",
+          "sounds": [],
+          "androidMode": "default",
+          "androidCollapsedTitle": "King of the Market"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "يحتاج تطبيق KOM للوصول إلى معرض الصور لاختيار صور السيارات.",
+          "cameraPermission": "يحتاج تطبيق KOM للوصول إلى الكاميرا لتصوير السيارات."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "38364066-6118-4eb7-ad6a-22eeecd37a69"
+      },
+      "privacyPolicyUrl": "https://kotm.app/privacy/",
+      "termsUrl": "https://kotm.app/terms/",
+      "supportEmail": "support@kotm.app",
+      "infoEmail": "info@kotm.app",
+      "supportUrl": "https://kotm.app/support/",
+      "router": {}
+    },
+    "owner": "bsmc.bh"
+  }
+}

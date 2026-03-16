@@ -1,0 +1,39 @@
+app = "kom-admin"
+primary_region = "cdg"
+
+[build]
+  [build.args]
+    NEXT_PUBLIC_API_BASE_URL = "https://api.kotm.app/api/v1"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  # Fly connects to apps over IPv6 (6PN). Binding to 0.0.0.0 is IPv4-only.
+  HOSTNAME = "::"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 50
+    hard_limit = 80
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "90s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
