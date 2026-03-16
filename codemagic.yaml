@@ -3,42 +3,30 @@ workflows:
     name: KOM iOS Release
     max_build_duration: 60
     instance_type: mac_mini_m2
-    working_directory: .
+    working_directory: kom-mobile-app
 
     environment:
       groups:
         - expo-credentials
       vars:
         EXPO_PUBLIC_API_URL: https://api.kotm.app
-        EAS_PROJECT_ID: 38364066-6118-4eb7-ad6a-22eeecd37a69
-        APP_STORE_CONNECT_ISSUER_ID: 9391dad5-7a3b-4176-a7bd-cf0af733285b
-        APP_STORE_CONNECT_KEY_IDENTIFIER: J6TS4PCQ4L
         EXPO_USERNAME: bsmc.bh
         EXPO_PASSWORD: Asdf@12341234
       node: 20.18.0
 
     scripts:
       - name: Install dependencies
-        script: |
-          cd kom-mobile-app
-          npm ci
+        script: npm ci
 
       - name: Install EAS CLI
-        script: |
-          npm install -g eas-cli
+        script: npm install -g eas-cli
 
       - name: Expo login
         script: |
           npx expo login -u $EXPO_USERNAME -p $EXPO_PASSWORD
 
-      - name: Check Expo project
-        script: |
-          cd kom-mobile-app
-          npx eas project:info
-
       - name: Build iOS
         script: |
-          cd kom-mobile-app
           npx eas build \
             --platform ios \
             --profile production \
@@ -47,7 +35,6 @@ workflows:
 
       - name: Submit to App Store
         script: |
-          cd kom-mobile-app
           npx eas submit \
             --platform ios \
             --latest \
