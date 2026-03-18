@@ -219,9 +219,10 @@ export class AdminService {
 
     const where: Prisma.UserWhereInput = {
       role: { in: [UserRole.USER_INDIVIDUAL, UserRole.USER_SHOWROOM] },
-      NOT: {
-        bannedReason: { startsWith: ACCOUNT_DELETION_PREFIX },
-      },
+      OR: [
+        { bannedReason: null },
+        { bannedReason: { not: { startsWith: ACCOUNT_DELETION_PREFIX } } }
+      ],
     };
 
     if (query.role) {
@@ -259,8 +260,22 @@ export class AdminService {
           bannedAt: true,
           createdAt: true,
           lastLoginAt: true,
-          individualProfile: { select: { fullName: true } },
-          showroomProfile: { select: { showroomName: true, crNumber: true } },
+          individualProfile: { 
+            select: { 
+              fullName: true, 
+              governorate: true, 
+              city: true 
+            } 
+          },
+          showroomProfile: { 
+            select: { 
+              showroomName: true, 
+              crNumber: true, 
+              governorate: true, 
+              city: true,
+              merchantType: true 
+            } 
+          },
           _count: { select: { listings: true } },
         },
         orderBy: { createdAt: 'desc' },

@@ -16,7 +16,7 @@ Notifications.setNotificationHandler({
 
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
   if (!Device.isDevice) {
-    // Push notifications don't work on simulators
+    console.log('⚠️ Push notifications don\'t work on simulators');
     return null;
   }
 
@@ -25,13 +25,17 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   let finalStatus = existingStatus;
 
   if (existingStatus !== 'granted') {
+    console.log('📱 Requesting notification permissions...');
     const { status } = await Notifications.requestPermissionsAsync();
     finalStatus = status;
   }
 
   if (finalStatus !== 'granted') {
+    console.warn('❌ Notification permission denied');
     return null;
   }
+
+  console.log('✅ Notification permission granted');
 
   // Android requires a notification channel
   if (Platform.OS === 'android') {
@@ -42,14 +46,17 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
       lightColor: '#D4AF37',
       sound: 'default',
     });
+    console.log('✅ Android notification channel created');
   }
 
   try {
     const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId: '076a3d84-3f92-4bf7-b8b3-9b208fa98891', // from app.json extra.eas.projectId
+      projectId: '38364066-6118-4eb7-ad6a-22eeecd37a69', // from app.json extra.eas.projectId
     });
+    console.log('✅ Push token obtained:', tokenData.data.substring(0, 30) + '...');
     return tokenData.data;
-  } catch {
+  } catch (error) {
+    console.error('❌ Failed to get push token:', error);
     return null;
   }
 }
@@ -64,7 +71,9 @@ export async function savePushTokenToServer(token: string): Promise<void> {
       token,
       platform: Platform.OS,
     });
-  } catch {
+    console.log('✅ Push token saved to server (authenticated)');
+  } catch (error) {
+    console.error('Failed to save push token to server:', error);
     // Silent fail — non-critical
   }
 }
@@ -76,7 +85,9 @@ export async function saveGuestPushToken(token: string): Promise<void> {
       token,
       platform: Platform.OS,
     });
-  } catch {
+    console.log('✅ Guest push token saved');
+  } catch (error) {
+    console.error('Failed to save guest push token:', error);
     // Silent fail — non-critical
   }
 }

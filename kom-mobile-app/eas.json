@@ -27,6 +27,17 @@
         "enterpriseProvisioning": "adhoc"
       }
     },
+    "production-test": {
+      "extends": "production",
+      "distribution": "internal",
+      "channel": "production-test",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      }
+    },
     "production": {
       "distribution": "store",
       "channel": "production",

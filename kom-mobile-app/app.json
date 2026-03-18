@@ -17,10 +17,13 @@
     },
     "ios": {
       "bundleIdentifier": "app.kotm.kom",
-      "buildNumber": "13",
+      "buildNumber": "20",
       "supportsTablet": false,
       "requireFullScreen": true,
       "infoPlist": {
+        "UIBackgroundModes": [
+          "remote-notification"
+        ],
         "CFBundleDisplayName": "King of the Market",
         "CFBundleDevelopmentRegion": "ar",
         "CFBundleLocalizations": [
@@ -101,7 +104,7 @@
     },
     "android": {
       "package": "app.kotm.kom",
-      "versionCode": 11,
+      "versionCode": 14,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0f172a"
@@ -117,7 +120,8 @@
         "android.permission.VIBRATE",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.POST_NOTIFICATIONS"
       ],
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -143,7 +147,8 @@
           "color": "#D4AF37",
           "sounds": [],
           "androidMode": "default",
-          "androidCollapsedTitle": "King of the Market"
+          "androidCollapsedTitle": "King of the Market",
+          "iosDisplayInForeground": true
         }
       ],
       [

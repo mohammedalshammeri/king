@@ -133,6 +133,13 @@ export class ListingsService {
   async upsertCarDetails(userId: string, listingId: string, dto: CarDetailsDto) {
     const _listing = await this.validateListingOwnership(userId, listingId, ListingType.CAR);
 
+    const nextSpecs = {
+      ...(dto.specs && typeof dto.specs === 'object' ? (dto.specs as Record<string, unknown>) : {}),
+      ...(dto.interiorColor ? { interiorColor: dto.interiorColor } : {}),
+      ...(dto.bodyCondition ? { bodyCondition: dto.bodyCondition } : {}),
+      ...(dto.paintType ? { paintType: dto.paintType, paint: dto.paintType } : {}),
+    };
+
     const carDetails = await this.prisma.carDetails.upsert({
       where: { listingId },
       create: {
@@ -149,7 +156,7 @@ export class ListingsService {
         vin: dto.vin,
         bodyType: dto.bodyType,
         engineSize: dto.engineSize,
-        specs: dto.specs,
+        specs: Object.keys(nextSpecs).length > 0 ? nextSpecs : undefined,
       },
       update: {
         make: dto.make,
@@ -164,7 +171,7 @@ export class ListingsService {
         vin: dto.vin,
         bodyType: dto.bodyType,
         engineSize: dto.engineSize,
-        specs: dto.specs,
+        specs: Object.keys(nextSpecs).length > 0 ? nextSpecs : undefined,
       },
     });
 

@@ -26,9 +26,14 @@ export default function UsersPage() {
 
   const load = async () => {
     try {
+      console.log('🔍 جاري تحميل المستخدمين...');
       const response = await getUsers();
+      console.log('✅ تم استلام البيانات:', response);
+      console.log('📊 عدد المستخدمين:', response.data?.length || 0);
       setData(response);
-    } catch {
+    } catch (error: any) {
+      console.error('❌ خطأ في تحميل المستخدمين:', error);
+      console.error('Response:', error?.response?.data);
       pushToast({ type: "error", message: "تعذر تحميل المستخدمين" });
     } finally {
       setLoading(false);
@@ -93,8 +98,11 @@ export default function UsersPage() {
             <thead className="bg-gray-50 text-xs text-gray-500 font-medium">
               <tr>
                 <th className="p-3 text-right">الاسم</th>
-                <th className="p-3 text-right">البريد</th>
                 <th className="p-3 text-right">النوع</th>
+                <th className="p-3 text-right">البريد</th>
+                <th className="p-3 text-right">الهاتف</th>
+                <th className="p-3 text-right">المحافظة / المدينة</th>
+                <th className="p-3 text-right">معلومات إضافية</th>
                 <th className="p-3 text-right">تاريخ التسجيل</th>
                 <th className="p-3 text-right">الحالة</th>
                 <th className="p-3 text-right">إجراء</th>
@@ -103,51 +111,66 @@ export default function UsersPage() {
             <tbody>
               {data?.data?.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-400 text-sm">
+                  <td colSpan={9} className="p-8 text-center text-gray-400 text-sm">
                     لا يوجد مستخدمون مسجلون حتى الآن
                   </td>
                 </tr>
               )}
-              {data?.data?.map((user) => (
-                <tr key={user.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors last:border-0">
-                  <td className="p-3 font-medium">
-                    {user.individualProfile?.fullName ?? user.showroomProfile?.showroomName ?? '—'}
-                  </td>
-                  <td className="p-3 text-gray-600">{user.email}</td>
-                  <td className="p-3">{roleLabels[user.role] ?? user.role}</td>
-                  <td className="p-3 text-gray-500 text-xs">
-                    {new Date(user.createdAt).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' })}
-                  </td>
-                  <td className="p-3">
-                    {user.isBanned ? (
-                      <Badge variant="destructive">محظور</Badge>
-                    ) : !user.isActive ? (
-                      <Badge variant="warning">قيد المراجعة</Badge>
-                    ) : (
-                      <Badge variant="success">نشط</Badge>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {user.isBanned ? (
-                      <Button size="sm" variant="secondary" onClick={() => handleUnban(user)} disabled={actionLoading}>
-                        فك الحظر
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setBanOpen(true);
-                        }}
-                        disabled={actionLoading}
-                      >
-                        حظر
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {data?.data?.map((user) => {
+                const location = user.individualProfile 
+                  ? [user.individualProfile.governorate, user.individualProfile.city].filter(Boolean).join(' / ') || '—'
+                  : user.showroomProfile
+                  ? [user.showroomProfile.governorate, user.showroomProfile.city].filter(Boolean).join(' / ') || '—'
+                  : '—';
+                
+                const additionalInfo = user.showroomProfile
+                  ? (user.showroomProfile.crNumber ? `س.ت: ${user.showroomProfile.crNumber}` : '—')
+                  : '—';
+
+                return (
+                  <tr key={user.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors last:border-0">
+                    <td className="p-3 font-medium">
+                      {user.individualProfile?.fullName ?? user.showroomProfile?.showroomName ?? '—'}
+                    </td>
+                    <td className="p-3">{roleLabels[user.role] ?? user.role}</td>
+                    <td className="p-3 text-gray-600 text-xs">{user.email}</td>
+                    <td className="p-3 text-gray-600">{user.phone ?? '—'}</td>
+                    <td className="p-3 text-gray-600 text-xs">{location}</td>
+                    <td className="p-3 text-gray-600 text-xs">{additionalInfo}</td>
+                    <td className="p-3 text-gray-500 text-xs">
+                      {new Date(user.createdAt).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </td>
+                    <td className="p-3">
+                      {user.isBanned ? (
+                        <Badge variant="destructive">محظور</Badge>
+                      ) : !user.isActive ? (
+                        <Badge variant="warning">قيد المراجعة</Badge>
+                      ) : (
+                        <Badge variant="success">نشط</Badge>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      {user.isBanned ? (
+                        <Button size="sm" variant="secondary" onClick={() => handleUnban(user)} disabled={actionLoading}>
+                          فك الحظر
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setBanOpen(true);
+                          }}
+                          disabled={actionLoading}
+                        >
+                          حظر
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

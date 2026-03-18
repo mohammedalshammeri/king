@@ -4,7 +4,8 @@ primary_region = "cdg"
 [build]
 
 [deploy]
-  release_command = "npx prisma migrate deploy"
+  # Temporarily disabled due to migration lock timeout
+  # release_command = "npx prisma migrate deploy"
 
 [env]
   NODE_ENV = "production"

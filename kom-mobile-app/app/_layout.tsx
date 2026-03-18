@@ -31,6 +31,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { useAuthStore } from '../store/authStore';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { registerForPushNotificationsAsync, savePushTokenToServer, saveGuestPushToken } from '../lib/notifications';
+import * as Notifications from 'expo-notifications';
 import 'react-native-reanimated';
 
 if (Platform.OS === 'web') {
@@ -271,6 +272,29 @@ export default function RootLayout() {
       const { isAuthenticated } = useAuthStore.getState();
       if (isAuthenticated) savePushTokenToServer(token);
     });
+
+    // Listen for notifications received while app is open
+    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+      console.log('📬 Notification received:', notification);
+      // Notification will be displayed automatically by expo-notifications
+    });
+
+    // Listen for user tapping on notification
+    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('👆 Notification tapped:', response);
+      // Handle navigation based on notification data
+      const data = response.notification.request.content.data;
+      if (data?.screen) {
+        // Navigate to specific screen based on notification data
+        // Example: router.push(data.screen);
+      }
+    });
+
+    // Cleanup listeners
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener);
+      Notifications.removeNotificationSubscription(responseListener);
+    };
 
     const videoTimer = setTimeout(() => {
       setIsVideoComplete(true);

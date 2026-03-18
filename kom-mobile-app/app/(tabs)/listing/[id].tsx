@@ -1031,7 +1031,7 @@ function getListingSpecs(listing: ListingDetail) {
          if (d.color) mainSpecs.push({ label: 'اللون الخارجي', value: val(d.color) });
          if (d.specs?.interiorColor) mainSpecs.push({ label: 'اللون الداخلي', value: val(d.specs.interiorColor) });
          if (d.specs?.bodyCondition) mainSpecs.push({ label: 'حالة الهيكل', value: val(d.specs.bodyCondition) });
-         if (d.specs?.paint) mainSpecs.push({ label: 'الدهان', value: val(d.specs.paint) });
+         if (d.specs?.paintType || d.specs?.paint) mainSpecs.push({ label: 'الدهان', value: val(d.specs.paintType || d.specs.paint) });
          mainSpecs.push({ label: 'طريقة الدفع', value: 'كاش' }); 
      }
     } else if (listing.type === 'MOTORCYCLE' && listing.motorcycleDetails) {

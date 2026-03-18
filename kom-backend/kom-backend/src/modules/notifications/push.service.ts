@@ -1,15 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Expo, ExpoPushMessage, ExpoPushTicket } from 'expo-server-sdk';
 
 @Injectable()
 export class PushService {
   private readonly logger = new Logger(PushService.name);
+  private expo: Expo;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    this.expo = new Expo();
+  }
 
   async sendPushNotification(
     userId: string,
@@ -59,28 +63,51 @@ export class PushService {
     body: string,
     data?: Record<string, unknown>,
   ): Promise<void> {
-    // Stub implementation
-    // In production:
-    // - For FCM: Use firebase-admin SDK
-    // - For APNs: Use @parse/node-apn or similar
-
-    const fcmProjectId = this.configService.get<string>('fcm.projectId');
-
-    if (!fcmProjectId) {
-      this.logger.warn('FCM not configured, skipping push notification');
-      return;
+    // Check if token is a valid Expo push token
+    if (!Expo.isExpoPushToken(token)) {
+      const tokenPreview = String(token).substring(0, 10);
+      this.logger.warn(`Invalid Expo push token: ${tokenPreview}...`);
+      throw new Error('messaging/invalid-registration-token');
     }
 
-    // Placeholder for actual implementation
-    this.logger.log(`[STUB] Sending push to ${platform}:`, {
-      token: token.substring(0, 10) + '...',
+    // Prepare the message
+    const message: ExpoPushMessage = {
+      to: token,
+      sound: 'default',
       title,
       body,
-      data,
-    });
+      data: data || {},
+      priority: 'high',
+    };
 
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    try {
+      // Send the notification
+      const tickets = await this.expo.sendPushNotificationsAsync([message]);
+      
+      // Check for errors in tickets
+      const ticket = tickets[0];
+      if (ticket.status === 'error') {
+        this.logger.error(`Error sending push notification: ${ticket.message}`);
+        
+        // Check if it's an invalid token error
+        if (ticket.details?.error === 'DeviceNotRegistered') {
+          throw new Error('messaging/registration-token-not-registered');
+        }
+        
+        throw new Error(ticket.message);
+      }
+      
+      const ticketId = ticket.status === 'ok' && 'id' in ticket ? ticket.id : 'unknown';
+      
+      this.logger.log(`Push notification sent successfully to ${platform}:`, {
+        token: token.substring(0, 10) + '...',
+        title,
+        ticketId,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send push notification:`, error);
+      throw error;
+    }
   }
 
   private isInvalidTokenError(error: { code?: string; message?: string }): boolean {

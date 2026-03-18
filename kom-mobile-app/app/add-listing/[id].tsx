@@ -35,6 +35,10 @@ interface CarDetails {
   condition: 'NEW' | 'USED';
   color: string;
   trim: string;
+  bodyType: string;
+  interiorColor: string;
+  bodyCondition: string;
+  paintType: string;
 }
 
 interface MotorcycleDetails {
@@ -164,6 +168,10 @@ export default function AddListingDetailScreen() {
     condition: 'USED',
     color: '',
     trim: '',
+    bodyType: '',
+    interiorColor: '',
+    bodyCondition: '',
+    paintType: '',
   });
 
   const [motorcycleDetails, setMotorcycleDetails] = useState<MotorcycleDetails>({
@@ -242,6 +250,7 @@ export default function AddListingDetailScreen() {
 
         const car = payload.carDetails || payload.details?.car || payload.car || null;
         if (car) {
+          const specs = car.specs && typeof car.specs === 'object' ? car.specs : {};
           setCarDetails((prev) => ({
             ...prev,
             make: car.make || '',
@@ -253,6 +262,10 @@ export default function AddListingDetailScreen() {
             condition: car.condition || prev.condition,
             color: car.color || '',
             trim: car.trim || '',
+            bodyType: car.bodyType || '',
+            interiorColor: String((specs as any).interiorColor || ''),
+            bodyCondition: String((specs as any).bodyCondition || ''),
+            paintType: String((specs as any).paintType || (specs as any).paint || ''),
           }));
         }
 
@@ -420,6 +433,13 @@ export default function AddListingDetailScreen() {
           condition: carDetails.condition,
           color: carDetails.color,
           trim: carDetails.trim,
+          bodyType: carDetails.bodyType,
+          specs: {
+            interiorColor: carDetails.interiorColor || undefined,
+            bodyCondition: carDetails.bodyCondition || undefined,
+            paintType: carDetails.paintType || undefined,
+            paint: carDetails.paintType || undefined,
+          },
         });
       } else if (type === 'MOTORCYCLE') {
         await api.post(`/listings/${listingId}/details/motorcycle`, {
@@ -1105,6 +1125,70 @@ export default function AddListingDetailScreen() {
         }}
         onClose={() => setShowCarColorModal(false)}
       />
+
+      <View style={styles.inputGroup}>
+        <Text style={[styles.label, { color: theme.text }]}>الفئة</Text>
+        <TextInput
+          style={inputStyle}
+          value={carDetails.trim}
+          onChangeText={(text) => setCarDetails({ ...carDetails, trim: text })}
+          placeholder="LE / فول / نص فل"
+          textAlign="right"
+          placeholderTextColor={theme.textMuted}
+        />
+      </View>
+
+      <View style={styles.inputGroup}>
+        <Text style={[styles.label, { color: theme.text }]}>نوع الهيكل</Text>
+        <TextInput
+          style={inputStyle}
+          value={carDetails.bodyType}
+          onChangeText={(text) => setCarDetails({ ...carDetails, bodyType: text })}
+          placeholder="سيدان / SUV / كوبيه"
+          textAlign="right"
+          placeholderTextColor={theme.textMuted}
+        />
+      </View>
+
+      <View style={styles.inputGroup}>
+        <Text style={[styles.label, { color: theme.text }]}>اللون الداخلي</Text>
+        <TextInput
+          style={inputStyle}
+          value={carDetails.interiorColor}
+          onChangeText={(text) => setCarDetails({ ...carDetails, interiorColor: text })}
+          placeholder="بيج / أسود / أحمر"
+          textAlign="right"
+          placeholderTextColor={theme.textMuted}
+        />
+      </View>
+
+      {carDetails.condition === 'USED' && (
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, { color: theme.text }]}>حالة الهيكل</Text>
+          <TextInput
+            style={inputStyle}
+            value={carDetails.bodyCondition}
+            onChangeText={(text) => setCarDetails({ ...carDetails, bodyCondition: text })}
+            placeholder="ممتازة / يوجد صدمات بسيطة / بحاجة لإصلاح"
+            textAlign="right"
+            placeholderTextColor={theme.textMuted}
+          />
+        </View>
+      )}
+
+      {carDetails.condition === 'USED' && (
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, { color: theme.text }]}>نوع الدهان</Text>
+          <TextInput
+            style={inputStyle}
+            value={carDetails.paintType}
+            onChangeText={(text) => setCarDetails({ ...carDetails, paintType: text })}
+            placeholder="صبغ وكالة / مصبوغ جزئياً / مصبوغ بالكامل"
+            textAlign="right"
+            placeholderTextColor={theme.textMuted}
+          />
+        </View>
+      )}
 
     </View>
   );

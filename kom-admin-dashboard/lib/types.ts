@@ -15,8 +15,14 @@ export interface UserProfile {
   isBanned: boolean;
   createdAt: string;
   lastLoginAt?: string | null;
-  individualProfile?: { fullName: string } | null;
-  showroomProfile?: { showroomName: string; crNumber?: string | null } | null;
+  individualProfile?: { fullName: string; governorate?: string | null; city?: string | null } | null;
+  showroomProfile?: { 
+    showroomName: string; 
+    crNumber?: string | null; 
+    governorate?: string | null; 
+    city?: string | null;
+    merchantType?: string | null;
+  } | null;
 }
 
 export interface DashboardStats {

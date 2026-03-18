@@ -30,9 +30,8 @@ export const rtlify = <T,>(style: T): T => {
     if (o.flexDirection === 'row') o.flexDirection = 'row-reverse';
     else if (o.flexDirection === 'row-reverse') o.flexDirection = 'row';
 
-    // 2) محاذاة النص
+    // 2) محاذاة النص: لا نقلب right إلى left داخل RTL لأن التطبيق عربي-first
     if (o.textAlign === 'left') o.textAlign = 'right';
-    else if (o.textAlign === 'right') o.textAlign = 'left';
 
     // 3) خصائص left/right الشائعة
     swap(o, 'left', 'right');

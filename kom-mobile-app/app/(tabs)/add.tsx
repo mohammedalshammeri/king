@@ -40,6 +40,21 @@ export default function AddListingScreen() {
     primary: Colors.primary,
   };
 
+  const getDraftTitle = (type: ListingType) => {
+    switch (type) {
+      case 'CAR':
+        return 'مسودة إعلان سيارة';
+      case 'MOTORCYCLE':
+        return 'مسودة إعلان دراجة';
+      case 'PLATE':
+        return 'مسودة إعلان لوحة';
+      case 'PART':
+        return 'مسودة إعلان قطعة';
+      default:
+        return 'مسودة إعلان جديد';
+    }
+  };
+
   const handleTypeSelect = async (type: ListingType) => {
     setSelectedType(type);
 
@@ -55,27 +70,23 @@ export default function AddListingScreen() {
       return;
     }
 
-    if (type === 'CAR') {
-      router.push('/add-car');
-    } else {
-      setIsCreating(true);
-      try {
-        const response = await api.post('/listings', {
-          type,
-          title: 'مسودة إعلان جديد',
-          price: 0,
-          currency: 'BHD',
-        });
+    setIsCreating(true);
+    try {
+      const response = await api.post('/listings', {
+        type,
+        title: getDraftTitle(type),
+        price: 0,
+        currency: 'BHD',
+      });
 
-        const listingId = response.data.data.id;
+      const listingId = response.data.data.id;
 
-        router.push({ pathname: '/add-listing/[id]', params: { id: listingId, type } });
-      } catch (error: any) {
-        console.error('Failed to create draft listing:', error);
-        Alert.alert('خطأ', error.response?.data?.message || 'فشل إنشاء الإعلان. حاول مرة أخرى', [{ text: 'حسناً' }]);
-      } finally {
-        setIsCreating(false);
-      }
+      router.push({ pathname: '/add-listing/[id]', params: { id: listingId, type } });
+    } catch (error: any) {
+      console.error('Failed to create draft listing:', error);
+      Alert.alert('خطأ', error.response?.data?.message || 'فشل إنشاء الإعلان. حاول مرة أخرى', [{ text: 'حسناً' }]);
+    } finally {
+      setIsCreating(false);
     }
   };
 

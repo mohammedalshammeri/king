@@ -31,7 +31,6 @@ import StoriesRail, { StoryUser } from '@/components/stories/StoriesRail';
 import AddStoryModal from '@/components/stories/AddStoryModal';
 import StoryViewer from '@/components/stories/StoryViewer';
 import AdsBanner from '@/components/ads/AdsBanner';
-import SubscriptionPromoCard from '@/components/ads/SubscriptionPromoCard';
 import LuckWinnerBanner from '@/components/luck/LuckWinnerBanner';
 
 const { width, height } = Dimensions.get('window');
@@ -1063,9 +1062,6 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </LinearGradient>
-
-        {/* Subscription Promo — shown only to logged-in users without an active package */}
-        <SubscriptionPromoCard />
 
         {/* Stories Rail */}
         <StoriesRail
