@@ -292,8 +292,8 @@ export default function RootLayout() {
 
     // Cleanup listeners
     return () => {
-      Notifications.removeNotificationSubscription(notificationListener);
-      Notifications.removeNotificationSubscription(responseListener);
+      notificationListener.remove();
+      responseListener.remove();
     };
 
     const videoTimer = setTimeout(() => {
