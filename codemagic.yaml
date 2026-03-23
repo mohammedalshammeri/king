@@ -6,42 +6,41 @@ workflows:
     working_directory: kom-mobile-app
 
     environment:
-      groups:
-        - expo
-      vars:
-        EXPO_PUBLIC_API_URL: https://api.kotm.app
       node: 20.18.0
+      xcode: latest
+      cocoapods: default
+      vars:
+        EXPO_PUBLIC_API_URL: "https://api.kotm.app/api/v1"
 
     scripts:
       - name: Install dependencies
         script: npm ci
 
-      - name: Install EAS CLI
-        script: npm install -g eas-cli
+      - name: Generate native iOS project from Expo
+        script: npx expo prebuild --platform ios --non-interactive
 
-      - name: Verify project files
+      - name: Install CocoaPods
         script: |
-          pwd
-          ls -la
-          cat app.json
-          cat eas.json
+          cd ios
+          pod install
 
-      - name: Build iOS
+      - name: Set up code signing
         script: |
-          echo "EXPO_TOKEN length: ${#EXPO_TOKEN}"
-          if [ -z "$EXPO_TOKEN" ]; then
-            echo "ERROR: EXPO_TOKEN is not set!"
-            exit 1
-          fi
-          npx eas build \
-            --platform ios \
-            --profile production \
-            --non-interactive \
-            --wait
+          xcode-project use-profiles
 
-      - name: Submit to App Store
+      - name: Build IPA
         script: |
-          npx eas submit \
-            --platform ios \
-            --latest \
-            --non-interactive
+          xcode-project build-ipa \
+            --workspace "ios/*.xcworkspace" \
+            --scheme "$(xcode-project detect-scheme)" \
+            --archive-flags="-destination 'generic/platform=iOS'"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
