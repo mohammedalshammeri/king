@@ -32,25 +32,12 @@ workflows:
 
       - name: Build IPA
         script: |
-          # Find the workspace file
-          WORKSPACE=$(find ios -name "*.xcworkspace" -maxdepth 1 | head -n 1)
+          WORKSPACE="ios/KingoftheMarket.xcworkspace"
+          SCHEME="KingoftheMarket"
+
           echo "Using workspace: $WORKSPACE"
-
-          if [ -z "$WORKSPACE" ]; then
-            echo "No .xcworkspace file was found under ios/"
-            exit 1
-          fi
-
-          # Prefer the app scheme and avoid EASClient/Pods helper schemes.
-          SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | sed -n '/Schemes:/,$p' | tail -n +2 | sed 's/^ *//' | grep -v '^$' | grep -v '^Pods-' | grep -v '^EASClient$' | head -n 1)
-
-          if [ -z "$SCHEME" ]; then
-            SCHEME=$(basename "$WORKSPACE" .xcworkspace)
-          fi
-
           echo "Using scheme: $SCHEME"
 
-          # Build IPA
           xcode-project build-ipa \
             --workspace "$WORKSPACE" \
             --scheme "$SCHEME" \
