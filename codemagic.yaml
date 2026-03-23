@@ -9,6 +9,9 @@ workflows:
       app_store_connect: KOM Production
 
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: app.kotm.kom
       node: 20.18.0
       xcode: latest
       cocoapods: default
