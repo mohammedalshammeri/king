@@ -41,14 +41,9 @@ workflows:
 
     publishing:
       app_store_connect:
-        # Option 1: Use App Store Connect API Key (Recommended)
-        # Add these credentials in Codemagic UI under App settings > Team integrations
-        # Then uncomment the line below:
-        # auth: integration
-        
-        # Option 2: Use Apple ID and App-specific password
-        # Set these as environment variables in Codemagic UI
-        apple_id: kalifaum47@gmail.com
-        password: $APP_STORE_CONNECT_PASSWORD
+        # Use App Store Connect API Key (Required for TestFlight)
+        # Add API Key in: Codemagic UI > Teams > Integrations > App Store Connect
+        # Then the build will automatically use it
+        auth: integration
         
         submit_to_testflight: true
