@@ -492,12 +492,12 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  cardHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   cardTitle: { fontSize: 14, fontWeight: '700' },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   statusText: { fontSize: 12, fontWeight: '700' },
   pkgName: { fontSize: 20, fontWeight: '900', marginBottom: 16 },
-  statsRow: { flexDirection: 'row-reverse', marginBottom: 12 },
+  statsRow: { flexDirection: 'row', marginBottom: 12 },
   progressBg: { height: 8, backgroundColor: '#E2E8F0', borderRadius: 4, marginBottom: 12, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: '#D4AF37', borderRadius: 4 },
   dateText: { fontSize: 12 },
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
   pkgPriceSub: { fontSize: 12 },
   pkgDesc: { fontSize: 13, marginBottom: 8 },
 
-  pkgFeature: { flexDirection: 'row-reverse', alignItems: 'center', gap: 6, marginBottom: 4, justifyContent: 'center' },
+  pkgFeature: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4, justifyContent: 'center' },
   pkgFeatureText: { fontSize: 13 },
 
   subscribeBtn: {
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
   renewNote: { textAlign: 'center', fontSize: 13, marginBottom: 16 },
 
   discountBadge: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     backgroundColor: '#DCFCE7',
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
   discountText: { fontSize: 12, fontWeight: '700', color: '#16A34A' },
 
   durationRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
     marginTop: 12,

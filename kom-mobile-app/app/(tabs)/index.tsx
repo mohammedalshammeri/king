@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   searchContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     height: 50,
@@ -255,8 +255,8 @@ const styles = StyleSheet.create({
   },
 // Force Right Alignment for everything in this header
   sectionHeader: {
-    paddingLeft: 16,
-    paddingRight: 0, // Zero right padding - titles stick to the edge
+    paddingStart: 16,
+    paddingEnd: 0, // Zero end padding - titles stick to the edge
     paddingVertical: 16,
     alignItems: 'flex-start',
   },
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     paddingBottom: 160,
   },
   row: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 16,
   },
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     padding: 11,
-    paddingLeft: 14,
+    paddingStart: 14,
     alignItems: 'flex-end',
     width: '100%',
   },
@@ -362,14 +362,14 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   cardFooter: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 3,
     width: '100%',
   },
   metaRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
   },
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     elevation: 20,
   },
   modalHeader: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   backButton: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
     paddingHorizontal: 4,
@@ -464,14 +464,14 @@ const styles = StyleSheet.create({
   backText: {
     fontSize: 14,
     fontWeight: 'bold',
-    marginLeft: 6,
+    marginStart: 6,
     textAlign: 'right',
   },
   modelList: {
     paddingBottom: 30,
   },
   modelItem: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 18,
@@ -545,7 +545,7 @@ const FilterHeader = React.memo(({ selectedFilter, onSelect, theme }: { selected
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={[
             styles.filterScroll,
-            { flexDirection: 'row-reverse' },
+            { flexDirection: 'row' },
           ]}
         >
           {filterOptions.map((option) => {
@@ -1100,7 +1100,7 @@ export default function HomeScreen() {
           renderItem={({ item }) => {
             if (item.type === 'HEADER_TITLE') {
               return (
-                <View style={{ width: '100%', paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row-reverse' }}>
+                <View style={{ width: '100%', paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row' }}>
                   <View>
                     <Text style={{ fontSize: 20, fontWeight: '800', textAlign: 'right', color: theme.text, writingDirection: 'rtl' }}>أحدث العروض</Text>
                     <View style={{ height: 3, width: 40, backgroundColor: Colors.primary, borderRadius: 2, marginTop: 4 }} />
@@ -1113,7 +1113,7 @@ export default function HomeScreen() {
               return (
                 <View style={{ marginBottom: 4 }}>
                   <View style={{
-                    flexDirection: 'row-reverse',
+                    flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     paddingHorizontal: 16,
@@ -1133,11 +1133,10 @@ export default function HomeScreen() {
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    style={{ transform: [{ scaleX: -1 }] }}
                     contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
                   >
                     {item.items.map((listing: any) => (
-                      <View key={listing.id} style={{ transform: [{ scaleX: -1 }] }}>
+                      <View key={listing.id}>
                         {renderListingCard({ item: listing })}
                       </View>
                     ))}

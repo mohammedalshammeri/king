@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     padding: 12,
-    paddingLeft: 16,
+    paddingStart: 16,
     alignItems: 'flex-end',
   },
   price: {
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   locationContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
   },

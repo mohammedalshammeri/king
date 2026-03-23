@@ -571,7 +571,7 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 14,
@@ -618,36 +618,36 @@ const styles = StyleSheet.create({
   noImageText: { fontSize: 12 },
   cardContent: { padding: 10 },
   cardTitle: { fontSize: 13, fontWeight: '700', textAlign: 'right', marginBottom: 5, writingDirection: 'rtl' },
-  cardFooterRow: { flexDirection: 'row-reverse', marginTop: 4 },
-  cardMetaItem: { flexDirection: 'row-reverse', alignItems: 'center', gap: 3 },
+  cardFooterRow: { flexDirection: 'row', marginTop: 4 },
+  cardMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   cardMetaText: { fontSize: 10, fontWeight: '500' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 40 },
   
   // Modal Styles
   modalContainer: { flex: 1 },
-  modalHeader: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', padding: 16, paddingRight: 0, borderBottomWidth: 1 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, paddingEnd: 0, borderBottomWidth: 1 },
   modalTitle: { fontSize: 18, fontWeight: 'bold' },
   modalContent: { padding: 16 },
   sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 12, marginTop: 16, textAlign: 'right', width: '100%' },
   
-  tabsContainer: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8 },
+  tabsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tabItem: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, backgroundColor: '#f3f4f6' },
   tabItemSelected: { backgroundColor: '#0E1830' },
   tabText: { fontSize: 14, color: '#0A0B14' },
   tabTextSelected: { color: '#D4AF37', fontWeight: '700' },
 
-  radioGroup: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8 },
+  radioGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   radioButton: { borderWidth: 1, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 12 },
   radioButtonSelected: { backgroundColor: '#0E1830', borderColor: '#D4AF37' },
   radioText: { fontSize: 13 },
 
   horizontalScroll: { marginBottom: 8, writingDirection: 'rtl' },
-  brandChip: { flexDirection: 'row-reverse', alignItems: 'center', padding: 8, borderWidth: 1, borderRadius: 12, marginLeft: 8, minWidth: 100, gap: 8 },
+  brandChip: { flexDirection: 'row', alignItems: 'center', padding: 8, borderWidth: 1, borderRadius: 12, marginStart: 8, minWidth: 100, gap: 8 },
   brandChipSelected: { backgroundColor: '#0E1830', borderColor: '#D4AF37' },
   brandLogo: { width: 24, height: 24 },
   brandName: { fontSize: 13 },
 
-  chip: { paddingVertical: 8, paddingHorizontal: 16, borderWidth: 1, borderRadius: 20, marginLeft: 8 },
+  chip: { paddingVertical: 8, paddingHorizontal: 16, borderWidth: 1, borderRadius: 20, marginStart: 8 },
   chipSelected: { backgroundColor: '#0E1830', borderColor: '#D4AF37' },
   chipText: { fontSize: 14 },
 

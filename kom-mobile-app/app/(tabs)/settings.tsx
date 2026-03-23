@@ -158,11 +158,11 @@ export default function SettingsScreen() {
         </View>
 
         <View style={[styles.section, { backgroundColor: theme.surface }]}>
-          <View style={[styles.menuItem, styles.rtlRow, { flexDirection: 'row-reverse', borderBottomWidth: 0 }]}>
+          <View style={[styles.menuItem, styles.rtlRow, { flexDirection: 'row', borderBottomWidth: 0 }]}>
             <Ionicons name="moon-outline" size={24} color={theme.subText} style={styles.menuIcon} />
             <Text style={[styles.menuText, styles.rtlText, { color: theme.text }]}>مظهر التطبيق</Text>
           </View>
-          <View style={{ flexDirection: 'row-reverse', justifyContent: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 8 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 8 }}>
             {([
               { mode: 'light' as const, label: 'نهاري', icon: 'sunny-outline' },
               { mode: 'auto' as const, label: 'تلقائي', icon: 'phone-portrait-outline' },
@@ -320,10 +320,10 @@ const styles = StyleSheet.create({
   },
   menuLabelContainer: {
     flex: 1,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingRight: 8,
+    paddingEnd: 8,
   },
   notificationRight: {
     flexDirection: 'row',
@@ -349,8 +349,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 8,
-    paddingLeft: 48,
-    paddingRight: 16,
+    paddingStart: 48,
+    paddingEnd: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
     position: 'relative',
@@ -359,8 +359,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   menuIcon: {
-    marginLeft: 12,
-    marginRight: 0,
+    marginStart: 12,
+    marginEnd: 0,
   },
   leftChevronContainer: {
     position: 'absolute',
@@ -375,10 +375,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#334155',
     textAlign: 'right',
-    marginRight: 8,
+    marginEnd: 8,
   },
   rtlRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
   },
   rtlText: {
     textAlign: 'right',

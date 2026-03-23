@@ -312,13 +312,13 @@ const s = StyleSheet.create({
     ...Platform.select({ default: { shadowColor: '#1A2050', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.1, shadowRadius: 18, elevation: 6 } }),
   },
   menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, paddingHorizontal: 16 },
-  menuLabelRow: { flex: 1, flexDirection: 'row-reverse', alignItems: 'center', gap: 14 },
+  menuLabelRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14 },
   iconPill: { width: 42, height: 42, borderRadius: 13, justifyContent: 'center', alignItems: 'center' },
   menuText: { fontSize: 15, fontWeight: '600', textAlign: 'right', writingDirection: 'rtl', flex: 1 },
 
   // logout
   logoutBtn: {
-    marginHorizontal: 16, marginTop: 14, flexDirection: 'row-reverse', alignItems: 'center',
+    marginHorizontal: 16, marginTop: 14, flexDirection: 'row', alignItems: 'center',
     justifyContent: 'center', paddingVertical: 16, borderRadius: 18, gap: 8, borderWidth: 1,
   },
   logoutText: { fontSize: 15, fontWeight: '700', color: '#EF4444', textAlign: 'right' },

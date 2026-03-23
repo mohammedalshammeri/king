@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
   purchaseName: { fontSize: 16, fontWeight: '800' },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   statusText: { fontSize: 12, fontWeight: '700' },
-  statsRow: { flexDirection: 'row-reverse', marginBottom: 12 },
+  statsRow: { flexDirection: 'row', marginBottom: 12 },
   progressBg: { height: 8, backgroundColor: '#E2E8F0', borderRadius: 4, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: '#D4AF37', borderRadius: 4 },
 
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
   pkgInfo: { flex: 1 },
   pkgName: { fontSize: 16, fontWeight: '800', marginBottom: 4 },
   pkgDesc: { fontSize: 12, marginBottom: 6 },
-  pkgFeature: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4, marginBottom: 2 },
+  pkgFeature: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
   featureText: { fontSize: 12 },
 
   pkgPriceCol: { alignItems: 'center', minWidth: 72 },
