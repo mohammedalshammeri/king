@@ -150,7 +150,7 @@ export default function ResetPasswordScreen() {
                 onFocus={() => setNewPassFocused(true)}
                 onBlur={() => setNewPassFocused(false)}
               />
-              <Ionicons name="lock-closed" size={18} color={newPassFocused ? '#D4AF37' : '#94A3B8'} style={{ marginRight: 4 }} />
+              <Ionicons name="lock-closed" size={18} color={newPassFocused ? '#D4AF37' : '#94A3B8'} style={{ marginEnd: 4 }} />
             </View>
           </View>
 
@@ -173,7 +173,7 @@ export default function ResetPasswordScreen() {
                 onFocus={() => setConfirmFocused(true)}
                 onBlur={() => setConfirmFocused(false)}
               />
-              <Ionicons name="lock-closed" size={18} color={confirmFocused ? '#D4AF37' : '#94A3B8'} style={{ marginRight: 4 }} />
+              <Ionicons name="lock-closed" size={18} color={confirmFocused ? '#D4AF37' : '#94A3B8'} style={{ marginEnd: 4 }} />
             </View>
           </View>
 
@@ -236,16 +236,16 @@ const s = StyleSheet.create({
   inputGroup: { marginBottom: 20 },
   label: { fontSize: 13, fontWeight: '700', marginBottom: 8, textAlign: 'right' },
   inputWrap: {
-    flexDirection: 'row-reverse', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     borderWidth: 1.5, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 2,
   },
   inputWrapFocused: { borderColor: '#D4AF37', backgroundColor: '#FFFDF4' },
-  icon: { marginLeft: 8 },
+  icon: { marginStart: 8 },
   input: { flex: 1, paddingVertical: 13, fontSize: 15, textAlign: 'right' },
 
   reqBox: { borderRadius: 14, padding: 16, marginBottom: 24 },
   reqTitle: { fontSize: 13, fontWeight: '700', marginBottom: 12, textAlign: 'right' },
-  reqRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, marginBottom: 8 },
+  reqRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   reqText: { fontSize: 13, textAlign: 'right', flex: 1 },
 
   submitBtn: {

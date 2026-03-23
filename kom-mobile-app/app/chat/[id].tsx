@@ -288,7 +288,7 @@ export default function ChatDetailScreen() {
             onPress={sendMessage}
             disabled={!inputText.trim()}
           >
-            <Ionicons name="send" size={20} color="#FFFFFF" style={{ transform: [{ scaleX: -1 }] }} />
+            <Ionicons name="send" size={20} color="#FFFFFF" style={{ }} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -434,10 +434,10 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
   checkmark: {
-    marginLeft: 4,
+    marginStart: 4,
   },
   inputContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'flex-end',
     padding: 8,
     paddingHorizontal: 12,
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   },
   attachButton: {
     padding: 8,
-    marginLeft: 4,
+    marginStart: 4,
   },
   input: {
     flex: 1,

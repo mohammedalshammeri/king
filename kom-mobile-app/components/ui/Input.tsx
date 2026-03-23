@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     borderWidth: 1,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
   },
@@ -119,11 +119,11 @@ const styles = StyleSheet.create({
   },
 
   leadingIcon: {
-    marginLeft: 8,
+    marginStart: 8,
   },
 
   trailingIcon: {
-    marginRight: 8,
+    marginEnd: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 12,
     right: 14,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'baseline',
     gap: 4,
     zIndex: 2,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingVertical: 14,
-    paddingLeft: 22,
+    paddingStart: 22,
   },
   title: {
     fontSize: 15,
@@ -182,12 +182,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   metaRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   metaItem: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },

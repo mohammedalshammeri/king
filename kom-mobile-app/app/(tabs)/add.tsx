@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   optionCard: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0b1835',
   },
   optionIcon: {
-    marginLeft: 16,
+    marginStart: 16,
   },
   optionContent: {
     flex: 1,

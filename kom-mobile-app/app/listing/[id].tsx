@@ -29,7 +29,7 @@ interface MediaItem {
 
 const IS_RTL = I18nManager.isRTL;
 const RTL_TEXT = { textAlign: 'right' as const, writingDirection: 'rtl' as const };
-const RTL_ROW = { flexDirection: 'row-reverse' as const };
+const RTL_ROW = { flexDirection: 'row' as const };
 
 // Helper component for Media Items to allow hooks usage
 // NOTE: useVideoPlayer must always be called at the top level (Rules of Hooks).
@@ -894,7 +894,7 @@ const styles = StyleSheet.create({
   // ── Floating Header ──
   floatingHeader: {
     position: 'absolute', top: 0, left: 0, right: 0, zIndex: 100,
-    flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 14,
   },
   hdrBtn: {
@@ -969,8 +969,8 @@ const styles = StyleSheet.create({
     fontSize: 20, fontWeight: '800', textAlign: 'right', writingDirection: 'rtl',
     lineHeight: 30, marginBottom: 12,
   },
-  metaRow: { flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 12 },
-  metaItem: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4 },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   metaTxt: { fontSize: 12, fontWeight: '500', textAlign: 'right', writingDirection: 'rtl' },
 
   // ── Quick Specs Block ──
@@ -981,13 +981,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   blockHeader: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1,
   },
   blockAccent: { width: 4, height: 18, borderRadius: 2 },
   blockTitle: { fontSize: 15, fontWeight: '800', textAlign: 'right', writingDirection: 'rtl' },
   quickGrid: {
-    flexDirection: 'row-reverse', flexWrap: 'wrap',
+    flexDirection: 'row', flexWrap: 'wrap',
     paddingHorizontal: 12, paddingVertical: 14, gap: 10,
   },
   quickCell: {
@@ -1010,7 +1010,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
   specRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 13,
@@ -1038,7 +1038,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
   sellerRow: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: 12,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: 16, paddingVertical: 14,
   },
   sellerAvt: {
@@ -1047,10 +1047,10 @@ const styles = StyleSheet.create({
   },
   sellerInit: { fontSize: 20, fontWeight: '900' },
   sellerName: { fontSize: 16, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl', marginBottom: 3 },
-  verifiedRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 4 },
+  verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   verifiedTxt: { fontSize: 12, color: '#10B981', fontWeight: '600' },
   callPill: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: 6,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 14, paddingVertical: 9, borderRadius: 22, borderWidth: 1,
   },
   callPillTxt: { fontSize: 13, fontWeight: '700' },
@@ -1060,20 +1060,20 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 0, left: 0, right: 0,
     paddingTop: 32, paddingHorizontal: 14,
   },
-  ctaRow: { flexDirection: 'row-reverse', gap: 10 },
+  ctaRow: { flexDirection: 'row', gap: 10 },
   ctaCallBtn: {
-    flex: 1, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center',
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 7, paddingVertical: 15, borderRadius: 16, borderWidth: 1.5,
   },
   ctaCallTxt: { fontSize: 15, fontWeight: '800' },
   ctaWABtn: {
-    flex: 1, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center',
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 7, paddingVertical: 15, borderRadius: 16, backgroundColor: '#25D366',
     shadowColor: '#25D366', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 10, elevation: 6,
   },
   ctaWATxt: { color: '#FFF', fontSize: 15, fontWeight: '800' },
   ctaChatBtn: {
-    flex: 1, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center',
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 7, paddingVertical: 15, borderRadius: 16, backgroundColor: '#D4AF37',
     shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6,
   },
@@ -1081,7 +1081,7 @@ const styles = StyleSheet.create({
 
   // ── Feature button ──
   ctaFeatureBtn: {
-    marginTop: 10, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center',
+    marginTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, paddingVertical: 14, borderRadius: 16,
     backgroundColor: '#FFD700',
     shadowColor: '#FFD700', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.45, shadowRadius: 10, elevation: 6,
@@ -1102,7 +1102,7 @@ const styles = StyleSheet.create({
   modalSub: { fontSize: 13, textAlign: 'center', marginBottom: 20 },
   modalEmpty: { fontSize: 14, textAlign: 'center', marginVertical: 32 },
   pkgCard: {
-    flexDirection: 'row-reverse', alignItems: 'center', gap: 14,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
     borderRadius: 16, borderWidth: 1, padding: 16, marginBottom: 10,
   },
   pkgLeft: {},

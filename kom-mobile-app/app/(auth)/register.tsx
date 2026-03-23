@@ -322,7 +322,7 @@ export default function RegisterScreen() {
                 selectionColor={inputColor}
                 textAlign={showPass ? 'right' : 'left'}
               />
-              <Ionicons name="lock-closed" size={18} color="#94A3B8" style={{ marginRight: 4 }} />
+              <Ionicons name="lock-closed" size={18} color="#94A3B8" style={{ marginEnd: 4 }} />
             </View>
             <Text style={s.hint}>
               8 أحرف+ • حرف كبير • حرف صغير • رقم • رمز (@$!%*?&)
@@ -347,7 +347,7 @@ export default function RegisterScreen() {
                 selectionColor={inputColor}
                 textAlign={showConfirmPass ? 'right' : 'left'}
               />
-              <Ionicons name="lock-closed" size={18} color="#94A3B8" style={{ marginRight: 4 }} />
+              <Ionicons name="lock-closed" size={18} color="#94A3B8" style={{ marginEnd: 4 }} />
             </View>
           </View>
 
@@ -445,14 +445,14 @@ const s = StyleSheet.create({
   inputGroup: { marginBottom: 20 },
   label: { fontSize: 13, fontWeight: '700', marginBottom: 8, textAlign: 'right' },
   inputWrap: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 2,
   },
-  icon: { marginLeft: 8 },
+  icon: { marginStart: 8 },
   input: { flex: 1, paddingVertical: 13, fontSize: 15, textAlign: 'right' },
   hint: { marginTop: 6, fontSize: 11, color: '#94A3B8', textAlign: 'right', lineHeight: 16 },
 
@@ -506,7 +506,7 @@ const s = StyleSheet.create({
   submitText: { color: '#0A0B14', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
 
   // footer
-  footer: { flexDirection: 'row-reverse', justifyContent: 'center', alignItems: 'center', gap: 4 },
+  footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4 },
   footerNote: { color: '#64748B', fontSize: 14 },
   loginLink: { color: '#D4AF37', fontSize: 14, fontWeight: '800' },
 });

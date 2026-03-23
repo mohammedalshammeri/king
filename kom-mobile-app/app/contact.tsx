@@ -4,8 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
-import { rtlStyles } from '@/lib/rtl';
-
 const CONTACT = {
   email: 'support@kotm.app',
   phone: '',
@@ -35,7 +33,7 @@ export default function ContactScreen() {
   };
 
   return (
-    <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, rtlStyles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={[styles.headerBar, rtlStyles.row, { borderBottomColor: theme.border }]}>
@@ -46,9 +44,9 @@ export default function ContactScreen() {
         <View style={styles.backButton} />
       </View>
 
-      <View style={[styles.content, rtlStyles.container]}>
+      <View style={[styles.content]}>
         <TouchableOpacity
-          style={[styles.card, { flexDirection: 'row-reverse', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
+          style={[styles.card, { flexDirection: 'row', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
           onPress={() => openLink(`mailto:${CONTACT.email}`)}
         >
           <Ionicons name="mail-outline" size={22} color="#D4AF37" />
@@ -60,7 +58,7 @@ export default function ContactScreen() {
 
         {!!CONTACT.phone && (
           <TouchableOpacity
-            style={[styles.card, { flexDirection: 'row-reverse', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
+            style={[styles.card, { flexDirection: 'row', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
             onPress={() => openLink(`tel:${CONTACT.phone.replace(/\s/g, '')}`)}
           >
             <Ionicons name="call-outline" size={22} color="#D4AF37" />
@@ -73,7 +71,7 @@ export default function ContactScreen() {
 
         {!!CONTACT.whatsapp && (
           <TouchableOpacity
-            style={[styles.card, { flexDirection: 'row-reverse', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
+            style={[styles.card, { flexDirection: 'row', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
             onPress={() => openLink(CONTACT.whatsapp)}
           >
             <Ionicons name="logo-whatsapp" size={22} color="#22c55e" />
@@ -86,7 +84,7 @@ export default function ContactScreen() {
 
         {!!CONTACT.instagram && (
           <TouchableOpacity
-            style={[styles.card, { flexDirection: 'row-reverse', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
+            style={[styles.card, { flexDirection: 'row', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
             onPress={() => openLink(CONTACT.instagram)}
           >
             <Ionicons name="logo-instagram" size={22} color="#ec4899" />

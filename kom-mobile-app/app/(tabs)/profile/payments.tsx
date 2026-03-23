@@ -555,7 +555,7 @@ const inv = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
     textAlign: 'left',
-    paddingLeft: 8,
+    paddingStart: 8,
   },
   footer: {
     alignItems: 'center',

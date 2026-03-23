@@ -284,7 +284,7 @@ const s = StyleSheet.create({
 
   // stats
   statsRow: {
-    flexDirection: 'row-reverse', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 18,
+    flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 18,
     paddingVertical: 14, paddingHorizontal: 20, width: '100%', justifyContent: 'space-around',
     alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
   },
@@ -296,7 +296,7 @@ const s = StyleSheet.create({
   // luck card
   luckCard: {
     marginHorizontal: 16, marginTop: 20, borderRadius: 22, overflow: 'hidden',
-    flexDirection: 'row-reverse', alignItems: 'center', padding: 20, gap: 14,
+    flexDirection: 'row', alignItems: 'center', padding: 20, gap: 14,
     ...Platform.select({ default: { shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 8 } }),
   },
   luckLeft: { alignItems: 'center', justifyContent: 'center' },

@@ -120,8 +120,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  rtlFlip: {
-    transform: [{ scaleX: -1 }],
+  rtlFlip: {,
   },
   content: {
     paddingHorizontal: 16,

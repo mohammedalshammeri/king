@@ -748,7 +748,7 @@ const styles = StyleSheet.create({
   // ── Floating Header ──
   floatingHeader: {
     position: 'absolute', top: 0, left: 0, right: 0, zIndex: 100,
-    flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 14,
   },
   hdrBtn: {
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 6,
   },
   hdrRight: { flexDirection: 'row' },
-  hdrBtnSpacer: { marginLeft: 8 },
+  hdrBtnSpacer: { marginStart: 8 },
 
   // ── Hero ──
   heroWrap: { height: ITEM_HEIGHT, backgroundColor: '#000', position: 'relative' },
@@ -795,7 +795,7 @@ const styles = StyleSheet.create({
     borderRadius: 16, paddingHorizontal: 9, paddingVertical: 4,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
   },
-  heroCntTxt: { color: '#FFF', fontSize: 12, fontWeight: '700', marginLeft: 5 },
+  heroCntTxt: { color: '#FFF', fontSize: 12, fontWeight: '700', marginStart: 5 },
 
   // ── Thumbnails ──
   thumbStrip: { borderBottomWidth: 1 },
@@ -825,9 +825,9 @@ const styles = StyleSheet.create({
     fontSize: 20, fontWeight: '800', textAlign: 'right', writingDirection: 'rtl',
     lineHeight: 30, marginBottom: 12,
   },
-  metaRow: { flexDirection: 'row-reverse', flexWrap: 'wrap' },
-  metaItem: { flexDirection: 'row-reverse', alignItems: 'center', marginLeft: 12, marginBottom: 8 },
-  metaTxt: { fontSize: 12, fontWeight: '500', marginRight: 4, flexShrink: 1, textAlign: 'right', writingDirection: 'rtl' },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap' },
+  metaItem: { flexDirection: 'row', alignItems: 'center', marginStart: 12, marginBottom: 8 },
+  metaTxt: { fontSize: 12, fontWeight: '500', marginEnd: 4, flexShrink: 1, textAlign: 'right', writingDirection: 'rtl' },
 
   // ── Quick Specs Block ──
   quickBlock: {
@@ -837,13 +837,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   blockHeader: {
-    flexDirection: 'row-reverse', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1,
   },
   blockAccent: { width: 4, height: 18, borderRadius: 2 },
-  blockTitle: { fontSize: 15, fontWeight: '800', textAlign: 'right', writingDirection: 'rtl', marginRight: 10 },
+  blockTitle: { fontSize: 15, fontWeight: '800', textAlign: 'right', writingDirection: 'rtl', marginEnd: 10 },
   quickGrid: {
-    flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'space-between',
+    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between',
     paddingHorizontal: 12, paddingVertical: 14,
   },
   quickCell: {
@@ -866,7 +866,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
   specRow: {
-    flexDirection: 'row-reverse', justifyContent: 'flex-start', alignItems: 'flex-start',
+    flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'flex-start',
     paddingHorizontal: 16, paddingVertical: 13,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
@@ -877,7 +877,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'right',
     writingDirection: 'rtl',
-    marginLeft: 12,
+    marginStart: 12,
     flexShrink: 0,
   },
   specVal: {
@@ -907,45 +907,45 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
   sellerRow: {
-    flexDirection: 'row-reverse', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 14,
   },
   sellerAvt: {
     width: 50, height: 50, borderRadius: 25,
     justifyContent: 'center', alignItems: 'center',
-    marginLeft: 12,
+    marginStart: 12,
   },
   sellerInit: { fontSize: 20, fontWeight: '900' },
   sellerName: { fontSize: 16, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl', marginBottom: 3 },
-  verifiedRow: { flexDirection: 'row-reverse', alignItems: 'center' },
-  verifiedTxt: { fontSize: 12, color: '#10B981', fontWeight: '600', marginRight: 4 },
+  verifiedRow: { flexDirection: 'row', alignItems: 'center' },
+  verifiedTxt: { fontSize: 12, color: '#10B981', fontWeight: '600', marginEnd: 4 },
   callPill: {
-    flexDirection: 'row-reverse', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 14, paddingVertical: 9, borderRadius: 22, borderWidth: 1,
-    marginRight: 12,
+    marginEnd: 12,
   },
-  callPillTxt: { fontSize: 13, fontWeight: '700', marginRight: 6 },
+  callPillTxt: { fontSize: 13, fontWeight: '700', marginEnd: 6 },
 
   // ── CTA Footer ──
   ctaWrap: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     paddingTop: 32, paddingHorizontal: 14,
   },
-  ctaRow: { flexDirection: 'row-reverse', alignItems: 'stretch' },
+  ctaRow: { flexDirection: 'row', alignItems: 'stretch' },
   ctaSpacer: { width: 10 },
   ctaCallBtn: {
-    flex: 1, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center',
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingVertical: 15, borderRadius: 16, borderWidth: 1.5,
   },
   ctaCallTxt: { fontSize: 15, fontWeight: '800' },
   ctaWABtn: {
-    flex: 1, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center',
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingVertical: 15, borderRadius: 16, backgroundColor: '#25D366',
     shadowColor: '#25D366', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 10, elevation: 6,
   },
   ctaWATxt: { color: '#FFF', fontSize: 15, fontWeight: '800' },
   ctaChatBtn: {
-    flex: 1, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center',
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingVertical: 15, borderRadius: 16, backgroundColor: '#D4AF37',
     shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6,
   },

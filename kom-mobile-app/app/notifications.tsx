@@ -14,7 +14,6 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '@/services/api';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuthStore } from '@/store/authStore';
-import { rtlStyles } from '@/lib/rtl';
 import { PageHeader } from '@/components/ui/page-header';
 
 interface Notification {
@@ -191,14 +190,14 @@ export default function NotificationsScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.centered, rtlStyles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.centered, { backgroundColor: theme.background }]}>
         <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, rtlStyles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: theme.background }]}>
       <PageHeader
         title="الإشعارات"
         backgroundColor={theme.card}
@@ -207,7 +206,7 @@ export default function NotificationsScreen() {
       />
 
       {!isAuthenticated ? (
-        <View style={[styles.centered, rtlStyles.container]}>
+        <View style={[styles.centered]}>
           <Ionicons name="lock-closed-outline" size={64} color={theme.textSecondary} />
           <Text style={[styles.emptyText, { color: theme.textSecondary }]}>تسجيل الدخول مطلوب</Text>
           <TouchableOpacity 
@@ -218,7 +217,7 @@ export default function NotificationsScreen() {
           </TouchableOpacity>
         </View>
       ) : notifications.length === 0 ? (
-        <View style={[styles.centered, rtlStyles.container]}>
+        <View style={[styles.centered]}>
           <Ionicons name="notifications-off-outline" size={64} color={theme.textSecondary} />
           <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
             لا توجد إشعارات
@@ -259,7 +258,7 @@ const styles = StyleSheet.create({
   },
   // ─── Notification Card ───────────────────────────────────────
   notificationItem: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderRadius: 18,
@@ -287,7 +286,7 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 14,
+    marginStart: 14,
     flexShrink: 0,
   },
   contentContainer: {

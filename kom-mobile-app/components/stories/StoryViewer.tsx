@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     borderColor: 'white',
-    marginRight: 10,
+    marginEnd: 10,
   },
   username: {
     color: 'white',
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
       width: 32,
       height: 32,
       borderRadius: 16,
-      marginLeft: 10,
+      marginStart: 10,
       backgroundColor: '#333'
   },
   commentUser: {
@@ -654,7 +654,7 @@ const styles = StyleSheet.create({
       paddingVertical: 8,
       color: '#fff',
       textAlign: 'right',
-      marginRight: 10
+      marginEnd: 10
   },
   sendButton: {
       padding: 8

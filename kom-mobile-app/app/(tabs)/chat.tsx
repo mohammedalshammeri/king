@@ -8,7 +8,6 @@ import { useAuthStore } from '@/store/authStore';
 import { useChatStore } from '@/store/chatStore';
 import { useTheme } from '../../context/ThemeContext';
 import { useCallback } from 'react';
-import { rtlStyles } from '@/lib/rtl';
 import { PageHeader } from '@/components/ui/page-header';
 
 // Using Chat interface from store logic implicitly via the hook data
@@ -128,7 +127,7 @@ export default function ChatScreen() {
 
   if (!isAuthenticated) {
     return (
-      <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, rtlStyles.container, { backgroundColor: theme.background }]}>
+      <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.emptyContainer}>
           <Ionicons name="chatbubbles-outline" size={64} color={theme.textMuted} />
           <Text style={[styles.emptyTitle, { color: theme.text }]}>تسجيل الدخول مطلوب</Text>
@@ -171,7 +170,7 @@ export default function ChatScreen() {
           data={chats}
           renderItem={renderChatCard}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={[styles.listContent, rtlStyles.container, { paddingBottom: 120 }]}
+          contentContainerStyle={[styles.listContent, { paddingBottom: 120 }]}
         />
       )}
     </SafeAreaView>
@@ -228,7 +227,7 @@ const styles = StyleSheet.create({
   },
   // ─── Chat Card ────────────────────────────────────────
   chatCard: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
     padding: 14,
@@ -252,7 +251,7 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     position: 'relative',
-    marginLeft: 14,
+    marginStart: 14,
   },
   avatarRing: {
     width: 58,
@@ -296,7 +295,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   chatHeader: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
@@ -322,7 +321,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   lastMessageRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
   },
@@ -344,7 +343,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 7,
-    marginRight: 8,
+    marginEnd: 8,
   },
   unreadText: {
     color: '#FFFFFF',
@@ -355,7 +354,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 10,
-    marginRight: 14,
+    marginEnd: 14,
     borderWidth: 1,
     borderColor: '#E4EAF4',
   },

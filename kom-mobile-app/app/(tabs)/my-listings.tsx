@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   filterContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     padding: 12,
     backgroundColor: '#0E1830',
     gap: 8,
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   addNewButton: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.primary,
     paddingHorizontal: 24,
@@ -502,14 +502,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cardContent: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     padding: 12,
   },
   thumbnailWrapper: {
     width: 110,
     height: 110,
     borderRadius: 12,
-    marginLeft: 12,
+    marginStart: 12,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardHeader: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 8,
@@ -548,7 +548,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1E293B',
     textAlign: 'right',
-    marginLeft: 8,
+    marginStart: 8,
   },
   statusBadge: {
     paddingHorizontal: 10,
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   cardLocation: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     marginBottom: 8,
@@ -577,11 +577,11 @@ const styles = StyleSheet.create({
     color: '#64748B',
   },
   cardStats: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: 16,
   },
   stat: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
   },
   rejectionBox: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FEE2E2',
     padding: 8,
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   cardActions: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
     padding: 4,
@@ -614,7 +614,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,

@@ -1007,7 +1007,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   selectInput: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
@@ -1046,7 +1046,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   mediaContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
     marginTop: 12,
@@ -1094,7 +1094,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   addVideoButton: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
@@ -1110,7 +1110,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   submitButton: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,

@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     minHeight: 300,
   },
   modalHeader: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 20,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   modalItem: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,

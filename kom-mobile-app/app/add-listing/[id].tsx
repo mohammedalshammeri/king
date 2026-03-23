@@ -10,7 +10,6 @@ import { PickerModal } from '@/components/ui/picker-modal';
 import api from '@/services/api';
 import { Image } from 'expo-image';
 import { useTheme } from '@/context/ThemeContext';
-import { rtlStyles } from '@/lib/rtl';
 import { PageHeader } from '@/components/ui/page-header';
 import { useAuthStore } from '@/store/authStore';
 
@@ -704,7 +703,7 @@ export default function AddListingDetailScreen() {
                 <View style={[styles.inputGroup, styles.halfWidth]}>
                 <Text style={[styles.label, { color: theme.text }]}>الشركة المصنعة *</Text>
                 <TouchableOpacity 
-                    style={[inputStyle, { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }]}
+                    style={[inputStyle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
                     onPress={() => setShowMotorcycleMakeModal(true)}
                 >
                     <Text style={{ color: motorcycleDetails.make ? theme.text : theme.textMuted }}>
@@ -717,7 +716,7 @@ export default function AddListingDetailScreen() {
                 <View style={[styles.inputGroup, styles.halfWidth]}>
                 <Text style={[styles.label, { color: theme.text }]}>الموديل *</Text>
                 <TouchableOpacity 
-                    style={[inputStyle, { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }, (!motorcycleDetails.make && !isCustomMotorcycleMake) && { opacity: 0.5 }]}
+                    style={[inputStyle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, (!motorcycleDetails.make && !isCustomMotorcycleMake) && { opacity: 0.5 }]}
                     onPress={() => (motorcycleDetails.make || isCustomMotorcycleMake) && setShowMotorcycleModelModal(true)}
                     disabled={!motorcycleDetails.make && !isCustomMotorcycleMake}
                 >
@@ -845,7 +844,7 @@ export default function AddListingDetailScreen() {
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: theme.text }]}>المنطقة</Text>
         <TouchableOpacity 
-          style={[inputStyle, { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }]}
+          style={[inputStyle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
           onPress={() => setShowAreaModal(true)}
         >
           <Text style={{ color: formData.locationArea ? theme.text : theme.textMuted }}>
@@ -1089,7 +1088,7 @@ export default function AddListingDetailScreen() {
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: theme.text }]}>اللون</Text>
         <TouchableOpacity 
-          style={[inputStyle, { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }]}
+          style={[inputStyle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
           onPress={() => setShowCarColorModal(true)}
         >
           <Text style={{ color: carDetails.color ? theme.text : theme.textMuted }}>
@@ -1334,7 +1333,7 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
       <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: theme.text }]}>اللون</Text>
           <TouchableOpacity 
-            style={[inputStyle, { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }]}
+            style={[inputStyle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
             onPress={() => setShowMotorcycleColorModal(true)}
           >
             <Text style={{ color: motorcycleDetails.color ? theme.text : theme.textMuted }}>
@@ -1691,7 +1690,7 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
   }
 
   return (
-    <SafeAreaView style={[styles.container, rtlStyles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <PageHeader
         title={
           type === 'CAR'
@@ -1767,7 +1766,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1E293B',
     textAlign: 'right',
-    marginRight: 12,
+    marginEnd: 12,
   },
   stepIndicator: {
     flexDirection: 'row',
@@ -1851,7 +1850,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   pickerContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
@@ -1876,7 +1875,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   row: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: 12,
   },
   halfWidth: {
@@ -1971,12 +1970,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   editActions: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: 12,
     marginTop: 24,
   },
   footer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     padding: 16,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,

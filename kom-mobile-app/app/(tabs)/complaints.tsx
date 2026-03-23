@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#ffffff',
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   loadingRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
   },
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   loadingIcon: {
-    marginLeft: 8,
+    marginStart: 8,
   },
   emptyText: {
     color: '#64748b',
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   ticketHeader: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },

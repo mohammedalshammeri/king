@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
       paddingBottom: 20
   },
   userInfo: {
-      flexDirection: 'row-reverse',
+      flexDirection: 'row',
       alignItems: 'center',
       marginBottom: 8,
       justifyContent: 'flex-start',

@@ -177,11 +177,11 @@ const s = StyleSheet.create({
   inputGroup: { marginBottom: 20 },
   label: { fontSize: 13, fontWeight: '700', marginBottom: 8, textAlign: 'right' },
   inputWrap: {
-    flexDirection: 'row-reverse', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     borderWidth: 1.5, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 2,
   },
   inputWrapFocused: { borderColor: '#D4AF37', backgroundColor: '#0e1a4e' },
-  icon: { marginLeft: 8 },
+  icon: { marginStart: 8 },
   input: { flex: 1, paddingVertical: 13, fontSize: 15, textAlign: 'right' },
 
   submitBtn: {

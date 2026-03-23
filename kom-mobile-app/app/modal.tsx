@@ -5,11 +5,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
-import { rtlStyles } from '@/lib/rtl';
-
 export default function ModalScreen() {
   return (
-    <View style={[styles.container, rtlStyles.container]}>
+    <View style={[styles.container]}>
       <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
         <Ionicons name="close" size={24} color="#000" />
       </TouchableOpacity>

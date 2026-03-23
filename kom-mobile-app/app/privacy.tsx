@@ -4,8 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
-import { rtlStyles } from '@/lib/rtl';
-
 export default function PrivacyScreen() {
   const router = useRouter();
   const { isDark } = useTheme();

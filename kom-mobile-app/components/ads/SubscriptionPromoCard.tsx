@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   badgeRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     marginBottom: 8,
   },
   badge: {
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   priceBlock: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 6,
     marginBottom: 2,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   featureRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
   },
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   cta: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#D4AF37',
     paddingHorizontal: 16,

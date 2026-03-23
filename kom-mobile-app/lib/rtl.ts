@@ -35,8 +35,8 @@ export const rtlify = <T,>(style: T): T => {
 
     // 3) خصائص left/right الشائعة
     swap(o, 'left', 'right');
-    swap(o, 'marginLeft', 'marginRight');
-    swap(o, 'paddingLeft', 'paddingRight');
+    swap(o, 'marginStart', 'marginEnd');
+    swap(o, 'paddingStart', 'paddingEnd');
     swap(o, 'borderLeftWidth', 'borderRightWidth');
     swap(o, 'borderTopLeftRadius', 'borderTopRightRadius');
     swap(o, 'borderBottomLeftRadius', 'borderBottomRightRadius');

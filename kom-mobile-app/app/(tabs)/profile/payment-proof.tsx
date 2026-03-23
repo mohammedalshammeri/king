@@ -290,7 +290,7 @@ export default function PaymentProofScreen() {
               <ActivityIndicator color="#0A0B14" />
             ) : (
               <>
-                <Ionicons name="paper-plane-outline" size={18} color="#0A0B14" style={{ marginRight: 8 }} />
+                <Ionicons name="paper-plane-outline" size={18} color="#0A0B14" style={{ marginEnd: 8 }} />
                 <Text style={[styles.submitBtnText, styles.rtlTextCenter]}>إرسال إثبات الدفع</Text>
               </>
             )}
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   ltrNumber: { writingDirection: 'ltr', textAlign: 'center', letterSpacing: 1.5 },
 
   header: { paddingHorizontal: 16, paddingVertical: 16, paddingTop: 12 },
-  headerInner: { flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between' },
+  headerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   backBtn: {
     width: 40,
     height: 40,
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     }),
   },
   stepsTitle: { fontSize: 15, fontWeight: '800', marginBottom: 14 },
-  stepRowRtl: { flexDirection: 'row-reverse', alignItems: 'flex-start', marginBottom: 12 },
+  stepRowRtl: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
   stepNum: {
     width: 26,
     height: 26,
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(212,175,55,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginEnd: 10,
     flexShrink: 0,
   },
   stepNumText: { fontSize: 13, fontWeight: '800', color: '#D4AF37' },
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   infoValue: { fontSize: 22, fontWeight: '900', marginBottom: 12 },
 
   copyBtnRtl: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     backgroundColor: 'rgba(212,175,55,0.12)',
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     }),
   },
   submitBtnDisabled: { opacity: 0.5 },
-  submitBtnGradRtl: { paddingVertical: 17, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center' },
+  submitBtnGradRtl: { paddingVertical: 17, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   submitBtnText: { color: '#0A0B14', fontSize: 16, fontWeight: '900' },
 
   note: { fontSize: 12, lineHeight: 18 },
