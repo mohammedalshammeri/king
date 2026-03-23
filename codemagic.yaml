@@ -32,9 +32,18 @@ workflows:
 
       - name: Build IPA
         script: |
+          # Find the workspace file
+          WORKSPACE=$(find ios -name "*.xcworkspace" -maxdepth 1 | head -n 1)
+          echo "Using workspace: $WORKSPACE"
+          
+          # Get scheme name from workspace
+          SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | grep -A 1 "Schemes:" | tail -n 1 | xargs)
+          echo "Using scheme: $SCHEME"
+          
+          # Build IPA
           xcode-project build-ipa \
-            --workspace "ios/*.xcworkspace" \
-            --scheme "$(xcode-project detect-scheme)" \
+            --workspace "$WORKSPACE" \
+            --scheme "$SCHEME" \
             --archive-flags="-destination 'generic/platform=iOS'"
 
     artifacts:
