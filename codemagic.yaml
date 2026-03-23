@@ -11,6 +11,8 @@ workflows:
       cocoapods: default
       vars:
         EXPO_PUBLIC_API_URL: "https://api.kotm.app/api/v1"
+        # Add this in Codemagic UI as a secure environment variable:
+        # APP_STORE_CONNECT_PASSWORD: your-app-specific-password
 
     scripts:
       - name: Install dependencies
@@ -39,4 +41,14 @@ workflows:
 
     publishing:
       app_store_connect:
+        # Option 1: Use App Store Connect API Key (Recommended)
+        # Add these credentials in Codemagic UI under App settings > Team integrations
+        # Then uncomment the line below:
+        # auth: integration
+        
+        # Option 2: Use Apple ID and App-specific password
+        # Set these as environment variables in Codemagic UI
+        apple_id: kalifaum47@gmail.com
+        password: $APP_STORE_CONNECT_PASSWORD
+        
         submit_to_testflight: true
