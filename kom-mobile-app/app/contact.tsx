@@ -36,7 +36,7 @@ export default function ContactScreen() {
     <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View style={[styles.headerBar, rtlStyles.row, { borderBottomColor: theme.border }]}>
+      <View style={[styles.headerBar, { flexDirection: 'row', borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="chevron-forward" size={24} color={theme.text} />
         </TouchableOpacity>

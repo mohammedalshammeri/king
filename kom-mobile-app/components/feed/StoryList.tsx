@@ -84,8 +84,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 12,
   },
-  rtlFlip: {,
-  },
+  rtlFlip: {},
   itemContainer: {
     alignItems: 'center',
     marginHorizontal: 8,
