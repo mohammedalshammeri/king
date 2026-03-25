@@ -4,9 +4,6 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     working_directory: kom-mobile-app
-    
-    integrations:
-      app_store_connect: KOM Production
 
     environment:
       ios_signing:
@@ -51,9 +48,6 @@ workflows:
 
     publishing:
       app_store_connect:
-        # Use App Store Connect API Key (Required for TestFlight)
-        # Add API Key in: Codemagic UI > Teams > Integrations > App Store Connect
-        # Then the build will automatically use it
-        auth: integration
-        
+        apple_id: "kalifaum47@gmail.com"
+        password: $APP_SPECIFIC_PASSWORD
         submit_to_testflight: true
