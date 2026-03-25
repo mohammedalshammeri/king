@@ -34,7 +34,7 @@ workflows:
       - name: Set up code signing
         script: |
           xcode-project use-profiles \
-            --custom-export-options='{"method":"app-store","signingStyle":"manual"}'
+            --custom-export-options='{"method":"app-store","signingStyle":"manual","teamID":"3Q84HM6S5Q","signingCertificate":"Apple Distribution","provisioningProfiles":{"app.kotm.kom":"KOM App Store Push"}}'
 
       - name: Build IPA
         script: |
@@ -47,6 +47,15 @@ workflows:
               <string>app-store</string>
               <key>signingStyle</key>
               <string>manual</string>
+              <key>teamID</key>
+              <string>3Q84HM6S5Q</string>
+              <key>signingCertificate</key>
+              <string>Apple Distribution</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                <key>app.kotm.kom</key>
+                <string>KOM App Store Push</string>
+              </dict>
           </dict>
           </plist>
           EOF
