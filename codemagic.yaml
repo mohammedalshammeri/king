@@ -7,10 +7,8 @@ workflows:
 
     environment:
       ios_signing:
-        provisioning_profiles:
-          - kom_app_store_push
-        certificates:
-          - kom_ios_distribution
+        distribution_type: app_store
+        bundle_identifier: app.kotm.kom
       groups:
         - appstore
       node: 20.18.0
@@ -33,37 +31,13 @@ workflows:
 
       - name: Set up code signing
         script: |
-          xcode-project use-profiles \
-            --custom-export-options='{"method":"app-store","signingStyle":"manual","teamID":"3Q84HM6S5Q","signingCertificate":"Apple Distribution","provisioningProfiles":{"app.kotm.kom":"19ef9980-91cb-4a14-b532-7dcff4c49a5"}}'
+          xcode-project use-profiles
 
       - name: Build IPA
         script: |
-          cat > export_options.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>app-store</string>
-              <key>signingStyle</key>
-              <string>manual</string>
-              <key>teamID</key>
-              <string>3Q84HM6S5Q</string>
-              <key>signingCertificate</key>
-              <string>Apple Distribution</string>
-              <key>provisioningProfiles</key>
-              <dict>
-                <key>app.kotm.kom</key>
-                  <string>19ef9980-91cb-4a14-b532-7dcff4c49a5</string>
-              </dict>
-          </dict>
-          </plist>
-          EOF
-
           xcode-project build-ipa \
             --workspace "ios/KingoftheMarket.xcworkspace" \
             --scheme "KingoftheMarket" \
-            --export-options-plist export_options.plist \
             --archive-flags="-destination 'generic/platform=iOS'"
 
     artifacts:
