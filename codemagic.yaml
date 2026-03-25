@@ -6,6 +6,11 @@ workflows:
     working_directory: kom-mobile-app
 
     environment:
+      ios_signing:
+        provisioning_profiles:
+          - kom_app_store_push
+        certificates:
+          - kom_ios_distribution
       groups:
         - appstore
       node: 20.18.0
@@ -26,6 +31,11 @@ workflows:
           cd ios
           pod install
 
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles \
+            --custom-export-options='{"method":"app-store","signingStyle":"manual"}'
+
       - name: Build IPA
         script: |
           cat > export_options.plist <<EOF
@@ -36,7 +46,7 @@ workflows:
               <key>method</key>
               <string>app-store</string>
               <key>signingStyle</key>
-              <string>automatic</string>
+              <string>manual</string>
           </dict>
           </plist>
           EOF
