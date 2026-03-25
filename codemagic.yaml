@@ -8,9 +8,6 @@ workflows:
     environment:
       groups:
         - appstore
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: app.kotm.kom
       node: 20.18.0
       xcode: latest
       cocoapods: default
@@ -38,8 +35,3 @@ workflows:
 
     artifacts:
       - build/ios/ipa/*.ipa
-
-    publishing:
-      app_store_connect:
-        apple_id: "kalifaum47@gmail.com"
-        password: $APP_SPECIFIC_PASSWORD
