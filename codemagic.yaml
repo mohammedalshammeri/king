@@ -1,4 +1,33 @@
 workflows:
+  android-release:
+    name: KOM Android Release
+    max_build_duration: 60
+    instance_type: linux_x2
+    working_directory: kom-mobile-app
+
+    environment:
+      groups:
+        - appstore
+      node: 20.18.0
+      java: 17
+      vars:
+        EXPO_PUBLIC_API_URL: "https://api.kotm.app/api/v1"
+
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+
+      - name: Generate native Android project
+        script: npx expo prebuild --platform android --non-interactive
+
+      - name: Build APK
+        script: |
+          cd android
+          ./gradlew assembleRelease
+
+    artifacts:
+      - android/app/build/outputs/apk/release/*.apk
+
   ios-release:
     name: KOM iOS Release
     max_build_duration: 60
