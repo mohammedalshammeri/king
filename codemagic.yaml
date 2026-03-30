@@ -79,7 +79,7 @@ workflows:
           app-store-connect publish \
             --path "build/ios/ipa/*.ipa" \
             --issuer-id "9391dad5-7a3b-4176-a7bd-cf0af733285b" \
-            --key-id "J6TS4PCQ4L" \
+            --key-id "V6L7CLXXRL" \
             --private-key "@env:APP_STORE_CONNECT_PRIVATE_KEY" \
             --testflight
 
