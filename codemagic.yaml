@@ -76,6 +76,9 @@ workflows:
             exit 1
           fi
 
+          unset APP_SPECIFIC_PASSWORD
+          unset APPLE_ID
+
           app-store-connect publish \
             --path "build/ios/ipa/*.ipa" \
             --issuer-id "9391dad5-7a3b-4176-a7bd-cf0af733285b" \
