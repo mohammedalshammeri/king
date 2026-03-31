@@ -76,15 +76,16 @@ workflows:
             exit 1
           fi
 
-          unset APP_SPECIFIC_PASSWORD
-          unset APPLE_ID
+          key_file="$CM_BUILD_DIR/AuthKey_V6L7CLXXRL.p8"
+          printf "%s" "$APP_STORE_CONNECT_PRIVATE_KEY" > "$key_file"
 
-          app-store-connect publish \
-            --path "build/ios/ipa/*.ipa" \
-            --issuer-id "9391dad5-7a3b-4176-a7bd-cf0af733285b" \
-            --key-id "V6L7CLXXRL" \
-            --private-key "@env:APP_STORE_CONNECT_PRIVATE_KEY" \
-            --testflight
+          env -u APP_SPECIFIC_PASSWORD -u APPLE_ID -u APP_STORE_CONNECT_PASSWORD -u APP_STORE_CONNECT_APPLE_ID \
+            app-store-connect publish \
+              --path "build/ios/ipa/*.ipa" \
+              --issuer-id "9391dad5-7a3b-4176-a7bd-cf0af733285b" \
+              --key-id "V6L7CLXXRL" \
+              --private-key "@file:$key_file" \
+              --testflight
 
     artifacts:
       - build/ios/ipa/*.ipa
