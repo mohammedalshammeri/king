@@ -226,16 +226,16 @@ export default function ChatDetailScreen() {
         end={{ x: 1, y: 0 }}
         style={[styles.header, { paddingTop: insets.top + 12 }]}
       >
-        <View style={{ width: 44 }} />
-        <View style={styles.headerInfo}>
-          <Text style={styles.headerName}>{params.otherUserName}</Text>
-          <Text style={styles.headerStatus}>متصل الآن</Text>
-        </View>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <View style={styles.backCircle}>
             <Ionicons name="arrow-forward" size={18} color="#D4AF37" />
           </View>
         </TouchableOpacity>
+        <View style={styles.headerInfo}>
+          <Text style={styles.headerName}>{params.otherUserName}</Text>
+          <Text style={styles.headerStatus}>متصل الآن</Text>
+        </View>
+        <View style={{ width: 44 }} />
       </LinearGradient>
 
       <KeyboardAvoidingView
@@ -408,14 +408,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     marginBottom: 4,
+    writingDirection: 'rtl',
   },
   myMessageText: {
     color: '#FFFFFF',
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
   theirMessageText: {
     color: '#1E293B',
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
   messageFooter: {
     flexDirection: 'row',
@@ -458,6 +461,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     maxHeight: 120, // Increased max height slightly
     minHeight: 48, // Increased min height
+    textAlign: 'right',
+    writingDirection: 'rtl',
     marginHorizontal: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',

@@ -106,6 +106,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
   modalList: {
     flex: 1,
@@ -123,6 +124,7 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 15,
     textAlign: 'right',
+    writingDirection: 'rtl',
     flex: 1,
   },
   modalItemTextSelected: {

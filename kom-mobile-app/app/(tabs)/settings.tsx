@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
     paddingEnd: 8,
   },
   notificationRight: {
@@ -349,8 +349,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 8,
-    paddingStart: 48,
-    paddingEnd: 16,
+    paddingStart: 16,
+    paddingEnd: 48,
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
     position: 'relative',
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   },
   leftChevronContainer: {
     position: 'absolute',
-    left: 8,
+    right: 8,
     top: '50%',
     transform: [{ translateY: -10 }],
     flexDirection: 'row',

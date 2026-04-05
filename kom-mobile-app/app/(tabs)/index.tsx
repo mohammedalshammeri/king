@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     right: 0,
     height: 70,
     justifyContent: 'flex-end',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     paddingHorizontal: 10,
     paddingBottom: 8,
   },
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   typeBadge: {
     position: 'absolute',
     top: 8,
-    right: 8,
+    left: 8,
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 10,
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   cardContent: {
     padding: 11,
     paddingStart: 14,
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     width: '100%',
   },
   cardTitle: {
@@ -898,35 +898,14 @@ export default function HomeScreen() {
     return (
       <TouchableOpacity
         style={[styles.card, { backgroundColor: theme.surface }]}
-        onPress={() => router.push({ pathname: '/listing/[id]', params: { id: item.id, backLink: '/(tabs)/index' } })}
+        onPress={() => router.push(`/listing/${item.id}`)}
         activeOpacity={0.88}
       >
         {/* Colored top accent bar */}
         <View style={{ height: 3, backgroundColor: typeAccent }} />
 
         <View style={styles.imageContainer}>
-          {imageUris.length > 1 ? (
-            <ScrollView
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              decelerationRate="fast"
-              scrollEventThrottle={16}
-              nestedScrollEnabled={true}
-              style={{ width: CARD_WIDTH, height: 160 }}
-            >
-              {imageUris.map((uri: string, idx: number) => (
-                <Image
-                  key={idx}
-                  source={{ uri }}
-                  style={[styles.cardImage, { width: CARD_WIDTH }]}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  transition={200}
-                />
-              ))}
-            </ScrollView>
-          ) : imageUri ? (
+          {imageUri ? (
             <Image
               source={{ uri: imageUri }}
               style={styles.cardImage}

@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
   heroGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 130 },
   // Price overlay on hero
   heroPriceBadge: {
-    position: 'absolute', bottom: 50, right: 16,
+    position: 'absolute', bottom: 50, left: 16,
     flexDirection: 'row', alignItems: 'flex-end',
   },
   heroPriceNum: {
@@ -784,12 +784,12 @@ const styles = StyleSheet.create({
     color: 'rgba(212,175,55,0.8)', fontSize: 15, fontWeight: '700', marginBottom: 4,
   },
   heroTypeBadge: {
-    position: 'absolute', bottom: 18, right: 16,
+    position: 'absolute', bottom: 18, left: 16,
     paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8,
   },
   heroTypeTxt: { color: '#FFF', fontSize: 12, fontWeight: '800', letterSpacing: 0.3 },
   heroCnt: {
-    position: 'absolute', bottom: 18, left: 16,
+    position: 'absolute', bottom: 18, right: 16,
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
     borderRadius: 16, paddingHorizontal: 9, paddingVertical: 4,

@@ -46,30 +46,23 @@ I18nManager.allowRTL(true);
 I18nManager.forceRTL(true);
 
 const enforceRTL = async () => {
-  const RTL_BOOT_KEY = 'rtl_boot_done_v8'; // رقم جديد لإجبار reload على كل الأجهزة
-  const DESIRED_RTL = true;
-
-  const beforeIsRTL = I18nManager.isRTL;
-
-  I18nManager.allowRTL(DESIRED_RTL);
-  I18nManager.forceRTL(DESIRED_RTL);
+  I18nManager.allowRTL(true);
+  I18nManager.forceRTL(true);
 
   if (Platform.OS === 'web') return;
 
-  const bootDone = await AsyncStorage.getItem(RTL_BOOT_KEY);
-  if (bootDone === '1') return;
-
-  // سجّل بعد التأكد من الـ reload
-  if (beforeIsRTL !== DESIRED_RTL) {
-    await AsyncStorage.setItem(RTL_BOOT_KEY, '1');
-    await Updates.reloadAsync();
-    return;
-  }
-
-  await AsyncStorage.setItem(RTL_BOOT_KEY, '1');
-
-  if (beforeIsRTL !== DESIRED_RTL) {
-    await Updates.reloadAsync();
+  // إذا RTL مو شغال، أعد تحميل التطبيق مرة واحدة
+  if (!I18nManager.isRTL) {
+    const RELOAD_KEY = 'rtl_reload_v10';
+    const alreadyReloaded = await AsyncStorage.getItem(RELOAD_KEY);
+    if (alreadyReloaded === '1') return; // منع حلقة لا نهائية
+    await AsyncStorage.setItem(RELOAD_KEY, '1');
+    try {
+      await Updates.reloadAsync();
+    } catch {}
+  } else {
+    // RTL شغال، امسح علامة إعادة التحميل
+    await AsyncStorage.removeItem('rtl_reload_v10');
   }
 };
 
@@ -290,15 +283,24 @@ export default function RootLayout() {
       }
     });
 
-    // Cleanup listeners
-    return () => {
-      notificationListener.remove();
-      responseListener.remove();
-    };
-
     const videoTimer = setTimeout(() => {
       setIsVideoComplete(true);
     }, 4000);
+
+    // ✅ OTA: فرض تحميل التحديث فوراً عند فتح التطبيق
+    if (!__DEV__) {
+      (async () => {
+        try {
+          const update = await Updates.checkForUpdateAsync();
+          if (update.isAvailable) {
+            await Updates.fetchUpdateAsync();
+            await Updates.reloadAsync();
+          }
+        } catch (e) {
+          console.log('OTA check error:', e);
+        }
+      })();
+    }
 
     // Warm ping — keep backend alive, fire every 4 minutes
     const warmPing = () => {
@@ -307,16 +309,18 @@ export default function RootLayout() {
     warmPing();
     const pingInterval = setInterval(warmPing, 4 * 60 * 1000);
 
+    // Cleanup listeners
     return () => {
+      notificationListener.remove();
+      responseListener.remove();
       clearTimeout(videoTimer);
       clearInterval(pingInterval);
     };
   }, []);
 
-  // ✅ اجبار النصوص والحقول RTL عالميًا
+  // ✅ اجبار النصوص والحقول RTL عالميًا — تطبيق عربي فقط
   useEffect(() => {
     if (!rtlReady) return;
-    if (!I18nManager.isRTL) return;
 
     // @ts-ignore
     Text.defaultProps = Text.defaultProps || {};

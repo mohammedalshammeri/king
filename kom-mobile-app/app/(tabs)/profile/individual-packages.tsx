@@ -168,11 +168,11 @@ export default function IndividualPackagesScreen() {
         colors={['#0E1830', '#162444']}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
         style={styles.header}>
-        <View style={{ width: 40 }} />
-        <Text style={[styles.headerTitle, RTL_TEXT, { color: '#D4AF37' }]}>باقات الإعلانات</Text>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-forward" size={20} color='#D4AF37' />
         </TouchableOpacity>
+        <Text style={[styles.headerTitle, RTL_TEXT, { color: '#D4AF37' }]}>باقات الإعلانات</Text>
+        <View style={{ width: 40 }} />
       </LinearGradient>
 
       <ScrollView
@@ -472,10 +472,10 @@ const styles = StyleSheet.create({
   countBadgeText: { fontSize: 20, fontWeight: '900', color: '#D4AF37' },
   countBadgeLabel: { fontSize: 10, color: '#D4AF37', fontWeight: '700' },
 
-  pkgInfo: { flex: 1 },
-  pkgName: { fontSize: 16, fontWeight: '800', marginBottom: 4 },
-  pkgDesc: { fontSize: 12, marginBottom: 6 },
-  pkgFeature: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
+  pkgInfo: { flex: 1, alignItems: 'flex-start' },
+  pkgName: { fontSize: 16, fontWeight: '800', marginBottom: 4, textAlign: 'right', writingDirection: 'rtl' },
+  pkgDesc: { fontSize: 12, marginBottom: 6, textAlign: 'right', writingDirection: 'rtl' },
+  pkgFeature: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2, alignSelf: 'flex-start' },
   featureText: { fontSize: 12 },
 
   pkgPriceCol: { alignItems: 'center', minWidth: 72 },

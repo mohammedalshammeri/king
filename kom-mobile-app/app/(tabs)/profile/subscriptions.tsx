@@ -201,11 +201,11 @@ export default function SubscriptionsScreen() {
         colors={['#0E1830', '#162444']}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
         style={styles.header}>
-        <View style={{ width: 40 }} />
-        <Text style={[styles.headerTitle, RTL_TEXT, { color: '#D4AF37' }]}>اشتراكاتي</Text>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-forward" size={20} color='#D4AF37' />
         </TouchableOpacity>
+        <Text style={[styles.headerTitle, RTL_TEXT, { color: '#D4AF37' }]}>اشتراكاتي</Text>
+        <View style={{ width: 40 }} />
       </LinearGradient>
 
       <ScrollView style={{ backgroundColor: bg }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

@@ -42,15 +42,49 @@ export default function TabLayout() {
     }
   };
 
+  // ✅ ترتيب التابات للعربية RTL — الرئيسية أقصى اليمين
   const mainTabs = [
     {
-      name: 'profile/index' as const,
-      title: 'الملف',
+      name: 'index' as const,
+      title: 'الرئيسية',
       icon: ({ color, focused }: { color: string; focused: boolean }) => (
-        <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
+        <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
       ),
       listeners: {
         tabPress: handleTabPress,
+      },
+    },
+    {
+      name: 'feed' as const,
+      title: 'فيديو',
+      icon: ({ color, focused }: { color: string; focused: boolean }) => (
+        <Ionicons name={focused ? 'videocam' : 'videocam-outline'} size={24} color={color} />
+      ),
+      listeners: {
+        tabPress: handleTabPress,
+      },
+    },
+    {
+      name: 'add' as const,
+      title: '',
+      icon: () => (
+        <View style={styles.addButtonWrapper}>
+          <LinearGradient colors={['#D4AF37', '#997D2D']} style={styles.addButtonGradient}>
+            <Ionicons name={user ? 'add' : 'search'} size={user ? 32 : 26} color="#ffffff" />
+          </LinearGradient>
+        </View>
+      ),
+      options: {
+        tabBarLabel: () => null,
+      },
+      listeners: {
+        tabPress: (e: any) => {
+          handleTabPress();
+          if (!user) {
+            e.preventDefault();
+            router.push('/search');
+          }
+        },
       },
     },
     {
@@ -78,43 +112,10 @@ export default function TabLayout() {
       },
     },
     {
-      name: 'add' as const,
-      title: '',
-      icon: () => (
-        <View style={styles.addButtonWrapper}>
-          <LinearGradient colors={['#D4AF37', '#997D2D']} style={styles.addButtonGradient}>
-            <Ionicons name={user ? 'add' : 'search'} size={user ? 32 : 26} color="#ffffff" />
-          </LinearGradient>
-        </View>
-      ),
-      options: {
-        tabBarLabel: () => null,
-      },
-      listeners: {
-        tabPress: (e: any) => {
-          handleTabPress();
-          if (!user) {
-            e.preventDefault();
-            router.push('/search');
-          }
-        },
-      },
-    },
-    {
-      name: 'feed' as const,
-      title: 'فيديو',
+      name: 'profile/index' as const,
+      title: 'الملف',
       icon: ({ color, focused }: { color: string; focused: boolean }) => (
-        <Ionicons name={focused ? 'videocam' : 'videocam-outline'} size={24} color={color} />
-      ),
-      listeners: {
-        tabPress: handleTabPress,
-      },
-    },
-    {
-      name: 'index' as const,
-      title: 'الرئيسية',
-      icon: ({ color, focused }: { color: string; focused: boolean }) => (
-        <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
+        <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
       ),
       listeners: {
         tabPress: handleTabPress,

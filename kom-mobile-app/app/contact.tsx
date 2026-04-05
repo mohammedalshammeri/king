@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   cardText: {
     flex: 1,
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     alignSelf: 'stretch',
     width: '100%',
   },

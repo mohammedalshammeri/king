@@ -217,7 +217,6 @@ export default function Feed() {
           keyExtractor={(item: any) => item.userId ?? item.id ?? Math.random().toString()}
           contentContainerStyle={{ paddingHorizontal: 10, paddingVertical: 6 }}
           showsHorizontalScrollIndicator={false}
-          style={{ direction: 'rtl' }}
           renderItem={({ item, index }) => (
             <StoryCircle
               user={item}

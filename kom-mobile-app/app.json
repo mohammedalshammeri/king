@@ -2,12 +2,20 @@
   "expo": {
     "name": "King of the Market",
     "slug": "kom-mobile-app",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "kotm",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/38364066-6118-4eb7-ad6a-22eeecd37a69",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "primaryColor": "#D4AF37",
     "description": "King of the Market | ملك السوق – سوق السيارات الأول في البحرين. بيع واشترِ سيارتك بكل سهولة مع آلاف الإعلانات من الأفراد والمعارض.",
     "splash": {
@@ -17,7 +25,7 @@
     },
     "ios": {
       "bundleIdentifier": "app.kotm.kom",
-      "buildNumber": "23",
+      "buildNumber": "31",
       "supportsTablet": false,
       "requireFullScreen": true,
       "infoPlist": {
@@ -104,7 +112,7 @@
     },
     "android": {
       "package": "app.kotm.kom",
-      "versionCode": 14,
+      "versionCode": 15,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0f172a"

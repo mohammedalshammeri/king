@@ -38,6 +38,21 @@
         "simulator": false
       }
     },
+    "testflight": {
+      "extends": "production",
+      "distribution": "store",
+      "channel": "testflight",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.kotm.app/api/v1"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "image": "latest"
+      }
+    },
     "production": {
       "distribution": "store",
       "channel": "production",

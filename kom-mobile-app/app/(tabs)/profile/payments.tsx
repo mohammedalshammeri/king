@@ -554,7 +554,7 @@ const inv = StyleSheet.create({
     color: '#0A0B14',
     fontWeight: '600',
     flex: 1,
-    textAlign: 'left',
+    textAlign: 'right',
     paddingStart: 8,
   },
   footer: {

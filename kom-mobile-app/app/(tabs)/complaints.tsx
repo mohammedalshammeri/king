@@ -226,6 +226,8 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginBottom: 10,
     textAlign: 'right',
+    writingDirection: 'rtl',
+    width: '100%',
   },
   input: {
     borderWidth: 1,
@@ -265,7 +267,9 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#64748b',
     textAlign: 'right',
+    writingDirection: 'rtl',
     paddingVertical: 10,
+    width: '100%',
   },
   ticketCard: {
     borderWidth: 1,

@@ -320,7 +320,7 @@ export default function RegisterScreen() {
                 secureTextEntry={!showPass}
                 autoCapitalize="none"
                 selectionColor={inputColor}
-                textAlign={showPass ? 'right' : 'left'}
+                textAlign="right"
               />
               <Ionicons name="lock-closed" size={18} color="#94A3B8" style={{ marginEnd: 4 }} />
             </View>
@@ -345,7 +345,7 @@ export default function RegisterScreen() {
                 secureTextEntry={!showConfirmPass}
                 autoCapitalize="none"
                 selectionColor={inputColor}
-                textAlign={showConfirmPass ? 'right' : 'left'}
+                textAlign="right"
               />
               <Ionicons name="lock-closed" size={18} color="#94A3B8" style={{ marginEnd: 4 }} />
             </View>
@@ -414,7 +414,7 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(212,175,55,0.05)', bottom: -20, left: -50,
   },
   backBtn: {
-    position: 'absolute', right: 20, zIndex: 20,
+    position: 'absolute', left: 20, zIndex: 20,
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center', alignItems: 'center',

@@ -50,8 +50,5 @@ export function View(props: ViewProps) {
   const { style, lightColor, darkColor, ...otherProps } = props;
   const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
 
-  // Force RTL at the container/layout level.
-  const rtlViewStyle = ({ direction: 'rtl' } as const);
-
-  return <DefaultView style={[{ backgroundColor }, style, rtlViewStyle]} {...otherProps} />;
+  return <DefaultView style={[{ backgroundColor }, style]} {...otherProps} />;
 }

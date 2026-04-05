@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     position: 'absolute',
-    right: 16,
+    left: 16,
     top: 0,
     bottom: 0,
     justifyContent: 'center',
@@ -153,11 +153,11 @@ const styles = StyleSheet.create({
   },
   rightSlot: {
     position: 'absolute',
-    left: 16,
+    right: 16,
     top: 0,
     bottom: 0,
     justifyContent: 'center',
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
     minWidth: 44,
     zIndex: 2,
   },

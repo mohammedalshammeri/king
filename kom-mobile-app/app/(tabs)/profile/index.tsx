@@ -233,13 +233,13 @@ export default function ProfileScreen() {
               activeOpacity={0.75}
               onPress={() => router.push(item.route as any)}
             >
-              <Ionicons name="chevron-back" size={18} color={mutedColor} />
               <View style={s.menuLabelRow}>
                 <View style={[s.iconPill, { backgroundColor: item.bg }]}>
                   <Ionicons name={item.icon as any} size={18} color={item.color} />
                 </View>
                 <Text style={[s.menuText, { color: textColor }]}>{item.label}</Text>
               </View>
+              <Ionicons name="chevron-back" size={18} color={mutedColor} />
             </TouchableOpacity>
           ))}
         </View>
@@ -314,7 +314,7 @@ const s = StyleSheet.create({
   menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, paddingHorizontal: 16 },
   menuLabelRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14 },
   iconPill: { width: 42, height: 42, borderRadius: 13, justifyContent: 'center', alignItems: 'center' },
-  menuText: { fontSize: 15, fontWeight: '600', textAlign: 'right', writingDirection: 'rtl', flex: 1 },
+  menuText: { fontSize: 15, fontWeight: '600', textAlign: 'right', writingDirection: 'rtl' },
 
   // logout
   logoutBtn: {
@@ -329,7 +329,7 @@ const s = StyleSheet.create({
   backBtn: {
     position: 'absolute',
     top: 12,
-    right: 12,
+    left: 12,
     width: 44,
     height: 44,
     borderRadius: 10,

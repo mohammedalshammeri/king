@@ -255,12 +255,15 @@ const styles = StyleSheet.create({
   },
   inputGroup: {
     marginBottom: 16,
+    width: '100%',
   },
   label: {
     fontSize: 13,
     color: '#64748b',
     marginBottom: 6,
     textAlign: 'right',
+    writingDirection: 'rtl',
+    alignSelf: 'stretch',
   },
   input: {
     backgroundColor: '#fff',

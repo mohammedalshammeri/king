@@ -5,12 +5,12 @@ import { Text, View } from '@/components/Themed';
 export default function NotFoundScreen() {
   return (
     <>
-      <Stack.Screen options={{ title: 'Oops!' }} />
+      <Stack.Screen options={{ title: 'خطأ' }} />
       <View style={[styles.container]}>
-        <Text style={styles.title}>This screen doesn't exist.</Text>
+        <Text style={styles.title}>هذه الصفحة غير موجودة</Text>
 
         <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>Go to home screen!</Text>
+          <Text style={styles.linkText}>العودة للرئيسية</Text>
         </Link>
       </View>
     </>

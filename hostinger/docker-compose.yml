@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: ../kom-backend/kom-backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./backend.env
+    ports:
+      - "127.0.0.1:3003:3000"
+
+  admin:
+    build:
+      context: ../kom-admin-dashboard
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: https://api.kotm.app/api/v1
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "127.0.0.1:3002:3000"
+
+  landing:
+    build:
+      context: ../kom-landing
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3004:80"
