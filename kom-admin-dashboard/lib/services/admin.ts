@@ -31,8 +31,8 @@ export async function approveUser(id: string) {
   return data.data as { message: string };
 }
 
-export async function rejectUser(id: string) {
-  const { data } = await api.post(`/admin/users/${id}/reject`);
+export async function rejectUser(id: string, reason: string) {
+  const { data } = await api.post(`/admin/users/${id}/reject`, { reason });
   return data.data as { message: string };
 }
 

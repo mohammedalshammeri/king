@@ -1,3 +1,32 @@
+const getRequiredEnv = (name: string): string => {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`${name} must be set`);
+  }
+  return value;
+};
+
+const getCorsOrigins = (): string[] => {
+  const configuredOrigins = process.env.CORS_ORIGINS?.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (configuredOrigins && configuredOrigins.length > 0) {
+    return configuredOrigins;
+  }
+
+  return [
+    'https://kotm.app',
+    'https://www.kotm.app',
+    'https://admin.kotm.app',
+    'https://api.kotm.app',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:8081',
+  ];
+};
+
 export default () => ({
   // Application
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -11,10 +40,22 @@ export default () => ({
 
   // JWT
   jwt: {
-    accessSecret: process.env.JWT_ACCESS_SECRET || 'access-secret',
+    accessSecret: getRequiredEnv('JWT_ACCESS_SECRET'),
     accessExpiration: process.env.JWT_ACCESS_EXPIRATION || '15m',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'refresh-secret',
+    refreshSecret: getRequiredEnv('JWT_REFRESH_SECRET'),
     refreshExpiration: process.env.JWT_REFRESH_EXPIRATION || '7d',
+  },
+
+  auth: {
+    googleClientIds: (process.env.GOOGLE_CLIENT_IDS || '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean),
+    appleAudience: process.env.APPLE_AUTH_AUDIENCE || process.env.APPLE_BUNDLE_ID || 'app.kotm.kom',
+  },
+
+  cors: {
+    origins: getCorsOrigins(),
   },
 
   // S3/R2 Storage

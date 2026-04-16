@@ -8,6 +8,7 @@ import { Image } from 'expo-image';
 import { Colors } from '@/constants/Colors';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { PageHeader } from '@/components/ui/page-header';
 
@@ -30,18 +31,11 @@ interface Listing {
   rejectionReason?: string;
 }
 
-const statusLabels: Record<string, { label: string; color: string; bg: string }> = {
-  DRAFT: { label: 'مسودة', color: '#64748B', bg: '#F1F5F9' },
-  PENDING_REVIEW: { label: 'قيد المراجعة', color: '#F59E0B', bg: '#FEF3C7' },
-  ACTIVE: { label: 'نشط', color: '#10B981', bg: '#D1FAE5' },
-  SOLD: { label: 'تم البيع', color: '#6366F1', bg: '#E0E7FF' },
-  REJECTED: { label: 'مرفوض', color: '#EF4444', bg: '#FEE2E2' },
-  EXPIRED: { label: 'منتهي', color: '#9CA3AF', bg: '#F3F4F6' },
-};
-
 export default function MyListingsScreen() {
   const { isAuthenticated } = useAuthStore();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -56,6 +50,18 @@ export default function MyListingsScreen() {
     textMuted:  isDark ? '#64748B' : '#94A3B8',
     subText:    isDark ? '#CBD5E1' : '#6B7280',
     primary: Colors.primary,
+  };
+
+  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
+  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
+
+  const statusLabels: Record<string, { label: string; color: string; bg: string }> = {
+    DRAFT: { label: t('myListings.statusDraft'), color: '#64748B', bg: '#F1F5F9' },
+    PENDING_REVIEW: { label: t('myListings.statusPendingReview'), color: '#F59E0B', bg: '#FEF3C7' },
+    ACTIVE: { label: t('myListings.statusActive'), color: '#10B981', bg: '#D1FAE5' },
+    SOLD: { label: t('myListings.statusSold'), color: '#6366F1', bg: '#E0E7FF' },
+    REJECTED: { label: t('myListings.statusRejected'), color: '#EF4444', bg: '#FEE2E2' },
+    EXPIRED: { label: t('myListings.statusExpired'), color: '#9CA3AF', bg: '#F3F4F6' },
   };
 
   const getDisplayStatus = (status: Listing['status']) => {
@@ -78,7 +84,7 @@ export default function MyListingsScreen() {
     } catch (error: any) {
       console.error('Failed to fetch listings:', error);
       if (error.response?.status !== 401) {
-        Alert.alert('خطأ', 'فشل تحميل الإعلانات');
+        Alert.alert(t('common.error'), t('myListings.loadFailed'));
       }
     } finally {
       setIsLoading(false);
@@ -96,21 +102,21 @@ export default function MyListingsScreen() {
 
   const handleDelete = async (listingId: string) => {
     Alert.alert(
-      'حذف الإعلان',
-      'هل أنت متأكد من حذف هذا الإعلان؟',
+      t('myListings.deleteTitle'),
+      t('myListings.deleteMessage'),
       [
-        { text: 'إلغاء', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'حذف',
+          text: t('myListings.deleteConfirm'),
           style: 'destructive',
           onPress: async () => {
             try {
               await api.delete(`/listings/${listingId}`);
               setListings(listings.filter(l => l.id !== listingId));
               fetchListings(true);
-              Alert.alert('تم بنجاح', 'تم حذف الإعلان');
+              Alert.alert(t('common.success'), t('myListings.deleteSuccess'));
             } catch (error: any) {
-              Alert.alert('خطأ', 'فشل حذف الإعلان');
+              Alert.alert(t('common.error'), t('myListings.deleteFailed'));
             }
           },
         },
@@ -127,19 +133,19 @@ export default function MyListingsScreen() {
 
   const handleMarkAsSold = async (listingId: string) => {
     Alert.alert(
-      'تحديد كمُباع',
-      'هل تريد تحديد هذا الإعلان كمُباع؟',
+      t('myListings.soldTitle'),
+      t('myListings.soldMessage'),
       [
-        { text: 'إلغاء', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'نعم',
+          text: t('myListings.confirmYes'),
           onPress: async () => {
             try {
               await api.post(`/listings/${listingId}/mark-sold`);
               fetchListings();
-              Alert.alert('تم بنجاح', 'تم تحديد الإعلان كمُباع');
+              Alert.alert(t('common.success'), t('myListings.soldSuccess'));
             } catch (error: any) {
-              Alert.alert('خطأ', 'فشل تحديث الإعلان');
+              Alert.alert(t('common.error'), t('myListings.updateFailed'));
             }
           },
         },
@@ -194,8 +200,8 @@ export default function MyListingsScreen() {
           </View>
 
           <View style={styles.cardInfo}>
-            <View style={styles.cardHeader}>
-              <Text style={[styles.cardTitle, { color: theme.text }]} numberOfLines={2}>
+            <View style={[styles.cardHeader, rowDirection]}>
+              <Text style={[styles.cardTitle, { color: theme.text }, dirText]} numberOfLines={2}>
                 {item.title}
               </Text>
               <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg }]}>
@@ -205,7 +211,7 @@ export default function MyListingsScreen() {
               </View>
             </View>
 
-            <Text style={[styles.cardPrice, { color: theme.primary }]}>
+            <Text style={[styles.cardPrice, { color: theme.primary }, dirText]}>
               {item.price 
                 ? (typeof item.price === 'number' 
                     ? item.price.toFixed(3) 
@@ -214,29 +220,29 @@ export default function MyListingsScreen() {
             </Text>
 
             {item.locationGovernorate && (
-              <View style={styles.cardLocation}>
+              <View style={[styles.cardLocation, rowDirection]}>
                 <Ionicons name="location-outline" size={14} color={theme.textMuted} />
-                <Text style={[styles.cardLocationText, { color: theme.textMuted }]}>{item.locationGovernorate}</Text>
+                <Text style={[styles.cardLocationText, { color: theme.textMuted }, dirText]}>{item.locationGovernorate}</Text>
               </View>
             )}
 
             {item.status === 'APPROVED' && (
-              <View style={styles.cardStats}>
-                <View style={styles.stat}>
+              <View style={[styles.cardStats, rowDirection]}>
+                <View style={[styles.stat, rowDirection]}>
                   <Ionicons name="eye-outline" size={16} color={theme.textMuted} />
-                  <Text style={[styles.statText, { color: theme.textMuted }]}>{item.viewsCount}</Text>
+                  <Text style={[styles.statText, { color: theme.textMuted }, dirText]}>{item.viewsCount}</Text>
                 </View>
-                <View style={styles.stat}>
+                <View style={[styles.stat, rowDirection]}>
                   <Ionicons name="heart-outline" size={16} color={theme.textMuted} />
-                  <Text style={[styles.statText, { color: theme.textMuted }]}>{item.favoritesCount}</Text>
+                  <Text style={[styles.statText, { color: theme.textMuted }, dirText]}>{item.favoritesCount}</Text>
                 </View>
               </View>
             )}
 
             {item.status === 'REJECTED' && item.rejectionReason && (
-              <View style={[styles.rejectionBox, { backgroundColor: isDark ? '#3b1f1f' : '#FEE2E2' }]}>
+              <View style={[styles.rejectionBox, { backgroundColor: isDark ? '#3b1f1f' : '#FEE2E2' }, rowDirection]}>
                 <Ionicons name="alert-circle" size={16} color="#EF4444" />
-                <Text style={styles.rejectionText} numberOfLines={2}>
+                <Text style={[styles.rejectionText, dirText]} numberOfLines={2}>
                   {item.rejectionReason}
                 </Text>
               </View>
@@ -244,44 +250,44 @@ export default function MyListingsScreen() {
           </View>
         </View>
 
-        <View style={[styles.cardActions, { borderTopColor: theme.border }]}>
+        <View style={[styles.cardActions, { borderTopColor: theme.border }, rowDirection]}>
           {canEdit && (
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[styles.actionButton, rowDirection]}
               onPress={(e: any) => {
                 e?.stopPropagation?.();
                 handleEdit(item);
               }}
             >
               <Ionicons name="create-outline" size={20} color={Colors.primary} />
-              <Text style={[styles.actionButtonText, { color: theme.primary }]}>
-                {item.status === 'DRAFT' ? 'إكمال' : 'تعديل'}
+              <Text style={[styles.actionButtonText, { color: theme.primary }, dirText]}>
+                {item.status === 'DRAFT' ? t('myListings.complete') : t('myListings.edit')}
               </Text>
             </TouchableOpacity>
           )}
 
           {item.status === 'APPROVED' && (
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[styles.actionButton, rowDirection]}
               onPress={(e: any) => {
                 e?.stopPropagation?.();
                 handleMarkAsSold(item.id);
               }}
             >
               <Ionicons name="checkmark-circle-outline" size={20} color="#10B981" />
-              <Text style={[styles.actionButtonText, { color: '#10B981' }]}>تم البيع</Text>
+              <Text style={[styles.actionButtonText, { color: '#10B981' }, dirText]}>{t('myListings.soldAction')}</Text>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
-            style={styles.actionButton}
+            style={[styles.actionButton, rowDirection]}
             onPress={(e: any) => {
               e?.stopPropagation?.();
               handleDelete(item.id);
             }}
           >
             <Ionicons name="trash-outline" size={20} color="#EF4444" />
-            <Text style={[styles.actionButtonText, { color: '#EF4444' }]}>حذف</Text>
+            <Text style={[styles.actionButtonText, { color: '#EF4444' }, dirText]}>{t('myListings.deleteAction')}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -293,15 +299,15 @@ export default function MyListingsScreen() {
       <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.emptyContainer}>
           <Ionicons name="lock-closed-outline" size={64} color={theme.textMuted} />
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>تسجيل الدخول مطلوب</Text>
-          <Text style={[styles.emptyText, { color: theme.textMuted }]}>
-            يجب تسجيل الدخول لرؤية إعلاناتك
+          <Text style={[styles.emptyTitle, { color: theme.text }, dirText]}>{t('myListings.loginRequired')}</Text>
+          <Text style={[styles.emptyText, { color: theme.textMuted }, dirText]}>
+            {t('myListings.loginRequiredMessage')}
           </Text>
           <TouchableOpacity
             style={styles.loginButton}
             onPress={() => router.push('/(auth)/login')}
           >
-            <Text style={styles.loginButtonText}>تسجيل الدخول</Text>
+            <Text style={styles.loginButtonText}>{t('myListings.loginAction')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -311,7 +317,7 @@ export default function MyListingsScreen() {
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: theme.background }]}>
       <PageHeader
-        title="إعلاناتي"
+        title={t('tabs.myListings')}
         variant="gradient"
         onBack={() => router.replace('/profile')}
         rightSlot={(
@@ -321,12 +327,12 @@ export default function MyListingsScreen() {
         )}
       />
 
-      <View style={styles.filterContainer}>
+      <View style={[styles.filterContainer, rowDirection]}>
         {[
-          { key: 'ALL', label: 'الكل' },
-          { key: 'ACTIVE', label: 'نشط' },
-          { key: 'PENDING_REVIEW', label: 'قيد المراجعة' },
-          { key: 'SOLD', label: 'مُباع' },
+          { key: 'ALL', label: t('myListings.allFilter') },
+          { key: 'ACTIVE', label: t('myListings.statusActive') },
+          { key: 'PENDING_REVIEW', label: t('myListings.statusPendingReview') },
+          { key: 'SOLD', label: t('myListings.soldAction') },
         ].map((f) => (
           <TouchableOpacity
             key={f.key}
@@ -347,19 +353,26 @@ export default function MyListingsScreen() {
       ) : filteredListings.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="document-text-outline" size={64} color={theme.textMuted} />
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>لا توجد إعلانات</Text>
-          <Text style={[styles.emptyText, { color: theme.textMuted }]}>
+          <Text style={[styles.emptyTitle, { color: theme.text }, dirText]}>{t('myListings.noListings')}</Text>
+          <Text style={[styles.emptyText, { color: theme.textMuted }, dirText]}>
             {filter === 'ALL'
-              ? 'لم تقم بإضافة أي إعلانات بعد'
-              : `لا توجد إعلانات ${filter === 'ACTIVE' ? 'نشطة' : filter === 'PENDING_REVIEW' ? 'قيد المراجعة' : 'مُباعة'}`}
+              ? t('myListings.noListingsYet')
+              : t('myListings.noListingsWithFilter', {
+                  status:
+                    filter === 'ACTIVE'
+                      ? t('myListings.filterActive')
+                      : filter === 'PENDING_REVIEW'
+                      ? t('myListings.filterPendingReview')
+                      : t('myListings.filterSold'),
+                })}
           </Text>
           {filter === 'ALL' && (
             <TouchableOpacity
-              style={styles.addNewButton}
+              style={[styles.addNewButton, rowDirection]}
               onPress={() => router.push('/(tabs)/add')}
             >
               <Ionicons name="add" size={20} color="#FFFFFF" />
-              <Text style={styles.addNewButtonText}>إضافة إعلان جديد</Text>
+              <Text style={styles.addNewButtonText}>{t('myListings.addNewListing')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -509,7 +522,7 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 12,
-    marginStart: 12,
+    marginEnd: 12,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -548,7 +561,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1E293B',
     textAlign: 'right',
-    marginStart: 8,
+    marginEnd: 8,
   },
   statusBadge: {
     paddingHorizontal: 10,

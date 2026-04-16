@@ -5,13 +5,19 @@ import { Resend } from 'resend';
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private readonly resend: Resend;
+  private readonly resend?: Resend;
   private readonly from: string;
   private readonly appUrl: string;
 
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('resend.apiKey');
-    this.resend = new Resend(apiKey);
+
+    if (apiKey) {
+      this.resend = new Resend(apiKey);
+    } else {
+      this.logger.warn('RESEND_API_KEY is not configured. Email delivery is disabled.');
+    }
+
     this.from = this.configService.get<string>('resend.from') || 'KOM – ملك السوق <info@kotm.app>';
     this.appUrl = this.configService.get<string>('resend.appUrl') || 'https://kotm.app';
   }
@@ -420,6 +426,11 @@ export class EmailService {
   // Internal: send + layout
   // ─────────────────────────────────────────────────────────────────────────
   private async send(opts: { to: string; subject: string; html: string }): Promise<void> {
+    if (!this.resend) {
+      this.logger.warn(`Skipping email to ${opts.to} because RESEND_API_KEY is not configured.`);
+      return;
+    }
+
     try {
       const { data, error } = await this.resend.emails.send({
         from: this.from,

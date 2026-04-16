@@ -100,6 +100,67 @@ export class LoginDto {
   password: string;
 }
 
+export enum SocialProvider {
+  GOOGLE = 'GOOGLE',
+  APPLE = 'APPLE',
+}
+
+export class SocialAuthDto {
+  @ApiProperty({ enum: SocialProvider, example: SocialProvider.GOOGLE })
+  @IsEnum(SocialProvider)
+  provider: SocialProvider;
+
+  @ApiProperty({ description: 'Verified provider identity token' })
+  @IsString()
+  @IsNotEmpty()
+  idToken: string;
+
+  @ApiPropertyOptional({ enum: UserType, example: UserType.INDIVIDUAL })
+  @IsOptional()
+  @IsEnum(UserType)
+  userType?: UserType;
+
+  @ApiPropertyOptional({ example: 'Ahmed Mohammed', description: 'Used when creating an INDIVIDUAL account' })
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  fullName?: string;
+
+  @ApiPropertyOptional({ example: 'ABC Motors', description: 'Used when creating a SHOWROOM account' })
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  showroomName?: string;
+
+  @ApiPropertyOptional({ enum: MerchantType, example: MerchantType.CAR_SHOWROOM })
+  @IsEnum(MerchantType)
+  @IsOptional()
+  merchantType?: MerchantType;
+
+  @ApiPropertyOptional({ example: 'CR123456', description: 'Required for SHOWROOM account creation' })
+  @IsOptional()
+  @IsString()
+  crNumber?: string;
+
+  @ApiPropertyOptional({ example: '+97339001001' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\+?[1-9]\d{7,14}$/, { message: 'Invalid phone number format' })
+  phone?: string;
+
+  @ApiPropertyOptional({ example: 'Capital' })
+  @IsOptional()
+  @IsString()
+  governorate?: string;
+
+  @ApiPropertyOptional({ example: 'Manama' })
+  @IsOptional()
+  @IsString()
+  city?: string;
+}
+
 export class RestoreAccountDto {
   @ApiProperty({ example: 'user@example.com' })
   @IsEmail()

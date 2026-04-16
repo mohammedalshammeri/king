@@ -2,7 +2,7 @@
   "expo": {
     "name": "King of the Market",
     "slug": "kom-mobile-app",
-    "version": "1.1.2",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "kotm",
@@ -25,7 +25,7 @@
     },
     "ios": {
       "bundleIdentifier": "app.kotm.kom",
-      "buildNumber": "31",
+      "buildNumber": "36",
       "supportsTablet": false,
       "requireFullScreen": true,
       "infoPlist": {
@@ -112,7 +112,7 @@
     },
     "android": {
       "package": "app.kotm.kom",
-      "versionCode": 15,
+      "versionCode": 18,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0f172a"
@@ -165,7 +165,9 @@
           "photosPermission": "يحتاج تطبيق KOM للوصول إلى معرض الصور لاختيار صور السيارات.",
           "cameraPermission": "يحتاج تطبيق KOM للوصول إلى الكاميرا لتصوير السيارات."
         }
-      ]
+      ],
+      "expo-apple-authentication",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

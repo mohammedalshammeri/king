@@ -19,46 +19,103 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import SocialAuthSection, { SocialAuthProviderPayload } from '@/components/auth/SocialAuthSection';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
+
+function getAuthErrorDetails(error: any, t: (key: string) => string): { code?: string; message: string } {
+  const responseData = error?.response?.data;
+  const code = responseData?.error?.code;
+  const rawMessage = responseData?.error?.message
+    || responseData?.message
+    || error?.message
+    || '';
+
+  const normalizedMessage = Array.isArray(rawMessage) ? rawMessage[0] : String(rawMessage).trim();
+
+  switch (code) {
+    case 'ACCOUNT_RECOVERY_REQUIRED':
+      return {
+        code,
+        message: normalizedMessage || t('auth.accountDeletedTemporary'),
+      };
+    case 'FORBIDDEN':
+      if (/not active/i.test(normalizedMessage)) {
+        return {
+          code,
+          message: t('auth.accountNotActive'),
+        };
+      }
+
+      if (/banned/i.test(normalizedMessage)) {
+        return {
+          code,
+          message: t('auth.accountBanned'),
+        };
+      }
+
+      return {
+        code,
+        message: normalizedMessage || t('auth.forbiddenGeneric'),
+      };
+    case 'UNAUTHORIZED':
+      return {
+        code,
+        message: t('auth.invalidCredentials'),
+      };
+    default:
+      return {
+        code,
+        message: normalizedMessage || t('auth.loginFailed'),
+      };
+  }
+}
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, restoreDeletedAccount, isLoading } = useAuthStore();
+  const { login, restoreDeletedAccount, socialAuth, isLoading } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passFocused, setPassFocused] = useState(false);
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
   const handleLogin = async () => {
     const normalizedEmail = email.trim();
-    const normalizedPassword = password.trim();
+    const normalizedPassword = password;
 
     if (!normalizedEmail || !normalizedPassword) {
-      Alert.alert('تنبيه', 'يرجى إدخال البريد الإلكتروني وكلمة المرور');
+      setLoginError(t('auth.enterCredentials'));
+      Alert.alert(t('common.warning'), t('auth.enterCredentials'));
       return;
     }
+
+    setLoginError('');
+
     try {
       await login(normalizedEmail, normalizedPassword);
       if (router.canGoBack()) router.back();
       else router.replace('/(tabs)');
     } catch (error: any) {
-      const errorCode = error.response?.data?.error?.code;
+      const { code: errorCode, message } = getAuthErrorDetails(error, t as any);
       if (errorCode === 'ACCOUNT_RECOVERY_REQUIRED') {
-        const msg = error.response?.data?.error?.message || 'يمكنك استرجاع هذا الحساب.';
-        Alert.alert('استرجاع الحساب', msg, [
-          { text: 'إلغاء', style: 'cancel' },
+        setLoginError(message);
+        Alert.alert(t('auth.accountRecoveryTitle'), message, [
+          { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'استرجاع',
+            text: t('auth.restoreAccount'),
             onPress: async () => {
               try {
                 await restoreDeletedAccount(normalizedEmail, normalizedPassword);
                 router.replace('/(tabs)');
               } catch (restoreError: any) {
-                const restoreMsg = restoreError.response?.data?.error?.message;
-                Alert.alert('خطأ', restoreMsg || 'فشل استرجاع الحساب.');
+                const restoreMsg = getAuthErrorDetails(restoreError, t as any).message;
+                Alert.alert(t('common.error'), restoreMsg || t('auth.restoreAccountFailed'));
               }
             },
           },
@@ -66,9 +123,15 @@ export default function LoginScreen() {
         return;
       }
 
-      const msg = error.response?.data?.error?.message;
-      Alert.alert('خطأ', msg || 'فشل تسجيل الدخول. تأكد من صحة البيانات.');
+      setLoginError(message);
+      Alert.alert(t('common.error'), message);
     }
+  };
+
+  const handleSocialAuth = async ({ provider, idToken, fullName }: SocialAuthProviderPayload) => {
+    await socialAuth({ provider, idToken, fullName });
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)');
   };
 
   const inputBg     = isDark ? '#1E2A40' : '#F8FAFC';
@@ -80,7 +143,7 @@ export default function LoginScreen() {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[s.root, { backgroundColor: isDark ? '#0B0F1E' : '#F2F5FC' }]}>
       <StatusBar style="light" />
 
-      {/* â”€â”€ Full-bleed navy hero â”€â”€ */}
+      {/* ── Full-bleed navy hero ── */}
       <LinearGradient colors={['#0A0F1E', '#0E1830', '#162444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.hero}>
         {/* Decorative blobs */}
         <View style={s.blob1} />
@@ -88,21 +151,21 @@ export default function LoginScreen() {
 
         {/* Back button */}
         <TouchableOpacity
-          style={[s.backBtn, { top: insets.top + 12 }]}
+          style={[s.backBtn, isRTL ? s.backBtnRtl : s.backBtnLtr, { top: insets.top + 12 }]}
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
         >
-          <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+          <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color="#FFFFFF" />
         </TouchableOpacity>
 
         {/* Logo + title */}
-        <View style={s.heroContent}>
+        <View style={[s.heroContent, isRTL ? s.heroContentRtl : s.heroContentLtr]}>
           <Image source={require('../../assets/images/logo.png')} style={s.logo} contentFit="contain" />
-          <Text style={s.heroTitle}>تسجيل الدخول</Text>
-          <Text style={s.heroSub}>مرحباً بك مجدداً في KOM</Text>
+          <Text style={[s.heroTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.login')}</Text>
+          <Text style={[s.heroSub, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.loginSubtitle')}</Text>
         </View>
       </LinearGradient>
 
-      {/* â”€â”€ Form card â”€â”€ */}
+      {/* ── Form card ── */}
       <ScrollView
         contentContainerStyle={[s.scrollContent, { paddingBottom: insets.bottom + 32 }]}
         keyboardShouldPersistTaps="handled"
@@ -111,12 +174,12 @@ export default function LoginScreen() {
         <View style={[s.card, { backgroundColor: isDark ? '#111827' : '#FFFFFF' }]}>
           {/* Email */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor }]}>البريد الإلكتروني</Text>
-            <View style={[s.inputWrap, { backgroundColor: inputBg, borderColor: inputBorder }, emailFocused && s.inputWrapFocused]}>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.email')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }, emailFocused && s.inputWrapFocused]}>
               <Ionicons name="mail" size={18} color={emailFocused ? '#D4AF37' : '#94A3B8'} style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
-                placeholder="name@example.com"
+                placeholder={t('auth.emailPlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={email}
                 onChangeText={setEmail}
@@ -125,7 +188,8 @@ export default function LoginScreen() {
                 autoComplete="email"
                 textContentType="emailAddress"
                 keyboardType="email-address"
-                textAlign="right"
+                textAlign={isRTL ? 'right' : 'left'}
+                writingDirection={isRTL ? 'rtl' : 'ltr'}
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
               />
@@ -134,14 +198,12 @@ export default function LoginScreen() {
 
           {/* Password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor }]}>كلمة المرور</Text>
-            <View style={[s.inputWrap, { backgroundColor: inputBg, borderColor: inputBorder }, passFocused && s.inputWrapFocused]}>
-              <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={s.icon}>
-                <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={18} color={passFocused ? '#D4AF37' : '#94A3B8'} />
-              </TouchableOpacity>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.password')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }, passFocused && s.inputWrapFocused]}>
+              <Ionicons name="lock-closed" size={18} color={passFocused ? '#D4AF37' : '#94A3B8'} style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
-                placeholder="••••••••"
+                placeholder={t('auth.passwordPlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={password}
                 onChangeText={setPassword}
@@ -150,17 +212,27 @@ export default function LoginScreen() {
                 autoCorrect={false}
                 autoComplete="password"
                 textContentType="password"
-                textAlign="right"
+                textAlign={isRTL ? 'right' : 'left'}
+                writingDirection={isRTL ? 'rtl' : 'ltr'}
                 onFocus={() => setPassFocused(true)}
                 onBlur={() => setPassFocused(false)}
               />
-              <Ionicons name="lock-closed" size={18} color={passFocused ? '#D4AF37' : '#94A3B8'} style={{ marginEnd: 4 }} />
+              <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={{ paddingHorizontal: 8 }}>
+                <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={18} color={passFocused ? '#D4AF37' : '#94A3B8'} />
+              </TouchableOpacity>
             </View>
           </View>
 
+          {loginError ? (
+            <View style={s.errorBox}>
+              <Ionicons name="alert-circle" size={18} color="#B42318" style={s.errorIcon} />
+              <Text style={s.errorText}>{loginError}</Text>
+            </View>
+          ) : null}
+
           {/* Forgot password */}
           <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')} style={s.forgotRow}>
-            <Text style={s.forgotText}>نسيت كلمة المرور؟</Text>
+            <Text style={[s.forgotText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.forgotQuestion')}</Text>
           </TouchableOpacity>
 
           {/* Login CTA */}
@@ -169,17 +241,19 @@ export default function LoginScreen() {
               {isLoading ? (
                 <ActivityIndicator color="#0A0B14" />
               ) : (
-                <Text style={s.loginText}>دخول</Text>
+                <Text style={s.loginText}>{t('auth.loginButton')}</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>
 
+          <SocialAuthSection mode="login" disabled={isLoading} onAuthenticate={handleSocialAuth} />
+
           {/* Register link */}
-          <View style={s.footer}>
-            <Text style={s.footerNote}>ليس لديك حساب؟ </Text>
+          <View style={[s.footer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <Text style={s.footerNote}>{t('auth.noAccount')}</Text>
             <Link href="/(auth)/register" asChild>
               <TouchableOpacity>
-                <Text style={s.registerLink}>إنشاء حساب جديد</Text>
+                <Text style={s.registerLink}>{t('auth.createNewAccount')}</Text>
               </TouchableOpacity>
             </Link>
           </View>
@@ -204,15 +278,19 @@ const s = StyleSheet.create({
   blob1: { position: 'absolute', width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(212,175,55,0.07)', top: -80, right: -60 },
   blob2: { position: 'absolute', width: 160, height: 160, borderRadius: 80,  backgroundColor: 'rgba(212,175,55,0.05)', bottom: -20, left: -50 },
   backBtn: {
-    position: 'absolute', left: 20, zIndex: 20,
+    position: 'absolute', zIndex: 20,
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center', alignItems: 'center',
   },
-  heroContent: { alignItems: 'center', paddingTop: 70 },
+  backBtnRtl: { right: 20 },
+  backBtnLtr: { left: 20 },
+  heroContent: { paddingTop: 70, width: '100%' },
+  heroContentRtl: { alignItems: 'flex-end' },
+  heroContentLtr: { alignItems: 'flex-start' },
   logo: { width: 110, height: 42, marginBottom: 20 },
-  heroTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', marginBottom: 6, textAlign: 'center' },
-  heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.6)', textAlign: 'center' },
+  heroTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', marginBottom: 6, width: '100%' },
+  heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.6)', width: '100%' },
 
   // scroll + card
   scrollContent: { flexGrow: 1, paddingHorizontal: 16, marginTop: 24 },
@@ -227,9 +305,8 @@ const s = StyleSheet.create({
 
   // inputs
   inputGroup: { marginBottom: 20 },
-  label: { fontSize: 13, fontWeight: '700', marginBottom: 8, textAlign: 'right' },
+  label: { fontSize: 13, fontWeight: '700', marginBottom: 8 },
   inputWrap: {
-    flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
     borderRadius: 16,
@@ -242,12 +319,33 @@ const s = StyleSheet.create({
     flex: 1,
     paddingVertical: 13,
     fontSize: 15,
-    textAlign: 'right',
+  },
+  errorBox: {
+    flexDirection: 'row-reverse',
+    alignItems: 'flex-start',
+    backgroundColor: '#FEF3F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginTop: -6,
+    marginBottom: 14,
+  },
+  errorIcon: {
+    marginStart: 8,
+    marginTop: 1,
+  },
+  errorText: {
+    flex: 1,
+    color: '#B42318',
+    fontSize: 13,
+    lineHeight: 20,
   },
 
   // forgot
-  forgotRow: { alignSelf: 'flex-start', marginTop: -8, marginBottom: 20 },
-  forgotText: { color: '#D4AF37', fontSize: 13, fontWeight: '600', textAlign: 'right', writingDirection: 'rtl' },
+  forgotRow: { alignSelf: 'flex-end', marginTop: -8, marginBottom: 20 },
+  forgotText: { color: '#D4AF37', fontSize: 13, fontWeight: '600' },
 
   // login btn
   loginBtn: {
@@ -264,4 +362,5 @@ const s = StyleSheet.create({
   footerNote: { color: '#64748B', fontSize: 14 },
   registerLink: { color: '#D4AF37', fontSize: 14, fontWeight: '800' },
 });
+
 

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect, Stack } from 'expo-router';
 import api from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { PageHeader } from '@/components/ui/page-header';
 
@@ -16,16 +17,11 @@ interface ComplaintItem {
   createdAt: string;
 }
 
-const statusMap: Record<string, { label: string; color: string; bg: string }> = {
-  OPEN: { label: 'مفتوحة', color: '#b45309', bg: '#fef3c7' },
-  UNDER_REVIEW: { label: 'قيد المراجعة', color: '#475569', bg: '#e2e8f0' },
-  RESOLVED: { label: 'تم الحل', color: '#15803d', bg: '#dcfce7' },
-  DISMISSED: { label: 'مغلقة', color: '#b91c1c', bg: '#fee2e2' },
-};
-
 export default function ComplaintsScreen() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
+  const { t } = useAppTranslation();
+  const { isRTL, language } = useLanguage();
   const { isDark } = useTheme();
   const [title, setTitle] = useState('');
   const [details, setDetails] = useState('');
@@ -43,6 +39,13 @@ export default function ComplaintsScreen() {
     primary: '#D4AF37',
   };
 
+  const statusMap: Record<string, { label: string; color: string; bg: string }> = {
+    OPEN: { label: t('complaints.statusOpen'), color: '#b45309', bg: '#fef3c7' },
+    UNDER_REVIEW: { label: t('complaints.statusReview'), color: '#475569', bg: '#e2e8f0' },
+    RESOLVED: { label: t('complaints.statusResolved'), color: '#15803d', bg: '#dcfce7' },
+    DISMISSED: { label: t('complaints.statusDismissed'), color: '#b91c1c', bg: '#fee2e2' },
+  };
+
   const loadComplaints = async () => {
     setLoading(true);
     try {
@@ -51,10 +54,10 @@ export default function ComplaintsScreen() {
       setItems((Array.isArray(data) ? data : data?.items) ?? []);
     } catch (error: any) {
       if (error?.response?.status === 401) {
-        Alert.alert('تنبيه', 'يرجى تسجيل الدخول أولاً');
+        Alert.alert(t('common.warning'), t('complaints.loginFirst'));
         router.push('/(auth)/login');
       } else {
-        Alert.alert('خطأ', 'تعذر تحميل الشكاوى');
+        Alert.alert(t('common.error'), t('complaints.loadFailed'));
       }
     } finally {
       setLoading(false);
@@ -73,7 +76,7 @@ export default function ComplaintsScreen() {
 
   const handleSubmit = async () => {
     if (title.trim().length < 5) {
-      Alert.alert('تنبيه', 'يرجى كتابة عنوان الشكوى (على الأقل 5 أحرف)');
+      Alert.alert(t('common.warning'), t('complaints.titleTooShort'));
       return;
     }
 
@@ -86,16 +89,16 @@ export default function ComplaintsScreen() {
       });
       setTitle('');
       setDetails('');
-      Alert.alert('تم الإرسال', 'تم إرسال الشكوى بنجاح');
+      Alert.alert(t('complaints.submitSuccessTitle'), t('complaints.submitSuccessMessage'));
       await loadComplaints();
     } catch (error: any) {
-      const message = error?.response?.data?.message || 'فشل إرسال الشكوى';
+      const message = error?.response?.data?.message || t('complaints.submitFailed');
       if (error?.response?.status === 401) {
-        Alert.alert('تنبيه', 'يرجى تسجيل الدخول أولاً');
+        Alert.alert(t('common.warning'), t('complaints.loginFirst'));
         router.push('/(auth)/login');
         return;
       }
-      Alert.alert('خطأ', Array.isArray(message) ? message[0] : message);
+      Alert.alert(t('common.error'), Array.isArray(message) ? message[0] : message);
     } finally {
       setSubmitting(false);
     }
@@ -105,7 +108,7 @@ export default function ComplaintsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['left', 'right', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
       <PageHeader
-        title="الشكاوى"
+        title={t('complaints.title')}
         variant="gradient"
         onBack={() => router.replace('/profile')}
       />
@@ -113,61 +116,65 @@ export default function ComplaintsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
         >
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>إرسال شكوى جديدة</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('complaints.newComplaintTitle')}</Text>
           <TextInput
-            placeholder="عنوان الشكوى"
+            placeholder={t('complaints.complaintTitlePlaceholder')}
             value={title}
             onChangeText={setTitle}
             style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
             placeholderTextColor={theme.textMuted}
+            textAlign={isRTL ? 'right' : 'left'}
+            writingDirection={isRTL ? 'rtl' : 'ltr'}
           />
           <TextInput
-            placeholder="تفاصيل الشكوى (اختياري)"
+            placeholder={t('complaints.complaintDetailsPlaceholder')}
             value={details}
             onChangeText={setDetails}
             style={[styles.input, styles.textArea, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
             placeholderTextColor={theme.textMuted}
             multiline
             textAlignVertical="top"
+            textAlign={isRTL ? 'right' : 'left'}
+            writingDirection={isRTL ? 'rtl' : 'ltr'}
           />
           <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={submitting}>
             {submitting ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.submitText}>إرسال الشكوى</Text>
+              <Text style={styles.submitText}>{t('complaints.submit')}</Text>
             )}
           </TouchableOpacity>
         </View>
 
         <View style={[styles.card, styles.cardSpacing, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>متابعة الشكاوى</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('complaints.trackTitle')}</Text>
           {loading ? (
-            <View style={styles.loadingRow}>
+            <View style={[styles.loadingRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
               <ActivityIndicator style={styles.loadingIcon} />
-              <Text style={[styles.loadingText, { color: theme.textMuted }]}>جاري التحميل...</Text>
+              <Text style={[styles.loadingText, { color: theme.textMuted }]}>{t('complaints.loading')}</Text>
             </View>
           ) : items.length === 0 ? (
-            <Text style={[styles.emptyText, { color: theme.textMuted }]}>لا توجد شكاوى حتى الآن</Text>
+            <Text style={[styles.emptyText, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('complaints.empty')}</Text>
           ) : (
             items.map((item) => {
               const status = statusMap[item.status] || statusMap.OPEN;
               return (
                 <View key={item.id} style={[styles.ticketCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                  <View style={styles.ticketHeader}>
-                    <Text style={[styles.ticketTitle, { color: theme.text }]} numberOfLines={2}>{item.reason}</Text>
+                  <View style={[styles.ticketHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                    <Text style={[styles.ticketTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]} numberOfLines={2}>{item.reason}</Text>
                     <View style={[styles.badge, { backgroundColor: status.bg }]}
                       >
                       <Text style={[styles.badgeText, { color: status.color }]}>{status.label}</Text>
                     </View>
                   </View>
-                  <Text style={[styles.ticketDate, { color: theme.textMuted }]}>{new Date(item.createdAt).toLocaleDateString('ar')}</Text>
+                  <Text style={[styles.ticketDate, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{new Date(item.createdAt).toLocaleDateString(language === 'ar' ? 'ar' : 'en-US')}</Text>
                   {item.details ? (
-                    <Text style={[styles.ticketDetails, { color: theme.textMuted }]} numberOfLines={3}>{item.details}</Text>
+                    <Text style={[styles.ticketDetails, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]} numberOfLines={3}>{item.details}</Text>
                   ) : null}
                   {item.resolution ? (
                     <View style={[styles.resolutionBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                      <Text style={[styles.resolutionLabel, { color: theme.primary }]}>رد الإدارة</Text>
-                      <Text style={[styles.resolutionText, { color: theme.text }]}>{item.resolution}</Text>
+                      <Text style={[styles.resolutionLabel, { color: theme.primary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('complaints.adminReply')}</Text>
+                      <Text style={[styles.resolutionText, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{item.resolution}</Text>
                     </View>
                   ) : null}
                 </View>
@@ -228,6 +235,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     writingDirection: 'rtl',
     width: '100%',
+    alignSelf: 'flex-end', // التعديل هنا
   },
   input: {
     borderWidth: 1,
@@ -270,6 +278,7 @@ const styles = StyleSheet.create({
     writingDirection: 'rtl',
     paddingVertical: 10,
     width: '100%',
+    alignSelf: 'flex-end', // التعديل هنا
   },
   ticketCard: {
     borderWidth: 1,
@@ -290,18 +299,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#0f172a',
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
   ticketDate: {
     fontSize: 12,
     color: '#94a3b8',
     marginTop: 4,
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
   ticketDetails: {
     fontSize: 13,
     color: '#475569',
     marginTop: 8,
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
   badge: {
     paddingHorizontal: 8,
@@ -325,11 +337,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#D4AF37',
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
   resolutionText: {
     fontSize: 13,
     color: '#0f172a',
     marginTop: 4,
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
 });

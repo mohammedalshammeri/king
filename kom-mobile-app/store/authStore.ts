@@ -24,10 +24,22 @@ interface User {
   id: string;
   email: string;
   role: string;
+  luckCode?: string;
   phone?: string;
   individualProfile?: { fullName: string; avatarUrl?: string; governorate?: string; city?: string };
   showroomProfile?: { showroomName: string; logoUrl?: string; governorate?: string; city?: string };
 }
+
+type SocialAuthPayload = {
+  provider: 'GOOGLE' | 'APPLE';
+  idToken: string;
+  userType?: 'INDIVIDUAL' | 'SHOWROOM';
+  fullName?: string;
+  showroomName?: string;
+  phone?: string;
+  crNumber?: string;
+  merchantType?: string;
+};
 
 type AvatarSource =
   | string
@@ -44,6 +56,7 @@ interface AuthState {
   isAuthLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  socialAuth: (payload: SocialAuthPayload) => Promise<{ user: User; message?: string }>;
   restoreDeletedAccount: (email: string, password: string) => Promise<any>;
   register: (userType: 'INDIVIDUAL' | 'SHOWROOM', name: string, email: string, password: string, crNumber?: string, phone?: string, merchantType?: string) => Promise<any>;
   logout: () => Promise<void>;
@@ -64,12 +77,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true });
       const uri = typeof source === 'string' ? source : source?.uri;
-      const fileName = typeof source === 'string' ? undefined : source?.fileName;
-      const mimeType = typeof source === 'string' ? undefined : source?.mimeType;
+      const providedFileName = typeof source === 'string' ? undefined : source?.fileName;
+      const providedMimeType = typeof source === 'string' ? undefined : source?.mimeType;
       const file = typeof source === 'string' ? undefined : source?.file;
 
-      const fallbackName = fileName || 'avatar.jpg';
-      const fallbackType = mimeType || 'image/jpeg';
+      const inferredFileName = uri?.split('/').pop() || `avatar-${Date.now()}.jpg`;
+      const inferredExtension = inferredFileName.match(/\.([a-zA-Z0-9]+)$/)?.[1]?.toLowerCase();
+      const inferredMimeType = inferredExtension ? `image/${inferredExtension === 'jpg' ? 'jpeg' : inferredExtension}` : undefined;
+      const fallbackName = providedFileName || inferredFileName;
+      const fallbackType = providedMimeType || inferredMimeType || 'image/jpeg';
       const isWebRuntime = typeof document !== 'undefined';
 
       if (!uri && !file) {
@@ -109,7 +125,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        transformRequest: (data) => data, // Prevent axios from transforming FormData
       });
 
       const responseBody = response.data;
@@ -168,7 +183,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: true });
       const response = await api.post('/auth/login', {
         email: email.trim().toLowerCase(),
-        password: password.trim(),
+        password,
       });
       const { accessToken, refreshToken, user } = response.data.data;
 
@@ -177,8 +192,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ user, isAuthenticated: true });
       // Associate push token with this user account
       registerForPushNotificationsAsync().then((t) => { if (t) savePushTokenToServer(t); });
+    } catch (error: any) {
+      console.warn('Login request rejected', error?.response?.data?.error || error?.message || error);
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  socialAuth: async (payload) => {
+    try {
+      set({ isLoading: true });
+
+      const trimmedPhone = payload.phone?.trim();
+      const trimmedFullName = payload.fullName?.trim();
+      const trimmedShowroomName = payload.showroomName?.trim();
+      const trimmedCrNumber = payload.crNumber?.trim();
+
+      const response = await api.post('/auth/social', {
+        provider: payload.provider,
+        idToken: payload.idToken,
+        ...(payload.userType ? { userType: payload.userType } : {}),
+        ...(trimmedFullName ? { fullName: trimmedFullName } : {}),
+        ...(trimmedShowroomName ? { showroomName: trimmedShowroomName } : {}),
+        ...(trimmedPhone ? { phone: trimmedPhone } : {}),
+        ...(trimmedCrNumber ? { crNumber: trimmedCrNumber } : {}),
+        ...(payload.merchantType ? { merchantType: payload.merchantType } : {}),
+      });
+
+      const data = response.data.data || response.data;
+      const { accessToken, refreshToken, user, message } = data;
+
+      await saveToken('access_token', accessToken);
+      await saveToken('refresh_token', refreshToken);
+      set({ user, isAuthenticated: true });
+      registerForPushNotificationsAsync().then((token) => { if (token) savePushTokenToServer(token); });
+
+      return { user, message };
     } catch (error) {
-      console.error('Login failed', error);
+      console.error('Social auth failed', error);
       throw error;
     } finally {
       set({ isLoading: false });
@@ -190,7 +242,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: true });
       const response = await api.post('/auth/restore-account', {
         email: email.trim().toLowerCase(),
-        password: password.trim(),
+        password,
       });
 
       const { accessToken, refreshToken, user, message } = response.data.data;

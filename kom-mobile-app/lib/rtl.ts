@@ -1,9 +1,16 @@
-import { I18nManager, StyleSheet, TextStyle, ViewStyle, ImageStyle } from 'react-native';
+import { StyleSheet, TextStyle, ViewStyle, ImageStyle } from 'react-native';
+import {
+  getDirectionalInputStyle,
+  getDirectionalRowStyle,
+  getDirectionalTextStyle,
+  isLanguageRTL,
+} from './layout-direction';
 
 type RNStyle = ViewStyle | TextStyle | ImageStyle;
 type AnyStyle = RNStyle & Record<string, any>;
 
-export const isRTL = I18nManager.isRTL;
+export const isRTL = (): boolean => isCurrentRTL();
+export const isCurrentRTL = (): boolean => isLanguageRTL();
 
 const swap = (o: AnyStyle, a: string, b: string) => {
   if (o[a] !== undefined || o[b] !== undefined) {
@@ -20,7 +27,8 @@ const swap = (o: AnyStyle, a: string, b: string) => {
  * - يدعم style object أو array
  */
 export const rtlify = <T,>(style: T): T => {
-  if (!isRTL || !style) return style;
+  const rtl = isCurrentRTL();
+  if (!rtl || !style) return style;
 
   const one = (s: AnyStyle): AnyStyle => {
     if (!s || typeof s !== 'object') return s;
@@ -42,8 +50,8 @@ export const rtlify = <T,>(style: T): T => {
     swap(o, 'borderBottomLeftRadius', 'borderBottomRightRadius');
     swap(o, 'borderLeftColor', 'borderRightColor');
 
-    // 4) اجبار RTL للنصوص لو ما كان محدد
-    if (o.writingDirection === undefined) o.writingDirection = 'rtl';
+    // 4) اجبار اتجاه النص حسب اللغة الحالية لو ما كان محدد
+    if (o.writingDirection === undefined) o.writingDirection = rtl ? 'rtl' : 'ltr';
 
     return o;
   };
@@ -63,13 +71,12 @@ export const rtlStyles = StyleSheet.create({
 
   // لأي row: icons + texts + buttons
   row: {
-    flexDirection: isRTL ? 'row-reverse' : 'row',
+    ...getDirectionalRowStyle(),
   } as ViewStyle,
 
   // نصوص عامة
   text: {
-    writingDirection: isRTL ? 'rtl' : 'ltr',
-    textAlign: isRTL ? 'right' : 'left',
+    ...getDirectionalTextStyle(),
   } as TextStyle,
 
   // محتوى داخل Card أو section
@@ -80,19 +87,20 @@ export const rtlStyles = StyleSheet.create({
 });
 
 /**
- * Helper للنص: يضمن RTL + محاذاة يمين
+ * Helper للنص: يضمن RTL + محاذاة يمين + writingDirection
  */
-export const rtlText = (style?: TextStyle): TextStyle =>
-  rtlify([
-    { writingDirection: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' } as TextStyle,
-    style,
-  ] as unknown) as TextStyle;
+export const rtlText = (style?: TextStyle): TextStyle => {
+  const baseStyle: TextStyle = getDirectionalTextStyle();
+  
+  if (!style) return rtlify(baseStyle) as TextStyle;
+  return rtlify([baseStyle, style] as unknown) as TextStyle;
+};
 
 /**
  * Helper للصفوف: يضمن row-reverse في RTL
  */
 export const rtlRow = (style?: ViewStyle): ViewStyle =>
-  rtlify([{ flexDirection: isRTL ? 'row-reverse' : 'row' } as ViewStyle, style] as unknown) as ViewStyle;
+  rtlify([getDirectionalRowStyle() as ViewStyle, style] as unknown) as ViewStyle;
 
 /**
  * Helper للكونتينر: يحافظ على layout “صحي”
@@ -100,3 +108,13 @@ export const rtlRow = (style?: ViewStyle): ViewStyle =>
  */
 export const rtlContainer = (style?: ViewStyle): ViewStyle =>
   rtlify([{ flex: 1 } as ViewStyle, style] as unknown) as ViewStyle;
+/**
+ * Helper لحقول الإدخال (TextInput): يضمن RTL + محاذاة يمين + writingDirection
+ * استخدم مع TextInput لضمان محاذاة صحيحة
+ */
+export const rtlInput = (style?: TextStyle): TextStyle => {
+  const baseStyle: TextStyle = getDirectionalInputStyle();
+  
+  if (!style) return rtlify(baseStyle) as TextStyle;
+  return rtlify([baseStyle, style] as unknown) as TextStyle;
+};

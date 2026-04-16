@@ -8,6 +8,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'rea
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
 
@@ -23,6 +24,8 @@ interface PromoPackage {
 
 export default function SubscriptionPromoCard() {
   const { isAuthenticated, user } = useAuthStore();
+  const { isRTL } = useLanguage();
+  const { t } = useAppTranslation();
   const [promoPackage, setPromoPackage] = useState<PromoPackage | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasSubscription, setHasSubscription] = useState<boolean | null>(null); // null = not checked yet
@@ -101,38 +104,38 @@ export default function SubscriptionPromoCard() {
         style={styles.card}
       >
         {/* Dismiss indicator */}
-        <View style={styles.badgeRow}>
-          <View style={styles.badge}>
+        <View style={[styles.badgeRow, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
+          <View style={[styles.badge, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
             <Ionicons name="star" size={11} color="#0E1830" />
-            <Text style={styles.badgeText}>عرض خاص</Text>
+            <Text style={[styles.badgeText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('promo.specialOffer')}</Text>
           </View>
         </View>
 
-        <View style={styles.body}>
+        <View style={[styles.body, isRTL ? styles.bodyRtl : styles.bodyLtr]}>
           {/* Package name & price */}
-          <View style={styles.priceBlock}>
+          <View style={[styles.priceBlock, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
             <Text style={styles.priceAmount}>{Number(price).toFixed(3)}</Text>
             <View>
-              <Text style={styles.priceCurrency}>د.ب</Text>
-              <Text style={styles.priceFreq}>/ شهر</Text>
+              <Text style={[styles.priceCurrency, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('common.bhd')}</Text>
+              <Text style={[styles.priceFreq, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('common.perMonth')}</Text>
             </View>
           </View>
 
-          <Text style={styles.pkgName} numberOfLines={1}>{promoPackage.name}</Text>
+          <Text style={[styles.pkgName, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]} numberOfLines={1}>{promoPackage.name}</Text>
 
           {/* Features */}
-          <View style={styles.features}>
-            <View style={styles.featureRow}>
+          <View style={[styles.features, isRTL ? styles.featuresRtl : styles.featuresLtr]}>
+            <View style={[styles.featureRow, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
               <Ionicons name="checkmark-circle" size={14} color="#4ADE80" />
-              <Text style={styles.featureText}>
-                حتى {promoPackage.maxListings} إعلانات نشطة
+              <Text style={[styles.featureText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+                {t('promo.activeListings', { count: promoPackage.maxListings })}
               </Text>
             </View>
             {promoPackage.maxStories !== undefined && promoPackage.maxStories > 0 && (
-              <View style={styles.featureRow}>
+              <View style={[styles.featureRow, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
                 <Ionicons name="checkmark-circle" size={14} color="#4ADE80" />
-                <Text style={styles.featureText}>
-                  {promoPackage.maxStories} قصص مميزة
+                <Text style={[styles.featureText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+                  {t('promo.featuredStories', { count: promoPackage.maxStories })}
                 </Text>
               </View>
             )}
@@ -140,12 +143,12 @@ export default function SubscriptionPromoCard() {
 
           {/* CTA */}
           <TouchableOpacity
-            style={styles.cta}
+            style={[styles.cta, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}
             onPress={() => router.push(targetRoute as any)}
             activeOpacity={0.85}
           >
-            <Text style={styles.ctaText}>اشترك الآن</Text>
-            <Ionicons name="arrow-back" size={14} color="#0E1830" />
+            <Text style={[styles.ctaText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('promo.subscribeNow')}</Text>
+            <Ionicons name={isRTL ? 'arrow-back' : 'arrow-forward'} size={14} color="#0E1830" />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -183,10 +186,14 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   body: {
+  },
+  bodyRtl: {
     alignItems: 'flex-end',
   },
+  bodyLtr: {
+    alignItems: 'flex-start',
+  },
   priceBlock: {
-    flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 6,
     marginBottom: 2,
@@ -200,37 +207,36 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#D4AF37',
-    textAlign: 'right',
   },
   priceFreq: {
     fontSize: 11,
     color: 'rgba(255,255,255,0.6)',
-    textAlign: 'right',
   },
   pkgName: {
     fontSize: 14,
     fontWeight: '700',
     color: '#fff',
-    textAlign: 'right',
     marginBottom: 6,
   },
   features: {
-    alignItems: 'flex-end',
     gap: 3,
     marginBottom: 10,
   },
+  featuresRtl: {
+    alignItems: 'flex-end',
+  },
+  featuresLtr: {
+    alignItems: 'flex-start',
+  },
   featureRow: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
   },
   featureText: {
     fontSize: 12,
     color: 'rgba(255,255,255,0.85)',
-    textAlign: 'right',
   },
   cta: {
-    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#D4AF37',
     paddingHorizontal: 16,

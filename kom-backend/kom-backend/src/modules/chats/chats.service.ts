@@ -43,6 +43,12 @@ export class ChatsService {
     return a < b ? [a, b] : [b, a];
   }
 
+  private sendChatRefreshToParticipants(userIds: string[], threadId: string) {
+    [...new Set(userIds.filter(Boolean))].forEach((participantId) => {
+      this.chatsGateway.sendChatRefreshToUser(participantId, { threadId });
+    });
+  }
+
   async startChat(userId: string, dto: StartChatDto) {
     const listing = await this.prisma.listing.findUnique({
       where: { id: dto.listingId },
@@ -215,6 +221,7 @@ export class ChatsService {
 
     // Notify the room that messages have been read
     this.chatsGateway.sendMessagesReadToRoom(threadId);
+    this.sendChatRefreshToParticipants([thread.userAId, thread.userBId], threadId);
 
     return new PaginatedResponse(messages, total, page, limit);
   }
@@ -242,6 +249,7 @@ export class ChatsService {
     });
 
     this.chatsGateway.sendMessagesReadToRoom(threadId);
+    this.sendChatRefreshToParticipants([thread.userAId, thread.userBId], threadId);
 
     return { success: true };
   }
@@ -281,6 +289,7 @@ export class ChatsService {
 
     // Emit real-time event
     this.chatsGateway.sendMessageToRoom(threadId, message);
+    this.sendChatRefreshToParticipants([thread.userAId, thread.userBId], threadId);
 
     const otherUserId = thread.userAId === userId ? thread.userBId : thread.userAId;
     const sender = await this.prisma.user.findUnique({

@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import api from '@/services/api';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { PageHeader } from '@/components/ui/page-header';
 
@@ -13,6 +14,8 @@ export default function SettingsScreen() {
   const { user, logout, refreshUser, isAuthenticated } = useAuthStore();
   const [unreadCount, setUnreadCount] = useState(0);
   const { isDark, themeMode, setThemeMode } = useTheme();
+  const { language, setLanguage, isRTL } = useLanguage();
+  const { t } = useAppTranslation();
 
   const theme = {
     background: isDark ? '#0f172a' : '#fff',
@@ -52,12 +55,12 @@ export default function SettingsScreen() {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      'حذف الحساب',
-      'هل أنت متأكد من رغبتك في حذف حسابك؟ سيتم تعطيل الحساب الآن ويمكن استرجاعه خلال 30 يوماً قبل الحذف النهائي.',
+      t('settings.deleteTitle'),
+      t('settings.deleteMessage'),
       [
-        { text: 'إلغاء', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'تأكيد الحذف',
+          text: t('settings.deleteConfirm'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -65,7 +68,7 @@ export default function SettingsScreen() {
               await logout();
               router.replace('/(auth)/login');
             } catch (error: any) {
-              Alert.alert('خطأ', 'فشل حذف الحساب. حاول مرة أخرى.');
+              Alert.alert(t('common.error'), t('settings.deleteFailed'));
             }
           },
         },
@@ -74,10 +77,10 @@ export default function SettingsScreen() {
   };
 
   const handleLogout = async () => {
-    Alert.alert('تسجيل الخروج', 'هل أنت متأكد من رغبتك في تسجيل الخروج؟', [
-      { text: 'إلغاء', style: 'cancel' },
+    Alert.alert(t('settings.logoutTitle'), t('settings.logoutMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'خروج',
+        text: t('settings.logoutConfirm'),
         style: 'destructive',
         onPress: async () => {
           await logout();
@@ -89,17 +92,17 @@ export default function SettingsScreen() {
 
   const MenuItem = ({ icon, title, onPress, rightElement, isLast = false }: any) => (
     <TouchableOpacity
-      style={[styles.menuItem, isLast && styles.menuItemLast]}
+      style={[styles.menuItem, { flexDirection: isRTL ? 'row-reverse' : 'row' }, isLast && styles.menuItemLast]}
       onPress={onPress}
       activeOpacity={0.6}
     >
-      <View style={styles.leftChevronContainer}>
-        <Ionicons name="chevron-back" size={20} color={theme.muted} />
+      <View style={[styles.leftChevronContainer, isRTL ? styles.leftChevronContainerRtl : styles.leftChevronContainerLtr]}>
+        <Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={20} color={theme.muted} />
       </View>
 
-      <View style={styles.menuLabelContainer}>
+      <View style={[styles.menuLabelContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
         <Ionicons name={icon} size={24} color={theme.subText} style={styles.menuIcon} />
-        <Text style={[styles.menuText, styles.rtlText, { color: theme.text }]}>{title}</Text>
+        <Text style={[styles.menuText, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{title}</Text>
         {rightElement ? rightElement : null}
       </View>
     </TouchableOpacity>
@@ -110,7 +113,7 @@ export default function SettingsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <PageHeader
-        title="الإعدادات"
+        title={t('settings.title')}
         backgroundColor={theme.surface}
         borderColor={theme.border}
         textColor={theme.primary}
@@ -127,14 +130,14 @@ export default function SettingsScreen() {
               <Text style={[styles.avatarText, { color: theme.primary }]}>{avatarLetter}</Text>
             )}
           </View>
-          <Text style={[styles.name, styles.rtlText, { color: theme.text }]}>{displayName || 'مستخدم'}</Text>
-          <Text style={[styles.email, styles.rtlText, { color: theme.subText }]}>{user?.email}</Text>
+          <Text style={[styles.name, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{displayName || t('profile.defaultUser')}</Text>
+          <Text style={[styles.email, { color: theme.subText, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{user?.email}</Text>
 
           <TouchableOpacity
             style={[styles.editButton, { borderColor: theme.border, backgroundColor: theme.surface }]}
             onPress={() => router.push('/profile/edit')}
           >
-            <Text style={[styles.editButtonText, styles.rtlText, { color: theme.primary }]}>تعديل الملف الشخصي</Text>
+            <Text style={[styles.editButtonText, { color: theme.primary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('settings.editProfile')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -142,7 +145,7 @@ export default function SettingsScreen() {
         >
           <MenuItem
             icon="notifications-outline"
-            title="الإشعارات"
+            title={t('settings.notifications')}
             onPress={() => router.push('/notifications')}
             rightElement={
               <View style={styles.notificationRight}>
@@ -158,15 +161,15 @@ export default function SettingsScreen() {
         </View>
 
         <View style={[styles.section, { backgroundColor: theme.surface }]}>
-          <View style={[styles.menuItem, styles.rtlRow, { flexDirection: 'row', borderBottomWidth: 0 }]}>
+          <View style={[styles.menuItem, { flexDirection: isRTL ? 'row-reverse' : 'row', borderBottomWidth: 0 }]}> 
             <Ionicons name="moon-outline" size={24} color={theme.subText} style={styles.menuIcon} />
-            <Text style={[styles.menuText, styles.rtlText, { color: theme.text }]}>مظهر التطبيق</Text>
+            <Text style={[styles.menuText, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('settings.appearance')}</Text>
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 8 }}>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 8 }}>
             {([
-              { mode: 'light' as const, label: 'نهاري', icon: 'sunny-outline' },
-              { mode: 'auto' as const, label: 'تلقائي', icon: 'phone-portrait-outline' },
-              { mode: 'dark' as const, label: 'ليلي', icon: 'moon-outline' },
+              { mode: 'light' as const, label: t('settings.themeLight'), icon: 'sunny-outline' },
+              { mode: 'auto' as const, label: t('settings.themeAuto'), icon: 'phone-portrait-outline' },
+              { mode: 'dark' as const, label: t('settings.themeDark'), icon: 'moon-outline' },
             ]).map(({ mode, label, icon }) => {
               const isActive = themeMode === mode;
               return (
@@ -195,42 +198,77 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        <View style={[styles.section, { backgroundColor: theme.surface }]}>
+          <View style={[styles.menuItem, { flexDirection: isRTL ? 'row-reverse' : 'row', borderBottomWidth: 0 }]}> 
+            <Ionicons name="language-outline" size={24} color={theme.subText} style={styles.menuIcon} />
+            <Text style={[styles.menuText, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('settings.languageSection')}</Text>
+          </View>
+          <View style={{ flexDirection: isRTL ? 'row-reverse' : 'row', justifyContent: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 8 }}>
+            {([
+              { value: 'ar' as const, label: t('common.arabic') },
+              { value: 'en' as const, label: t('common.english') },
+            ]).map(({ value, label }) => {
+              const isActive = language === value;
+              return (
+                <TouchableOpacity
+                  key={value}
+                  onPress={() => setLanguage(value)}
+                  style={{
+                    flex: 1,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingVertical: 12,
+                    borderRadius: 10,
+                    borderWidth: 1.5,
+                    borderColor: isActive ? theme.primary : theme.border,
+                    backgroundColor: isActive ? theme.primary + '18' : 'transparent',
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: isActive ? '700' : '500', color: isActive ? theme.primary : theme.subText }}>
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         <View style={[styles.section, { backgroundColor: theme.surface }]}
         >
           <MenuItem
             icon="mail-outline"
-            title="تواصل معنا"
+            title={t('settings.contact')}
             onPress={() => router.push('/contact')}
           />
           <MenuItem
             icon="document-text-outline"
-            title="سياسة الخصوصية"
+            title={t('settings.privacy')}
             onPress={() => router.push('/privacy')}
           />
           <MenuItem
             icon="reader-outline"
-            title="الشروط والأحكام"
+            title={t('settings.terms')}
             onPress={() => router.push('/terms')}
             isLast
           />
         </View>
 
         <View style={styles.logoutContainer}>
-          <TouchableOpacity style={[styles.logoutButton, styles.rtlRow]} onPress={handleLogout}>
+          <TouchableOpacity style={[styles.logoutButton, { flexDirection: isRTL ? 'row-reverse' : 'row' }]} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={20} color={theme.danger} style={styles.menuIcon} />
-            <Text style={[styles.logoutText, styles.rtlText, { color: theme.danger }]}>تسجيل الخروج</Text>
+            <Text style={[styles.logoutText, { color: theme.danger, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('settings.logout')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.logoutButton, styles.rtlRow, { marginTop: 8, backgroundColor: theme.danger + '12', borderRadius: 12, borderWidth: 1, borderColor: theme.danger + '30' }]}
+            style={[styles.logoutButton, { flexDirection: isRTL ? 'row-reverse' : 'row', marginTop: 8, backgroundColor: theme.danger + '12', borderRadius: 12, borderWidth: 1, borderColor: theme.danger + '30' }]}
             onPress={handleDeleteAccount}
           >
             <Ionicons name="trash-outline" size={20} color={theme.danger} style={styles.menuIcon} />
-            <Text style={[styles.logoutText, styles.rtlText, { color: theme.danger }]}>حذف الحساب</Text>
+            <Text style={[styles.logoutText, { color: theme.danger, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('settings.deleteAccount')}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.versionContainer}>
-          <Text style={[styles.versionText, styles.rtlText, { color: theme.subText }]}>الإصدار 1.0.0</Text>
+          <Text style={[styles.versionText, { color: theme.subText, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('settings.version', { version: '1.0.0' })}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -320,13 +358,12 @@ const styles = StyleSheet.create({
   },
   menuLabelContainer: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'flex-end',
     paddingEnd: 8,
   },
   notificationRight: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
@@ -345,6 +382,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   menuItem: {
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 16,
@@ -359,36 +397,28 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   menuIcon: {
-    marginStart: 12,
-    marginEnd: 0,
+    marginStart: 0,
+    marginEnd: 12,
   },
   leftChevronContainer: {
     position: 'absolute',
-    right: 8,
     top: '50%',
     transform: [{ translateY: -10 }],
-    flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
+  leftChevronContainerRtl: { left: 8 },
+  leftChevronContainerLtr: { right: 8 },
   menuText: {
     fontSize: 16,
     color: '#334155',
     textAlign: 'right',
     marginEnd: 8,
   },
-  rtlRow: {
-    flexDirection: 'row',
-  },
-  rtlText: {
-    textAlign: 'right',
-    writingDirection: 'rtl',
-  },
   logoutContainer: {
     marginTop: 8,
   },
   logoutButton: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,

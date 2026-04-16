@@ -5,6 +5,7 @@ import { BroadcastLog, sendBroadcast, getBroadcastHistory } from "../../../lib/s
 import { Button } from "../../../components/ui/button";
 import { useToast } from "../../../components/ui/toast";
 import { Card } from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
 import { Loader } from "../../../components/ui/loader";
 import { Send, History, Users, MessageSquare } from "lucide-react";
 
@@ -14,6 +15,8 @@ export default function NotificationsPage() {
   const [sending, setSending] = useState(false);
   const [history, setHistory] = useState<BroadcastLog[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [search, setSearch] = useState("");
+  const [targetFilter, setTargetFilter] = useState("ALL");
 
   const { pushToast } = useToast();
 
@@ -61,6 +64,19 @@ export default function NotificationsPage() {
   };
 
   const totalSent = history.reduce((sum, log) => sum + log.sentCount, 0);
+  const sentToday = history
+    .filter((log) => new Date(log.createdAt).toDateString() === new Date().toDateString())
+    .reduce((sum, log) => sum + log.sentCount, 0);
+  const filteredHistory = history.filter((log) => {
+    const normalizedSearch = search.trim().toLowerCase();
+    const matchesSearch =
+      normalizedSearch.length === 0 ||
+      log.title.toLowerCase().includes(normalizedSearch) ||
+      log.body.toLowerCase().includes(normalizedSearch) ||
+      (log.sentBy?.email ?? "").toLowerCase().includes(normalizedSearch);
+    const matchesTarget = targetFilter === "ALL" || log.targetType === targetFilter;
+    return matchesSearch && matchesTarget;
+  });
 
   return (
     <div className="space-y-6">
@@ -78,6 +94,10 @@ export default function NotificationsPage() {
         <div className="bg-white rounded-xl px-5 py-3 shadow-sm border text-center">
           <p className="text-2xl font-bold text-green-600">{totalSent.toLocaleString("ar-BH")}</p>
           <p className="text-xs text-gray-500">إجمالي الإشعارات المُرسلة</p>
+        </div>
+        <div className="bg-white rounded-xl px-5 py-3 shadow-sm border text-center">
+          <p className="text-2xl font-bold text-blue-600">{sentToday.toLocaleString("ar-BH")}</p>
+          <p className="text-xs text-gray-500">تم إرساله اليوم</p>
         </div>
       </div>
 
@@ -133,9 +153,31 @@ export default function NotificationsPage() {
 
       {/* History */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <History size={20} className="text-gray-600" />
-          <h2 className="text-lg font-semibold">سجل الإذاعات</h2>
+        <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-2">
+            <History size={20} className="text-gray-600" />
+            <h2 className="text-lg font-semibold">سجل الإذاعات</h2>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="ابحث بالعنوان أو النص أو البريد"
+              className="h-10 min-w-60"
+            />
+            <select
+              value={targetFilter}
+              onChange={(e) => setTargetFilter(e.target.value)}
+              className="h-10 rounded-lg border border-black/10 bg-white px-3 text-sm outline-none focus:border-black/30"
+            >
+              <option value="ALL">كل الفئات</option>
+              <option value="ALL">الكل</option>
+              <option value="REGISTERED">المستخدمون المسجلون</option>
+            </select>
+            <Button variant="secondary" onClick={fetchHistory} disabled={loadingHistory || sending}>
+              {loadingHistory ? "جاري التحديث..." : "تحديث"}
+            </Button>
+          </div>
         </div>
 
         {loadingHistory ? (
@@ -143,14 +185,14 @@ export default function NotificationsPage() {
             <Loader />
             جاري تحميل السجل...
           </div>
-        ) : history.length === 0 ? (
+        ) : filteredHistory.length === 0 ? (
           <div className="py-16 text-center text-gray-400 border-2 border-dashed rounded-lg">
             <MessageSquare size={40} className="mx-auto mb-3 opacity-40" />
-            <p>لا توجد إذاعات سابقة</p>
+            <p>لا توجد إذاعات مطابقة للبحث أو الفلاتر الحالية</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {history.map((log) => (
+            {filteredHistory.map((log) => (
               <Card key={log.id} className="p-4 border-none shadow-sm">
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="flex-1 min-w-0">

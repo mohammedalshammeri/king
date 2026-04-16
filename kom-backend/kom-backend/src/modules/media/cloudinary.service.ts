@@ -26,6 +26,10 @@ export class CloudinaryService {
     });
   }
 
+  isReady(): boolean {
+    return this.isConfigured;
+  }
+
   uploadBuffer(
     buffer: Buffer,
     options: {

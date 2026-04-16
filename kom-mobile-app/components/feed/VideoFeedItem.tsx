@@ -6,6 +6,7 @@ import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAppTranslation } from '@/context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ interface VideoFeedItemProps {
 
 export default function VideoFeedItem({ video, isActive = false, height }: VideoFeedItemProps) {
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
   // Removed videoRef
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -112,7 +114,7 @@ export default function VideoFeedItem({ video, isActive = false, height }: Video
                   style={{ width: '100%', height: '100%', borderRadius: 16 }}
                 />
             </View>
-            <Text style={styles.authorName}>KOM Admin</Text>
+            <Text style={styles.authorName}>{t('feed.adminAuthor')}</Text>
          </View>
          
          {video.title && <Text style={styles.title}>{video.title}</Text>}

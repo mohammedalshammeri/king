@@ -19,8 +19,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 
+import { useAppTranslation, useLanguage } from '../../../context/LanguageContext';
 import { useTheme } from '../../../context/ThemeContext';
 import api from '../../../services/api';
+import PageHeader from '../../../components/ui/page-header';
 
 const BENEFIT_ACCOUNT_NUMBER = '36883800';
 
@@ -28,12 +30,15 @@ export default function PaymentProofScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
-  const { transactionId, amount, currency, paymentType } = useLocalSearchParams<{
+  const { transactionId, amount, currency, paymentType, returnToListingId } = useLocalSearchParams<{
     transactionId: string;
     amount: string;
     currency: string;
     paymentType: string;
+    returnToListingId?: string;
   }>();
 
   const [proofUri, setProofUri] = useState<string | null>(null);
@@ -45,6 +50,9 @@ export default function PaymentProofScreen() {
   const textColor = isDark ? '#F8FAFC' : '#0A0B14';
   const mutedColor = isDark ? '#94A3B8' : '#64748B';
   const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+  const dirText = { writingDirection: isRTL ? 'rtl' as const : 'ltr' as const, textAlign: isRTL ? 'right' as const : 'left' as const };
+  const centerDirText = { writingDirection: isRTL ? 'rtl' as const : 'ltr' as const, textAlign: 'center' as const };
+  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
 
   // Hide bottom tabs on this screen only
   useEffect(() => {
@@ -61,21 +69,23 @@ export default function PaymentProofScreen() {
   }, [amount, currency]);
 
   const paymentTypeText = useMemo(() => {
-    if (paymentType === 'SUBSCRIPTION') return 'رسوم الاشتراك';
-    if (paymentType === 'FEATURED_LISTING') return 'رسوم تمييز الإعلان';
-    return 'رسوم نشر الإعلان';
-  }, [paymentType]);
+    if (paymentType === 'SUBSCRIPTION') return t('paymentProof.subscriptionFee');
+    if (paymentType === 'FEATURED_LISTING') return t('paymentProof.featuredListingFee');
+    return t('paymentProof.listingFee');
+  }, [paymentType, t]);
+
+  const hasListingReturnTarget = typeof returnToListingId === 'string' && returnToListingId.length > 0;
 
   const handleCopy = (value: string, label: string) => {
     if (!value) return;
     Clipboard.setString(value);
-    Alert.alert('تم النسخ', `تم نسخ ${label}`);
+    Alert.alert(t('paymentProof.copiedTitle'), t('paymentProof.copiedMessage', { label }));
   };
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('إذن مطلوب', 'يجب منح إذن الوصول إلى الصور لرفع إثبات الدفع');
+      Alert.alert(t('paymentProof.permissionRequiredTitle'), t('paymentProof.permissionRequiredMessage'));
       return;
     }
 
@@ -92,11 +102,11 @@ export default function PaymentProofScreen() {
 
   const handleSubmit = async () => {
     if (!proofUri) {
-      Alert.alert('مطلوب', 'يرجى اختيار صورة إثبات التحويل أولاً');
+      Alert.alert(t('paymentProof.requiredTitle'), t('paymentProof.chooseProofFirst'));
       return;
     }
     if (!transactionId) {
-      Alert.alert('خطأ', 'معرّف المعاملة غير موجود');
+      Alert.alert(t('common.error'), t('paymentProof.missingTransactionId'));
       return;
     }
 
@@ -127,7 +137,7 @@ export default function PaymentProofScreen() {
       const proofImageUrl: string = uploadPayload.url;
 
       if (!proofImageUrl) {
-        throw new Error('لم يتم استلام رابط الصورة من السيرفر');
+        throw new Error(t('paymentProof.uploadImageUrlMissing'));
       }
 
       // Step 2: submit proof URL
@@ -140,8 +150,8 @@ export default function PaymentProofScreen() {
         server?.error?.message ||
         server?.message ||
         e?.message ||
-        'فشل رفع الإثبات، يرجى المحاولة مرة أخرى';
-      Alert.alert('خطأ', msg);
+        t('paymentProof.uploadFailed');
+      Alert.alert(t('common.error'), msg);
     } finally {
       setUploading(false);
     }
@@ -156,14 +166,23 @@ export default function PaymentProofScreen() {
             <Ionicons name="checkmark-circle" size={72} color="#16A34A" />
           </View>
 
-          <Text style={[styles.successTitle, { color: textColor }, styles.rtlTextCenter]}>تم الإرسال بنجاح!</Text>
-          <Text style={[styles.successSub, { color: mutedColor }, styles.rtlTextCenter]}>
-            تم إرسال إثبات التحويل وسيتم مراجعته من قِبل الإدارة خلال 24 ساعة.
+          <Text style={[styles.successTitle, { color: textColor }, centerDirText]}>{t('paymentProof.successTitle')}</Text>
+          <Text style={[styles.successSub, { color: mutedColor }, centerDirText]}>
+            {hasListingReturnTarget
+              ? t('paymentProof.successWithListing')
+              : t('paymentProof.successWithoutListing')}
           </Text>
 
           <TouchableOpacity
             style={styles.doneBtn}
-            onPress={() => router.replace('/(tabs)/profile/payments' as any)}
+            onPress={() =>
+              hasListingReturnTarget
+                ? router.replace({
+                    pathname: '/add-listing/[id]' as any,
+                    params: { id: returnToListingId, awaitingPackageApproval: '1' },
+                  })
+                : router.replace('/(tabs)/profile/payments' as any)
+            }
             activeOpacity={0.85}
           >
             <LinearGradient
@@ -172,7 +191,9 @@ export default function PaymentProofScreen() {
               end={{ x: 1, y: 0 }}
               style={styles.doneBtnGrad}
             >
-              <Text style={[styles.doneBtnText, styles.rtlTextCenter]}>العودة لمدفوعاتي</Text>
+              <Text style={[styles.doneBtnText, centerDirText]}>
+                {hasListingReturnTarget ? t('paymentProof.backToListing') : t('paymentProof.backToPayments')}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -184,64 +205,54 @@ export default function PaymentProofScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: '#0E1830' }]} edges={['left', 'right', 'bottom']}>
       <StatusBar style='light' />
 
-      {/* Header */}
-      <LinearGradient
-        colors={['#0E1830', '#162444']}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-        style={styles.header}>
-        <View style={styles.headerInner}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-forward" size={20} color='#D4AF37' />
-          </TouchableOpacity>
-
-          <Text style={[styles.headerTitle, styles.rtlTextCenter, { color: '#D4AF37' }]}>إثبات الدفع</Text>
-
-          <View style={{ width: 40 }} />
-        </View>
-      </LinearGradient>
+      <PageHeader
+        title={t('paymentProof.title')}
+        variant="gradient"
+        onBack={() => router.replace('/profile')}
+      />
 
       <ScrollView style={{ backgroundColor: bg }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Amount card */}
         <View style={[styles.amountCard, { backgroundColor: cardBg, borderColor }]}>
-          <Text style={[styles.amountLabel, { color: mutedColor }, styles.rtlText]}>مبلغ الدفع</Text>
-          <Text style={[styles.amountValue, { color: '#D4AF37' }, styles.rtlTextCenter]}>{amountText}</Text>
-          <Text style={[styles.amountType, { color: mutedColor }, styles.rtlText]}>{paymentTypeText}</Text>
+          <Text style={[styles.amountLabel, { color: mutedColor }, dirText]}>{t('paymentProof.amountLabel')}</Text>
+          <Text style={[styles.amountValue, { color: '#D4AF37' }, centerDirText]}>{amountText}</Text>
+          <Text style={[styles.amountType, { color: mutedColor }, dirText]}>{paymentTypeText}</Text>
         </View>
 
         {/* Steps */}
         <View style={[styles.stepsCard, { backgroundColor: cardBg, borderColor }]}>
-          <Text style={[styles.stepsTitle, { color: textColor }, styles.rtlText]}>خطوات الدفع عبر Benefit</Text>
+          <Text style={[styles.stepsTitle, { color: textColor }, dirText]}>{t('paymentProof.stepsTitle')}</Text>
 
           {[
-            'انسخ رقم الحساب أدناه',
-            `حوّل المبلغ ${Number(amount ?? 0).toFixed(3)} د.ب عبر تطبيق Benefit`,
-            'التقط لقطة شاشة لإثبات التحويل',
-            'ارفع الصورة وانقر على "إرسال"',
+            t('paymentProof.stepCopyAccount'),
+            t('paymentProof.stepTransferAmount', { amount: Number(amount ?? 0).toFixed(3), currency: currency ?? 'BHD' }),
+            t('paymentProof.stepTakeScreenshot'),
+            t('paymentProof.stepUploadAndSend'),
           ].map((step, i) => (
-            <View key={i} style={styles.stepRowRtl}>
+            <View key={i} style={[styles.stepRowRtl, rowDirection]}>
               <View style={styles.stepNum}>
                 <Text style={styles.stepNumText}>{i + 1}</Text>
               </View>
-              <Text style={[styles.stepText, { color: mutedColor }, styles.rtlText]}>{step}</Text>
+              <Text style={[styles.stepText, { color: mutedColor }, dirText]}>{step}</Text>
             </View>
           ))}
         </View>
 
         {/* Account number card (ONLY) */}
         <View style={[styles.infoCard, { backgroundColor: cardBg, borderColor }]}>
-          <Text style={[styles.infoLabel, { color: mutedColor }, styles.rtlText]}>رقم الحساب</Text>
+          <Text style={[styles.infoLabel, { color: mutedColor }, dirText]}>{t('paymentProof.accountNumberLabel')}</Text>
 
           <Text style={[styles.infoValue, { color: textColor }, styles.ltrNumber]} selectable>
             {BENEFIT_ACCOUNT_NUMBER}
           </Text>
 
           <TouchableOpacity
-            style={styles.copyBtnRtl}
-            onPress={() => handleCopy(BENEFIT_ACCOUNT_NUMBER, 'رقم الحساب')}
+            style={[styles.copyBtnRtl, rowDirection]}
+            onPress={() => handleCopy(BENEFIT_ACCOUNT_NUMBER, t('paymentProof.accountNumberLabel'))}
             activeOpacity={0.75}
           >
             <Ionicons name="copy-outline" size={16} color="#D4AF37" />
-            <Text style={styles.copyBtnText}>نسخ رقم الحساب</Text>
+            <Text style={[styles.copyBtnText, centerDirText]}>{t('paymentProof.copyAccountNumber')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -257,17 +268,17 @@ export default function PaymentProofScreen() {
           {proofUri ? (
             <>
               <Image source={{ uri: proofUri }} style={styles.previewImage} contentFit="cover" />
-              <View style={styles.changeOverlay}>
+              <View style={[styles.changeOverlay, rowDirection]}>
                 <Ionicons name="camera" size={22} color="#FFF" />
-                <Text style={[styles.changeText, styles.rtlTextCenter]}>تغيير الصورة</Text>
+                <Text style={[styles.changeText, centerDirText]}>{t('paymentProof.changeImage')}</Text>
               </View>
             </>
           ) : (
             <View style={styles.pickerPlaceholder}>
               <Ionicons name="image-outline" size={48} color="#D4AF37" />
-              <Text style={[styles.pickerTitle, { color: textColor }, styles.rtlTextCenter]}>ارفع إثبات التحويل</Text>
-              <Text style={[styles.pickerSub, { color: mutedColor }, styles.rtlTextCenter]}>
-                اضغط لاختيار صورة من معرض الصور
+              <Text style={[styles.pickerTitle, { color: textColor }, centerDirText]}>{t('paymentProof.uploadTransferProof')}</Text>
+              <Text style={[styles.pickerSub, { color: mutedColor }, centerDirText]}>
+                {t('paymentProof.pickImageFromGallery')}
               </Text>
             </View>
           )}
@@ -284,21 +295,21 @@ export default function PaymentProofScreen() {
             colors={proofUri ? ['#E8C84A', '#D4AF37', '#A8860E'] : ['#6B7280', '#6B7280']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={styles.submitBtnGradRtl}
+            style={[styles.submitBtnGradRtl, rowDirection]}
           >
             {uploading ? (
               <ActivityIndicator color="#0A0B14" />
             ) : (
               <>
                 <Ionicons name="paper-plane-outline" size={18} color="#0A0B14" style={{ marginEnd: 8 }} />
-                <Text style={[styles.submitBtnText, styles.rtlTextCenter]}>إرسال إثبات الدفع</Text>
+                <Text style={[styles.submitBtnText, centerDirText]}>{t('paymentProof.submitProof')}</Text>
               </>
             )}
           </LinearGradient>
         </TouchableOpacity>
 
-        <Text style={[styles.note, { color: mutedColor }, styles.rtlTextCenter]}>
-          سيتم مراجعة إثباتك من قِبل الإدارة وتفعيل حسابك خلال 24 ساعة.
+        <Text style={[styles.note, { color: mutedColor }, centerDirText]}>
+          {t('paymentProof.reviewNote')}
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -311,18 +322,6 @@ const styles = StyleSheet.create({
   rtlText: { writingDirection: 'rtl', textAlign: 'right' },
   rtlTextCenter: { writingDirection: 'rtl', textAlign: 'center' },
   ltrNumber: { writingDirection: 'ltr', textAlign: 'center', letterSpacing: 1.5 },
-
-  header: { paddingHorizontal: 16, paddingVertical: 16, paddingTop: 12 },
-  headerInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#FFF', flex: 1 },
 
   scrollContent: { padding: 16, paddingBottom: 48 },
 
@@ -369,7 +368,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(212,175,55,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginEnd: 10,
+    marginStart: 10,
     flexShrink: 0,
   },
   stepNumText: { fontSize: 13, fontWeight: '800', color: '#D4AF37' },

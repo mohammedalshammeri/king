@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../media/cloudinary.service';
+import { S3Service } from '../media/s3.service';
 import { UserRole } from '@prisma/client';
 import { UpdateProfileDto, UpdateShowroomPhoneDto } from './dto';
 
@@ -12,6 +13,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly s3Service: S3Service,
   ) {}
 
   async getUserProfile(userId: string) {
@@ -303,14 +305,25 @@ export class UsersService {
     }
 
     const folder = `users/${userId}/avatar`;
-    const resourceType = 'image';
+    const contentType = file.mimetype || 'image/jpeg';
 
-    let uploaded;
+    let url: string;
     try {
-      uploaded = await this.cloudinaryService.uploadBuffer(file.buffer, {
-        folder,
-        resourceType,
-      });
+      if (this.cloudinaryService.isReady()) {
+        try {
+          const uploaded = await this.cloudinaryService.uploadBuffer(file.buffer, {
+            folder,
+            resourceType: 'image',
+          });
+          url = uploaded.secureUrl;
+        } catch {
+          const uploaded = await this.s3Service.uploadBuffer(folder, file.buffer, contentType, 'avatar');
+          url = uploaded.publicUrl;
+        }
+      } else {
+        const uploaded = await this.s3Service.uploadBuffer(folder, file.buffer, contentType, 'avatar');
+        url = uploaded.publicUrl;
+      }
     } catch (err: unknown) {
       const message =
         typeof err === 'object' &&
@@ -321,8 +334,6 @@ export class UsersService {
           : 'Image upload failed';
       throw new BadRequestException(message);
     }
-
-    const url = uploaded.secureUrl;
 
     if (user.role === UserRole.USER_INDIVIDUAL) {
       if (user.individualProfile) {

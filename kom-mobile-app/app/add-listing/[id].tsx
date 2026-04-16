@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '@/constants/Colors';
-import { MotorcycleBrands, VehicleColors } from '@/constants/CarData';
+import { CarBodyTypes, CarBrands, CarTrimOptions, GenericCarTrimOptions, MotorcycleBodyTypes, MotorcycleBrands, VehicleColors } from '@/constants/CarData';
 import { PickerModal } from '@/components/ui/picker-modal';
 import api from '@/services/api';
 import { Image } from 'expo-image';
 import { useTheme } from '@/context/ThemeContext';
 import { PageHeader } from '@/components/ui/page-header';
 import { useAuthStore } from '@/store/authStore';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 type ListingType = 'CAR' | 'PLATE' | 'PART' | 'MOTORCYCLE';
 
@@ -74,6 +75,70 @@ interface MediaItem {
   type: 'IMAGE' | 'VIDEO';
 }
 
+interface BrandOption {
+  nameAr: string;
+  models: string[];
+}
+
+const normalizeBrandModels = (models: any[] = []) =>
+  Array.from(
+    new Set(
+      models
+        .map((model) => {
+          if (typeof model === 'string') return model;
+          return model?.ar || model?.nameAr || model?.name || model?.en || '';
+        })
+        .filter(Boolean)
+    )
+  );
+
+const buildBrandOptions = (brands: any[], fallbackBrands: string[] = []): BrandOption[] => {
+  const normalized = brands
+    .filter((brand) => brand?.id !== 'all')
+    .map((brand) => ({
+      nameAr: brand?.nameAr || brand?.name || '',
+      models: normalizeBrandModels(brand?.models),
+    }))
+    .filter((brand) => brand.nameAr);
+
+  const existing = new Set(normalized.map((brand) => brand.nameAr));
+  const extra = fallbackBrands
+    .filter((name) => !existing.has(name))
+    .map((name) => ({ nameAr: name, models: [] }));
+
+  return [...normalized, ...extra];
+};
+
+const CAR_BRAND_OPTIONS = buildBrandOptions(CarBrands);
+
+const MOTORCYCLE_BRAND_OPTIONS = buildBrandOptions(MotorcycleBrands);
+
+const getCarTrimOptions = (make: string, model: string) => {
+  if (!make || !model) return GenericCarTrimOptions;
+  return CarTrimOptions[make]?.[model] || GenericCarTrimOptions;
+};
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 1960 + 1 }, (_, index) => String(CURRENT_YEAR - index));
+
+const PART_CATEGORIES = ['مكينه', 'جير', 'هيكل', 'كهرباء', 'داخليه', 'مكيف', 'إطارات', 'زيوت', 'إكسسوارات', 'أخرى'];
+const MOTORCYCLE_ENGINE_SIZES = ['50', '125', '150', '250', '300', '400', '600', '750', '900', '1000', '1200', 'أخرى'];
+const PLATE_TYPE_OPTIONS = [
+  { value: 'PRIVATE' as const, label: 'خاصة' },
+  { value: 'TRANSPORT' as const, label: 'نقل مشترك' },
+  { value: 'MOTORCYCLE' as const, label: 'دراجة نارية' },
+];
+const PLATE_CATEGORY_OPTIONS: Record<PlateDetails['plateType'], string[]> = {
+  PRIVATE: ['عادي', 'مميز', 'ثنائي', 'ثلاثي', 'رباعي', 'خماسي'],
+  TRANSPORT: ['نقل خفيف', 'نقل ثقيل', 'أجرة', 'مميز'],
+  MOTORCYCLE: ['عادي', 'مميز'],
+};
+const PLATE_CODE_OPTIONS: Record<PlateDetails['plateType'], string[]> = {
+  PRIVATE: ['بدون رمز', 'أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي'],
+  TRANSPORT: ['بدون رمز', 'أ', 'ب', 'ج', 'د', 'هـ'],
+  MOTORCYCLE: ['بدون رمز', 'أ', 'ب', 'ج'],
+};
+
 const GOVERNORATES: { [key: string]: string[] } = {
   'العاصمة': [
     'المنامة', 'الجفير', 'العدلية', 'ام الحصم', 'الزنج', 'السلمانية', 'البلاد القديم', 
@@ -103,10 +168,178 @@ const contactPreferences = [
   { value: 'IN_APP_CHAT' as const, label: 'دردشة داخل التطبيق' },
 ];
 
+const getMotorcycleBodyTypeTranslationKey = (bodyType: string) => {
+  switch (bodyType) {
+    case 'رياضية':
+      return 'addListing.motorcycleBodySport' as const;
+    case 'سكوتر':
+      return 'addListing.motorcycleBodyScooter' as const;
+    case 'كروزر':
+      return 'addListing.motorcycleBodyCruiser' as const;
+    case 'تجوال':
+      return 'addListing.motorcycleBodyTouring' as const;
+    case 'ديرت بايك':
+      return 'addListing.motorcycleBodyDirtBike' as const;
+    case 'نيكد':
+      return 'addListing.motorcycleBodyNaked' as const;
+    case 'أدفنشر':
+      return 'addListing.motorcycleBodyAdventure' as const;
+    default:
+      return 'common.other' as const;
+  }
+};
+
+const getVehicleColorTranslationKey = (color: string) => {
+  switch (color) {
+    case 'أبيض':
+      return 'addListing.colorWhite' as const;
+    case 'أسود':
+      return 'addListing.colorBlack' as const;
+    case 'رمادي':
+      return 'addListing.colorGray' as const;
+    case 'فضي':
+      return 'addListing.colorSilver' as const;
+    case 'أحمر':
+      return 'addListing.colorRed' as const;
+    case 'أزرق':
+      return 'addListing.colorBlue' as const;
+    case 'بني':
+      return 'addListing.colorBrown' as const;
+    case 'أخضر':
+      return 'addListing.colorGreen' as const;
+    case 'بيج':
+      return 'addListing.colorBeige' as const;
+    case 'ذهبي':
+      return 'addListing.colorGold' as const;
+    case 'أصفر':
+      return 'addListing.colorYellow' as const;
+    case 'برتقالي':
+      return 'addListing.colorOrange' as const;
+    case 'بنفسجي':
+      return 'addListing.colorPurple' as const;
+    case 'برونزي':
+      return 'addListing.colorBronze' as const;
+    case 'عنابي':
+      return 'addListing.colorBurgundy' as const;
+    case 'كحلي':
+      return 'addListing.colorNavy' as const;
+    case 'زيتي':
+      return 'addListing.colorOlive' as const;
+    case 'فيروزي':
+      return 'addListing.colorTurquoise' as const;
+    case 'زهري':
+      return 'addListing.colorPink' as const;
+    case 'لؤلؤي':
+      return 'addListing.colorPearl' as const;
+    case 'ماروني':
+      return 'addListing.colorMaroon' as const;
+    case 'تيتانيوم':
+      return 'addListing.colorTitanium' as const;
+    default:
+      return 'common.other' as const;
+  }
+};
+
+const getGovernorateTranslationKey = (governorate: string) => {
+  switch (governorate) {
+    case 'العاصمة':
+      return 'addListing.governorateCapital' as const;
+    case 'المحرق':
+      return 'addListing.governorateMuharraq' as const;
+    case 'الشمالية':
+      return 'addListing.governorateNorthern' as const;
+    case 'الجنوبية':
+      return 'addListing.governorateSouthern' as const;
+    default:
+      return null;
+  }
+};
+
+const getPlateCategoryTranslationKey = (category: string) => {
+  switch (category) {
+    case 'عادي':
+      return 'addListing.plateCategoryRegular' as const;
+    case 'مميز':
+      return 'addListing.plateCategorySpecial' as const;
+    case 'ثنائي':
+      return 'addListing.plateCategoryDouble' as const;
+    case 'ثلاثي':
+      return 'addListing.plateCategoryTriple' as const;
+    case 'رباعي':
+      return 'addListing.plateCategoryQuad' as const;
+    case 'خماسي':
+      return 'addListing.plateCategoryFive' as const;
+    case 'نقل خفيف':
+      return 'addListing.plateCategoryLightTransport' as const;
+    case 'نقل ثقيل':
+      return 'addListing.plateCategoryHeavyTransport' as const;
+    case 'أجرة':
+      return 'addListing.plateCategoryTaxi' as const;
+    default:
+      return null;
+  }
+};
+
+const normalizePlateCategory = (plateType: PlateDetails['plateType'], category?: string) => {
+  const allowed = PLATE_CATEGORY_OPTIONS[plateType];
+  if (!category) return allowed[0] || '';
+
+  if (allowed.includes(category)) {
+    return category;
+  }
+
+  if (plateType === 'PRIVATE') {
+    const legacyMap: Record<string, string> = {
+      Private: 'عادي',
+      Regular: 'عادي',
+      Special: 'مميز',
+      'Double digit': 'ثنائي',
+      'Triple digit': 'ثلاثي',
+      'Quad digit': 'رباعي',
+      'Five digit': 'خماسي',
+    };
+    return legacyMap[category] || allowed[0] || '';
+  }
+
+  if (plateType === 'TRANSPORT') {
+    const legacyMap: Record<string, string> = {
+      'Shared transport': 'نقل خفيف',
+      'Light transport': 'نقل خفيف',
+      'Heavy transport': 'نقل ثقيل',
+      Taxi: 'أجرة',
+      Special: 'مميز',
+    };
+    return legacyMap[category] || allowed[0] || '';
+  }
+
+  const legacyMap: Record<string, string> = {
+    Motorcycle: 'عادي',
+    Regular: 'عادي',
+    Special: 'مميز',
+  };
+  return legacyMap[category] || allowed[0] || '';
+};
+
+const normalizePlateCode = (plateType: PlateDetails['plateType'], code?: string) => {
+  const allowed = PLATE_CODE_OPTIONS[plateType];
+  if (!code) return '';
+  if (allowed.includes(code)) {
+    return code;
+  }
+
+  if (code === 'No code') {
+    return 'بدون رمز';
+  }
+
+  return '';
+};
+
 export default function AddListingDetailScreen() {
-  const params = useLocalSearchParams<{ id: string; type: ListingType; mode?: 'edit' }>();
-  const { id: listingId, type, mode } = params;
+  const params = useLocalSearchParams<{ id: string; type: ListingType; mode?: 'edit'; awaitingPackageApproval?: string }>();
+  const { id: listingId, type, mode, awaitingPackageApproval } = params;
   const isEditMode = mode === 'edit';
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
   const { isDark } = useTheme();
   const theme = {
     background: isDark ? '#0f172a' : '#f8f9fa',
@@ -118,33 +351,132 @@ export default function AddListingDetailScreen() {
     subText: isDark ? '#cbd5e1' : '#6b7280',
     primary: Colors.primary,
   };
+  const direction: 'rtl' | 'ltr' = isRTL ? 'rtl' : 'ltr';
+  const textAlign: 'right' | 'left' = isRTL ? 'right' : 'left';
+  const rowDirection: 'row-reverse' | 'row' = isRTL ? 'row-reverse' : 'row';
+  const inputDirectionProps = { textAlign, writingDirection: direction as 'rtl' | 'ltr' };
+  const otherOption = t('common.other');
+
+  const translatedContactPreferences = [
+    { value: 'CALL' as const, label: t('addListing.contactCall') },
+    { value: 'WHATSAPP' as const, label: t('addListing.contactWhatsApp') },
+    { value: 'IN_APP_CHAT' as const, label: t('addListing.contactChat') },
+  ];
+
+  const translatedPlateTypeOptions = [
+    { value: 'PRIVATE' as const, label: t('addListing.platePrivate') },
+    { value: 'TRANSPORT' as const, label: t('addListing.plateTransport') },
+    { value: 'MOTORCYCLE' as const, label: t('addListing.plateMotorcycle') },
+  ];
+
+  const translatedPlateCategories: Record<PlateDetails['plateType'], Array<{ value: string; label: string }>> = {
+    PRIVATE: PLATE_CATEGORY_OPTIONS.PRIVATE.map((category) => ({
+      value: category,
+      label: getPlateCategoryTranslationKey(category) ? t(getPlateCategoryTranslationKey(category)!) : category,
+    })),
+    TRANSPORT: PLATE_CATEGORY_OPTIONS.TRANSPORT.map((category) => ({
+      value: category,
+      label: getPlateCategoryTranslationKey(category) ? t(getPlateCategoryTranslationKey(category)!) : category,
+    })),
+    MOTORCYCLE: PLATE_CATEGORY_OPTIONS.MOTORCYCLE.map((category) => ({
+      value: category,
+      label: getPlateCategoryTranslationKey(category) ? t(getPlateCategoryTranslationKey(category)!) : category,
+    })),
+  };
+
+  const translatedPlateCodes: Record<PlateDetails['plateType'], Array<{ value: string; label: string }>> = {
+    PRIVATE: PLATE_CODE_OPTIONS.PRIVATE.map((code) => ({ value: code, label: code === 'بدون رمز' ? t('addListing.noCode') : code })),
+    TRANSPORT: PLATE_CODE_OPTIONS.TRANSPORT.map((code) => ({ value: code, label: code === 'بدون رمز' ? t('addListing.noCode') : code })),
+    MOTORCYCLE: PLATE_CODE_OPTIONS.MOTORCYCLE.map((code) => ({ value: code, label: code === 'بدون رمز' ? t('addListing.noCode') : code })),
+  };
+
+  const translatedPartCategories = [
+    { value: 'مكينه', label: t('addListing.partCategoryEngine') },
+    { value: 'جير', label: t('addListing.partCategoryGearbox') },
+    { value: 'هيكل', label: t('addListing.partCategoryBody') },
+    { value: 'كهرباء', label: t('addListing.partCategoryElectrical') },
+    { value: 'داخليه', label: t('addListing.partCategoryInterior') },
+    { value: 'مكيف', label: t('addListing.partCategoryAC') },
+    { value: 'إطارات', label: t('addListing.partCategoryTires') },
+    { value: 'زيوت', label: t('addListing.partCategoryOils') },
+    { value: 'إكسسوارات', label: t('addListing.partCategoryAccessories') },
+    { value: 'أخرى', label: t('addListing.allOther') },
+  ];
+
+  const translatedMotorcycleBodyTypes = MotorcycleBodyTypes.map((bodyType) => ({
+    value: bodyType,
+    label: t(getMotorcycleBodyTypeTranslationKey(bodyType)),
+  }));
+
+  const translatedMotorcycleEngineSizes = MOTORCYCLE_ENGINE_SIZES.map((engineSize) => ({
+    value: engineSize,
+    label: engineSize === 'أخرى' ? t('addListing.allOther') : `${engineSize} CC`,
+  }));
+
+  const translatedVehicleColors = VehicleColors.map((color) => ({
+    value: color,
+    label: color === 'أخرى' ? t('addListing.allOther') : t(getVehicleColorTranslationKey(color)),
+  }));
+
+  const translatedFuelOptions = [
+    { value: 'PETROL' as const, label: t('addListing.fuelPetrol') },
+    { value: 'DIESEL' as const, label: t('addListing.fuelDiesel') },
+    { value: 'HYBRID' as const, label: t('addListing.fuelHybrid') },
+    { value: 'ELECTRIC' as const, label: t('addListing.fuelElectric') },
+  ];
+
+  const translatedConditionOptions = [
+    { value: 'NEW' as const, label: t('addListing.conditionNew') },
+    { value: 'USED' as const, label: t('addListing.conditionUsed') },
+  ];
 
   const inputStyle = [styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }];
   const pickerItemStyle = [styles.pickerItem, { backgroundColor: theme.card, borderColor: theme.border }];
+  const totalSteps = 2;
 
-  const [step, setStep] = useState(1); // 1: Basic Info, 2: Specific Details, 3: Images
+  useEffect(() => {
+    if (awaitingPackageApproval === '1') {
+      Alert.alert(
+        t('addListing.savedTitle'),
+        t('addListing.awaitingPackageApprovalMessage'),
+      );
+    }
+  }, [awaitingPackageApproval, t]);
+
+  const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPrefilling, setIsPrefilling] = useState(false);
   const [hasPrefilled, setHasPrefilled] = useState(false);
   const [listingStatus, setListingStatus] = useState<string | null>(null);
 
+  const [yearPickerTarget, setYearPickerTarget] = useState<'CAR' | 'MOTORCYCLE' | null>(null);
+
   // Motorcycle Modals
   const [showMotorcycleMakeModal, setShowMotorcycleMakeModal] = useState(false);
   const [showMotorcycleModelModal, setShowMotorcycleModelModal] = useState(false);
   const [showMotorcycleColorModal, setShowMotorcycleColorModal] = useState(false);
+  const [showPartMakeModal, setShowPartMakeModal] = useState(false);
+  const [showPartModelModal, setShowPartModelModal] = useState(false);
   
   // Custom Flags
   const [isCustomMotorcycleMake, setIsCustomMotorcycleMake] = useState(false);
   const [isCustomMotorcycleModel, setIsCustomMotorcycleModel] = useState(false);
   const [isCustomMotorcycleColor, setIsCustomMotorcycleColor] = useState(false);
+  const [isCustomPartMake, setIsCustomPartMake] = useState(false);
+  const [isCustomPartModel, setIsCustomPartModel] = useState(false);
 
   // Car Modals
+  const [showCarMakeModal, setShowCarMakeModal] = useState(false);
+  const [showCarModelModal, setShowCarModelModal] = useState(false);
+  const [showCarTrimModal, setShowCarTrimModal] = useState(false);
   const [showCarColorModal, setShowCarColorModal] = useState(false);
+  const [isCustomCarMake, setIsCustomCarMake] = useState(false);
+  const [isCustomCarModel, setIsCustomCarModel] = useState(false);
+  const [isCustomCarTrim, setIsCustomCarTrim] = useState(false);
   const [isCustomCarColor, setIsCustomCarColor] = useState(false);
 
   // Location Modals
-  const [showGovernorateModal, setShowGovernorateModal] = useState(false);
   const [showAreaModal, setShowAreaModal] = useState(false);
 
   // Form data
@@ -187,7 +519,7 @@ export default function AddListingDetailScreen() {
 
   const [plateDetails, setPlateDetails] = useState<PlateDetails>({
     plateNumber: '',
-    plateCategory: 'Private',
+    plateCategory: PLATE_CATEGORY_OPTIONS.PRIVATE[0],
     plateCode: '',
     plateType: 'PRIVATE',
   });
@@ -204,6 +536,16 @@ export default function AddListingDetailScreen() {
   const [images, setImages] = useState<string[]>([]);
   const [videos, setVideos] = useState<string[]>([]);
   const [existingMedia, setExistingMedia] = useState<MediaItem[]>([]);
+
+  useEffect(() => {
+    if (!carDetails.trim) {
+      setIsCustomCarTrim(false);
+      return;
+    }
+
+    const trimOptions = getCarTrimOptions(carDetails.make, carDetails.model);
+    setIsCustomCarTrim(!trimOptions.includes(carDetails.trim));
+  }, [carDetails.make, carDetails.model, carDetails.trim]);
 
   useEffect(() => {
     if (!listingId || hasPrefilled) return;
@@ -285,11 +627,12 @@ export default function AddListingDetailScreen() {
 
         const plate = payload.plateDetails || payload.details?.plate || payload.plate || null;
         if (plate) {
+          const normalizedPlateType = (plate.plateType || 'PRIVATE') as PlateDetails['plateType'];
           setPlateDetails({
             plateNumber: plate.plateNumber || '',
-            plateCategory: plate.plateCategory || 'Private',
-            plateCode: plate.plateCode || '',
-            plateType: plate.plateType || 'PRIVATE',
+            plateCategory: normalizePlateCategory(normalizedPlateType, plate.plateCategory),
+            plateCode: normalizePlateCode(normalizedPlateType, plate.plateCode),
+            plateType: normalizedPlateType,
           });
         }
 
@@ -329,54 +672,81 @@ export default function AddListingDetailScreen() {
     };
   }, [listingId, hasPrefilled]);
 
-  const handleNextStep = async () => {
-    // Validate current step
-    let titleToSave = formData.title;
-
-    if (step === 1) {
-      if (type === 'MOTORCYCLE') {
-         if (!motorcycleDetails.make || !motorcycleDetails.model || !motorcycleDetails.year) {
-             Alert.alert('تنبيه', 'يرجى تعبئة جميع الحقول المطلوبة (الشركة، الموديل، السنة)');
-             return;
-         }
-         titleToSave = `${motorcycleDetails.make} ${motorcycleDetails.model} ${motorcycleDetails.year}`;
-         setFormData(prev => ({ ...prev, title: titleToSave }));
-      } else {
-        // Only validate title length if it's NOT a motorcycle
-         if (!titleToSave || titleToSave.trim().length < 5) {
-            Alert.alert('خطأ', 'العنوان يجب أن يكون 5 أحرف على الأقل');
-            return;
-         }
-      }
-
-      if (!formData.price || parseFloat(formData.price) <= 0) {
-        Alert.alert('خطأ', 'السعر يجب أن يكون أكبر من صفر');
-        return;
-      }
-
-      // Save basic info
-      await saveBasicInfo(titleToSave);
-      
-      // Auto-save specific details right away for motorcycles to avoid data loss on step switch
-      if (type === 'MOTORCYCLE') {
-         await api.post(`/listings/${listingId}/details/motorcycle`, {
-          make: motorcycleDetails.make,
-          model: motorcycleDetails.model,
-          year: parseInt(motorcycleDetails.year),
-          mileageKm: parseInt(motorcycleDetails.mileageKm) || 0,
-          transmission: motorcycleDetails.transmission,
-          condition: motorcycleDetails.condition,
-          color: motorcycleDetails.color,
-          engineSize: motorcycleDetails.engineSize,
-          bodyType: motorcycleDetails.bodyType,
-        });
-      }
-    } else if (step === 2) {
-      // Validate and save specific details
-      await saveSpecificDetails();
+  const getAutoTitle = () => {
+    if (type === 'CAR') {
+      return [carDetails.make, carDetails.model, carDetails.year].filter(Boolean).join(' ');
     }
 
-    if (step < 3) {
+    if (type === 'MOTORCYCLE') {
+      return [motorcycleDetails.make, motorcycleDetails.model, motorcycleDetails.year].filter(Boolean).join(' ');
+    }
+
+    if (type === 'PLATE') {
+      return [t('listing.types.plate'), plateDetails.plateCategory || t('common.other'), plateDetails.plateNumber, plateDetails.plateCode].filter(Boolean).join(' ');
+    }
+
+    return [partDetails.partCategory || t('listing.types.part'), partDetails.partName, partDetails.compatibleCarMake, partDetails.compatibleCarModel]
+      .filter(Boolean)
+      .join(' ');
+  };
+
+  const isYearValid = (value: string) => {
+    const numericYear = Number(value);
+    return Number.isInteger(numericYear) && numericYear >= 1960 && numericYear <= CURRENT_YEAR;
+  };
+
+  const handleNextStep = async () => {
+    if (step !== 1) return;
+
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      Alert.alert(t('common.error'), t('addListing.priceGreaterThanZero'));
+      return;
+    }
+
+    let titleToSave = getAutoTitle();
+
+    if (type === 'CAR') {
+      if (!carDetails.make || !carDetails.model || !carDetails.year || !carDetails.mileageKm) {
+        Alert.alert(t('common.warning'), t('addListing.completeVehicleBasics'));
+        return;
+      }
+      if (!isYearValid(carDetails.year)) {
+        Alert.alert(t('common.warning'), t('addListing.carYearRange'));
+        return;
+      }
+    }
+
+    if (type === 'MOTORCYCLE') {
+      if (!motorcycleDetails.make || !motorcycleDetails.model || !motorcycleDetails.year || !motorcycleDetails.mileageKm) {
+        Alert.alert(t('common.warning'), t('addListing.completeVehicleBasics'));
+        return;
+      }
+      if (!isYearValid(motorcycleDetails.year)) {
+        Alert.alert(t('common.warning'), t('addListing.motorcycleYearRange'));
+        return;
+      }
+    }
+
+    if (type === 'PLATE' && !plateDetails.plateNumber.trim()) {
+      Alert.alert(t('common.warning'), t('addListing.plateNumberRequired'));
+      return;
+    }
+
+    if (type === 'PART' && !partDetails.partCategory.trim()) {
+      Alert.alert(t('common.warning'), t('addListing.partCategoryRequired'));
+      return;
+    }
+
+    if (!titleToSave || titleToSave.trim().length < 3) {
+      titleToSave = t('addListing.newListing');
+    }
+
+    setFormData((prev) => ({ ...prev, title: titleToSave }));
+
+    await saveBasicInfo(titleToSave);
+    await saveSpecificDetails();
+
+    if (step < totalSteps) {
       setStep(step + 1);
     }
   };
@@ -406,11 +776,11 @@ export default function AddListingDetailScreen() {
       console.error('Failed to save basic info:', error);
       const apiError = error?.response?.data?.error;
       if (apiError?.details && Array.isArray(apiError.details)) {
-        Alert.alert('خطأ', apiError.details.join('\n'));
+        Alert.alert(t('common.error'), apiError.details.join('\n'));
       } else if (apiError?.message) {
-        Alert.alert('خطأ', String(apiError.message));
+        Alert.alert(t('common.error'), String(apiError.message));
       } else {
-        Alert.alert('خطأ', 'فشل حفظ البيانات');
+        Alert.alert(t('common.error'), t('addListing.saveFailed'));
       }
       throw error;
     } finally {
@@ -430,15 +800,9 @@ export default function AddListingDetailScreen() {
           transmission: carDetails.transmission,
           fuel: carDetails.fuel,
           condition: carDetails.condition,
-          color: carDetails.color,
-          trim: carDetails.trim,
-          bodyType: carDetails.bodyType,
-          specs: {
-            interiorColor: carDetails.interiorColor || undefined,
-            bodyCondition: carDetails.bodyCondition || undefined,
-            paintType: carDetails.paintType || undefined,
-            paint: carDetails.paintType || undefined,
-          },
+          color: carDetails.color || undefined,
+          trim: carDetails.trim || undefined,
+          bodyType: carDetails.bodyType || undefined,
         });
       } else if (type === 'MOTORCYCLE') {
         await api.post(`/listings/${listingId}/details/motorcycle`, {
@@ -448,9 +812,9 @@ export default function AddListingDetailScreen() {
           mileageKm: parseInt(motorcycleDetails.mileageKm) || 0,
           transmission: motorcycleDetails.transmission,
           condition: motorcycleDetails.condition,
-          color: motorcycleDetails.color,
-          engineSize: motorcycleDetails.engineSize,
-          bodyType: motorcycleDetails.bodyType,
+          color: motorcycleDetails.color || undefined,
+          engineSize: motorcycleDetails.engineSize || undefined,
+          bodyType: motorcycleDetails.bodyType || undefined,
         });
       } else if (type === 'PLATE') {
         await api.post(`/listings/${listingId}/details/plate`, {
@@ -471,7 +835,14 @@ export default function AddListingDetailScreen() {
       }
     } catch (error: any) {
       console.error('Failed to save specific details:', error);
-      Alert.alert('خطأ', 'فشل حفظ التفاصيل');
+      const apiError = error?.response?.data?.error;
+      if (apiError?.details && Array.isArray(apiError.details)) {
+        Alert.alert(t('common.error'), apiError.details.join('\n'));
+      } else if (apiError?.message) {
+        Alert.alert(t('common.error'), String(apiError.message));
+      } else {
+        Alert.alert(t('common.error'), error?.response?.data?.message || t('addListing.detailsSaveFailed'));
+      }
       throw error;
     } finally {
       setIsSaving(false);
@@ -493,7 +864,7 @@ export default function AddListingDetailScreen() {
       }
     } catch (error) {
       console.error('Failed to pick images:', error);
-      Alert.alert('خطأ', 'فشل اختيار الصور');
+      Alert.alert(t('common.error'), t('addListing.imagePickFailed'));
     }
   };
 
@@ -512,7 +883,7 @@ export default function AddListingDetailScreen() {
       }
     } catch (error) {
       console.error('Failed to pick videos:', error);
-      Alert.alert('خطأ', 'فشل اختيار الفيديو');
+      Alert.alert(t('common.error'), t('addListing.videoPickFailed'));
     }
   };
 
@@ -530,7 +901,7 @@ export default function AddListingDetailScreen() {
       setExistingMedia(existingMedia.filter((m) => m.id !== mediaId));
     } catch (error) {
       console.error('Failed to delete media:', error);
-      Alert.alert('خطأ', 'فشل حذف الوسائط');
+      Alert.alert(t('common.error'), t('addListing.mediaDeleteFailed'));
     }
   };
 
@@ -540,12 +911,12 @@ export default function AddListingDetailScreen() {
 
     if (action === 'submit') {
       if (totalImages === 0) {
-        Alert.alert('تنبيه', 'يجب إضافة صورة واحدة على الأقل');
+        Alert.alert(t('common.warning'), t('addListing.needAtLeastOneImage'));
         return;
       }
 
       if (type === 'CAR' && totalImages < 3) {
-        Alert.alert('تنبيه', 'يجب إضافة 3 صور على الأقل للسيارة');
+        Alert.alert(t('common.warning'), t('addListing.needAtLeastThreeCarImages'));
         return;
       }
     }
@@ -611,13 +982,13 @@ export default function AddListingDetailScreen() {
       }
 
       Alert.alert(
-        'تم بنجاح',
+        t('addListing.submitSuccessTitle'),
         action === 'submit'
-          ? 'تم إرسال إعلانك للمراجعة. سيتم نشره بعد الموافقة'
-          : 'تم حفظ الإعلان كمسودة',
+          ? t('addListing.submitSuccessReview')
+          : t('addListing.submitSuccessDraft'),
         [
           {
-            text: 'حسناً',
+            text: t('common.ok'),
             onPress: () => {
               router.replace('/(tabs)/my-listings');
             },
@@ -627,27 +998,34 @@ export default function AddListingDetailScreen() {
     } catch (error: any) {
       console.error('Failed to submit listing:', error);
       const errMsg: string = error.response?.data?.message ||
-        error.response?.data?.error?.message || 'فشل نشر الإعلان';
+        error.response?.data?.error?.message || t('addListing.submitFailed');
       const isCreditsError = errMsg.includes('رصيد') || errMsg.includes('باقة') || errMsg.includes('اشتراك') || errMsg.includes('credit') || errMsg.includes('package') || errMsg.includes('canPost') || errMsg.includes('allowed');
       if (isCreditsError) {
         const isShowroom = useAuthStore.getState().user?.role === 'USER_SHOWROOM';
         Alert.alert(
-          isShowroom ? 'لا يوجد اشتراك نشط' : 'لا يوجد رصيد إعلانات',
+          isShowroom ? t('addListing.noActiveSubscriptionTitle') : t('addListing.noCreditsTitle'),
           isShowroom
-            ? 'يجب الاشتراك في باقة معرض لنشر الإعلانات.'
-            : 'يجب شراء باقة إعلانات أولاً لنشر إعلانك.',
+            ? t('addListing.noActiveSubscriptionMessage')
+            : t('addListing.noCreditsMessage'),
           [
-            { text: 'إلغاء', style: 'cancel' },
+            { text: t('common.cancel'), style: 'cancel' },
             {
-              text: isShowroom ? 'اشترك الآن' : 'اشتري باقة الآن',
-              onPress: () => isShowroom
-                ? router.push('/(tabs)/profile/subscriptions')
-                : router.push('/(tabs)/profile/individual-packages'),
+              text: isShowroom ? t('addListing.subscribeNow') : t('addListing.buyPackageNow'),
+              onPress: () =>
+                isShowroom
+                  ? router.push({
+                      pathname: '/(tabs)/profile/subscriptions' as any,
+                      params: { returnToListingId: String(listingId) },
+                    })
+                  : router.push({
+                      pathname: '/(tabs)/profile/individual-packages' as any,
+                      params: { returnToListingId: String(listingId) },
+                    }),
             },
           ]
         );
       } else {
-        Alert.alert('خطأ', errMsg);
+        Alert.alert(t('common.error'), errMsg);
       }
     } finally {
       setIsLoading(false);
@@ -656,7 +1034,7 @@ export default function AddListingDetailScreen() {
 
   const renderStepIndicator = () => (
     <View style={[styles.stepIndicator, { backgroundColor: theme.card }]}>
-      {[1, 2, 3].map((s) => (
+      {Array.from({ length: totalSteps }, (_, index) => index + 1).map((s) => (
         <View key={s} style={styles.stepItem}>
           <View
             style={[
@@ -675,7 +1053,7 @@ export default function AddListingDetailScreen() {
               {s}
             </Text>
           </View>
-          {s < 3 && (
+          {s < totalSteps && (
             <View
               style={[
                 styles.stepLine,
@@ -690,110 +1068,607 @@ export default function AddListingDetailScreen() {
   );
 
   const renderBasicInfoForm = () => {
-    const selectedBrand = MotorcycleBrands.find(b => b.nameAr === motorcycleDetails.make || b.name === motorcycleDetails.make);
-    const availableModels = selectedBrand ? selectedBrand.models : [];
+    const selectedCarBrand = CAR_BRAND_OPTIONS.find((brand) => brand.nameAr === carDetails.make);
+    const availableCarModels = selectedCarBrand?.models || [];
+    const availableCarTrims = getCarTrimOptions(carDetails.make, carDetails.model);
+    const selectedMotorcycleBrand = MOTORCYCLE_BRAND_OPTIONS.find((brand) => brand.nameAr === motorcycleDetails.make);
+    const availableMotorcycleModels = selectedMotorcycleBrand?.models || [];
+    const selectedPartBrand = CAR_BRAND_OPTIONS.find((brand) => brand.nameAr === partDetails.compatibleCarMake);
+    const availablePartModels = selectedPartBrand?.models || [];
+    const plateCategories = translatedPlateCategories[plateDetails.plateType] || [];
+    const plateCodes = translatedPlateCodes[plateDetails.plateType] || [];
+
+    const renderLocationFields = () => (
+      <>
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.governorate')}</Text>
+          <View style={[styles.pickerContainer, { flexDirection: rowDirection }]}>
+            {Object.keys(GOVERNORATES).map((gov) => (
+              <TouchableOpacity
+                key={gov}
+                style={[
+                  pickerItemStyle,
+                  formData.locationGovernorate === gov && styles.pickerItemActive,
+                  formData.locationGovernorate === gov && { backgroundColor: theme.surface, borderColor: theme.primary },
+                ]}
+                onPress={() => setFormData({ ...formData, locationGovernorate: gov, locationArea: '' })}
+              >
+                <Text
+                  style={[
+                    styles.pickerItemText,
+                    { color: theme.textMuted },
+                    formData.locationGovernorate === gov && { color: theme.primary, fontWeight: '500' },
+                  ]}
+                >
+                  {(() => {
+                    const translationKey = getGovernorateTranslationKey(gov);
+                    return translationKey ? t(translationKey) : gov;
+                  })()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.area')}</Text>
+          <TouchableOpacity
+            style={[inputStyle, styles.selectorField, { flexDirection: rowDirection }]}
+            onPress={() => setShowAreaModal(true)}
+          >
+            <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
+            <Text style={[styles.selectorText, { color: formData.locationArea ? theme.text : theme.textMuted, textAlign }]}>
+              {formData.locationArea || t('addListing.selectArea')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.contactPreference')}</Text>
+          <View style={[styles.pickerContainer, { flexDirection: rowDirection }]}>
+            {translatedContactPreferences.map((pref) => (
+              <TouchableOpacity
+                key={pref.value}
+                style={[
+                  pickerItemStyle,
+                  formData.contactPreference === pref.value && styles.pickerItemActive,
+                  formData.contactPreference === pref.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+                ]}
+                onPress={() => setFormData({ ...formData, contactPreference: pref.value })}
+              >
+                <Text
+                  style={[
+                    styles.pickerItemText,
+                    { color: theme.textMuted },
+                    formData.contactPreference === pref.value && { color: theme.primary, fontWeight: '500' },
+                  ]}
+                >
+                  {pref.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </>
+    );
 
     return (
     <View style={styles.form}>
-      <Text style={[styles.sectionTitle, { color: theme.text }]}>المعلومات الأساسية</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign }]}>{t('addListing.basicInfoTitle')}</Text>
+          <Text style={[styles.subtitle, { color: theme.textMuted, textAlign }]}>{t('addListing.basicInfoSubtitle')}</Text>
 
-      {type === 'MOTORCYCLE' ? (
-        <View>
-            <View style={styles.row}>
-                <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={[styles.label, { color: theme.text }]}>الشركة المصنعة *</Text>
-                <TouchableOpacity 
-                    style={[inputStyle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
-                    onPress={() => setShowMotorcycleMakeModal(true)}
-                >
-                    <Text style={{ color: motorcycleDetails.make ? theme.text : theme.textMuted }}>
-                    {isCustomMotorcycleMake ? (motorcycleDetails.make || 'أخرى') : (motorcycleDetails.make || 'اختر الشركة')}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
-                </TouchableOpacity>
-                </View>
-
-                <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={[styles.label, { color: theme.text }]}>الموديل *</Text>
-                <TouchableOpacity 
-                    style={[inputStyle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, (!motorcycleDetails.make && !isCustomMotorcycleMake) && { opacity: 0.5 }]}
-                    onPress={() => (motorcycleDetails.make || isCustomMotorcycleMake) && setShowMotorcycleModelModal(true)}
-                    disabled={!motorcycleDetails.make && !isCustomMotorcycleMake}
-                >
-                    <Text style={{ color: motorcycleDetails.model ? theme.text : theme.textMuted }}>
-                    {isCustomMotorcycleModel ? (motorcycleDetails.model || 'أخرى') : (motorcycleDetails.model || 'اختر الموديل')}
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
-                </TouchableOpacity>
-                </View>
+      {type === 'CAR' && (
+        <>
+          <View style={[styles.row, { flexDirection: rowDirection }]}>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.makeLabel')} *</Text>
+              <TouchableOpacity style={[inputStyle, styles.selectorField, { flexDirection: rowDirection }]} onPress={() => setShowCarMakeModal(true)}>
+                <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
+                <Text style={[styles.selectorText, { color: carDetails.make ? theme.text : theme.textMuted, textAlign }]}>
+                  {isCustomCarMake ? (carDetails.make || t('addListing.allOther')) : (carDetails.make || t('addListing.selectMakePlaceholder'))}
+                </Text>
+              </TouchableOpacity>
             </View>
 
-             {(isCustomMotorcycleMake || isCustomMotorcycleModel) && (
-                 <View style={styles.row}>
-                    {isCustomMotorcycleMake && (
-                         <View style={[styles.inputGroup, styles.halfWidth]}>
-                            <TextInput
-                            style={inputStyle}
-                            value={motorcycleDetails.make}
-                            onChangeText={(text) => setMotorcycleDetails({ ...motorcycleDetails, make: text })}
-                            placeholder="اسم الشركة"
-                            textAlign="right"
-                            placeholderTextColor={theme.textMuted}
-                            />
-                        </View>
-                    )}
-                    {isCustomMotorcycleModel && (
-                         <View style={[styles.inputGroup, styles.halfWidth]}>
-                            <TextInput
-                            style={inputStyle}
-                            value={motorcycleDetails.model}
-                            onChangeText={(text) => setMotorcycleDetails({ ...motorcycleDetails, model: text })}
-                            placeholder="اسم الموديل"
-                            textAlign="right"
-                            placeholderTextColor={theme.textMuted}
-                            />
-                        </View>
-                    )}
-                 </View>
-             )}
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.modelLabel')} *</Text>
+              <TouchableOpacity
+                style={[inputStyle, styles.selectorField, { flexDirection: rowDirection }, (!carDetails.make && !isCustomCarMake) && styles.disabledField]}
+                onPress={() => (carDetails.make || isCustomCarMake) && setShowCarModelModal(true)}
+                disabled={!carDetails.make && !isCustomCarMake}
+              >
+                <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
+                <Text style={[styles.selectorText, { color: carDetails.model ? theme.text : theme.textMuted, textAlign }]}>
+                  {isCustomCarModel ? (carDetails.model || t('addListing.allOther')) : (carDetails.model || t('addListing.selectModelPlaceholder'))}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
-            <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.text }]}>السنة *</Text>
-            <TextInput
+          {(isCustomCarMake || isCustomCarModel) && (
+            <View style={[styles.row, { flexDirection: rowDirection }]}>
+              {isCustomCarMake && (
+                <View style={[styles.inputGroup, styles.halfWidth]}>
+                  <TextInput
+                    style={inputStyle}
+                    value={carDetails.make}
+                    onChangeText={(text) => setCarDetails((prev) => ({ ...prev, make: text, model: '' }))}
+                    placeholder={t('addListing.enterMake')}
+                    {...inputDirectionProps}
+                    placeholderTextColor={theme.textMuted}
+                  />
+                </View>
+              )}
+              {isCustomCarModel && (
+                <View style={[styles.inputGroup, styles.halfWidth]}>
+                  <TextInput
+                    style={inputStyle}
+                    value={carDetails.model}
+                    onChangeText={(text) => setCarDetails((prev) => ({ ...prev, model: text }))}
+                    placeholder={t('addListing.enterModel')}
+                    {...inputDirectionProps}
+                    placeholderTextColor={theme.textMuted}
+                  />
+                </View>
+              )}
+            </View>
+          )}
+
+          <View style={[styles.row, { flexDirection: rowDirection }]}>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.yearLabel')} *</Text>
+              <TouchableOpacity style={[inputStyle, styles.selectorField, { flexDirection: rowDirection }]} onPress={() => setYearPickerTarget('CAR')}>
+                <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
+                <Text style={[styles.selectorText, { color: carDetails.year ? theme.text : theme.textMuted, textAlign }]}>
+                  {carDetails.year || t('addListing.selectYear')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.mileageLabel')} *</Text>
+              <TextInput
                 style={inputStyle}
-                value={motorcycleDetails.year}
-                onChangeText={(text) => setMotorcycleDetails({ ...motorcycleDetails, year: text.replace(/[^0-9]/g, '') })}
-                placeholder="2024"
-                textAlign="right"
+                value={carDetails.mileageKm}
+                onChangeText={(text) => setCarDetails((prev) => ({ ...prev, mileageKm: text.replace(/[^0-9]/g, '') }))}
+                placeholder={t('addListing.enterMileageCarExample')}
+                {...inputDirectionProps}
                 keyboardType="number-pad"
-                maxLength={4}
                 placeholderTextColor={theme.textMuted}
-            />
+              />
             </View>
-        </View>
-      ) : (
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>العنوان *</Text>
-        <TextInput
-          style={inputStyle}
-          value={formData.title}
-          onChangeText={(text) => setFormData({ ...formData, title: text })}
-          placeholder="مثال: تويوتا كامري 2020"
-          textAlign="right"
-          maxLength={150}
-          placeholderTextColor={theme.textMuted}
-        />
-      </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.transmissionLabel')}</Text>
+            <View style={[styles.pickerContainer, { flexDirection: rowDirection }]}>
+              {[
+                { value: 'AUTO', label: t('addListing.transmissionAuto') },
+                { value: 'MANUAL', label: t('addListing.transmissionManual') },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    pickerItemStyle,
+                    carDetails.transmission === item.value && styles.pickerItemActive,
+                    carDetails.transmission === item.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+                  ]}
+                  onPress={() => setCarDetails((prev) => ({ ...prev, transmission: item.value as CarDetails['transmission'] }))}
+                >
+                  <Text style={[styles.pickerItemText, { color: carDetails.transmission === item.value ? theme.primary : theme.textMuted }]}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.fuelLabel')}</Text>
+            <View style={[styles.pickerContainer, { flexDirection: rowDirection }]}>
+              {[
+                { value: 'PETROL', label: t('addListing.fuelPetrol') },
+                { value: 'DIESEL', label: t('addListing.fuelDiesel') },
+                { value: 'HYBRID', label: t('addListing.fuelHybrid') },
+                { value: 'ELECTRIC', label: t('addListing.fuelElectric') },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    pickerItemStyle,
+                    carDetails.fuel === item.value && styles.pickerItemActive,
+                    carDetails.fuel === item.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+                  ]}
+                  onPress={() => setCarDetails((prev) => ({ ...prev, fuel: item.value as CarDetails['fuel'] }))}
+                >
+                  <Text style={[styles.pickerItemText, { color: carDetails.fuel === item.value ? theme.primary : theme.textMuted }]}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </>
+      )}
+
+      {type === 'MOTORCYCLE' && (
+        <>
+          <View style={[styles.row, { flexDirection: rowDirection }]}>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.makeLabel')} *</Text>
+              <TouchableOpacity style={[inputStyle, styles.selectorField, { flexDirection: rowDirection }]} onPress={() => setShowMotorcycleMakeModal(true)}>
+                <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
+                <Text style={[styles.selectorText, { color: motorcycleDetails.make ? theme.text : theme.textMuted, textAlign }]}>
+                  {isCustomMotorcycleMake ? (motorcycleDetails.make || t('addListing.allOther')) : (motorcycleDetails.make || t('addListing.selectMakePlaceholder'))}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.modelLabel')} *</Text>
+              <TouchableOpacity
+                style={[inputStyle, styles.selectorField, { flexDirection: rowDirection }, (!motorcycleDetails.make && !isCustomMotorcycleMake) && styles.disabledField]}
+                onPress={() => (motorcycleDetails.make || isCustomMotorcycleMake) && setShowMotorcycleModelModal(true)}
+                disabled={!motorcycleDetails.make && !isCustomMotorcycleMake}
+              >
+                <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
+                <Text style={[styles.selectorText, { color: motorcycleDetails.model ? theme.text : theme.textMuted, textAlign }]}>
+                  {isCustomMotorcycleModel ? (motorcycleDetails.model || t('addListing.allOther')) : (motorcycleDetails.model || t('addListing.selectModelPlaceholder'))}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {(isCustomMotorcycleMake || isCustomMotorcycleModel) && (
+            <View style={[styles.row, { flexDirection: rowDirection }]}>
+              {isCustomMotorcycleMake && (
+                <View style={[styles.inputGroup, styles.halfWidth]}>
+                  <TextInput
+                    style={inputStyle}
+                    value={motorcycleDetails.make}
+                    onChangeText={(text) => setMotorcycleDetails((prev) => ({ ...prev, make: text, model: '' }))}
+                    placeholder={t('addListing.enterMake')}
+                    {...inputDirectionProps}
+                    placeholderTextColor={theme.textMuted}
+                  />
+                </View>
+              )}
+              {isCustomMotorcycleModel && (
+                <View style={[styles.inputGroup, styles.halfWidth]}>
+                  <TextInput
+                    style={inputStyle}
+                    value={motorcycleDetails.model}
+                    onChangeText={(text) => setMotorcycleDetails((prev) => ({ ...prev, model: text }))}
+                    placeholder={t('addListing.enterModel')}
+                    {...inputDirectionProps}
+                    placeholderTextColor={theme.textMuted}
+                  />
+                </View>
+              )}
+            </View>
+          )}
+
+          <View style={[styles.row, { flexDirection: rowDirection }]}>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.yearLabel')} *</Text>
+              <TouchableOpacity style={[inputStyle, styles.selectorField, { flexDirection: rowDirection }]} onPress={() => setYearPickerTarget('MOTORCYCLE')}>
+                <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
+                <Text style={[styles.selectorText, { color: motorcycleDetails.year ? theme.text : theme.textMuted, textAlign }]}>
+                  {motorcycleDetails.year || t('addListing.selectYear')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.mileageLabel')} *</Text>
+              <TextInput
+                style={inputStyle}
+                value={motorcycleDetails.mileageKm}
+                onChangeText={(text) => setMotorcycleDetails((prev) => ({ ...prev, mileageKm: text.replace(/[^0-9]/g, '') }))}
+                placeholder={t('addListing.enterMileageMotorcycleExample')}
+                {...inputDirectionProps}
+                keyboardType="number-pad"
+                placeholderTextColor={theme.textMuted}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.transmissionLabel')}</Text>
+            <View style={[styles.pickerContainer, { flexDirection: rowDirection }]}>
+              {[
+                { value: 'AUTO', label: t('addListing.transmissionAuto') },
+                { value: 'MANUAL', label: t('addListing.transmissionManual') },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    pickerItemStyle,
+                    motorcycleDetails.transmission === item.value && styles.pickerItemActive,
+                    motorcycleDetails.transmission === item.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+                  ]}
+                  onPress={() => setMotorcycleDetails((prev) => ({ ...prev, transmission: item.value as MotorcycleDetails['transmission'] }))}
+                >
+                  <Text style={[styles.pickerItemText, { color: motorcycleDetails.transmission === item.value ? theme.primary : theme.textMuted }]}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.bodyTypeLabel')}</Text>
+            <View style={[styles.pickerContainer, { flexDirection: rowDirection }]}>
+              {translatedMotorcycleBodyTypes.map((bodyType) => (
+                <TouchableOpacity
+                  key={bodyType.value}
+                  style={[
+                    pickerItemStyle,
+                    motorcycleDetails.bodyType === bodyType.value && styles.pickerItemActive,
+                    motorcycleDetails.bodyType === bodyType.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+                  ]}
+                  onPress={() => setMotorcycleDetails((prev) => ({ ...prev, bodyType: bodyType.value }))}
+                >
+                  <Text style={[styles.pickerItemText, { color: motorcycleDetails.bodyType === bodyType.value ? theme.primary : theme.textMuted }]}>{bodyType.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.engineSizeLabel')}</Text>
+            <View style={[styles.pickerContainer, { flexDirection: rowDirection }]}>
+              {translatedMotorcycleEngineSizes.map((engineSize) => (
+                <TouchableOpacity
+                  key={engineSize.value}
+                  style={[
+                    pickerItemStyle,
+                    motorcycleDetails.engineSize === engineSize.value && styles.pickerItemActive,
+                    motorcycleDetails.engineSize === engineSize.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+                  ]}
+                  onPress={() => setMotorcycleDetails((prev) => ({ ...prev, engineSize: engineSize.value }))}
+                >
+                  <Text style={[styles.pickerItemText, { color: motorcycleDetails.engineSize === engineSize.value ? theme.primary : theme.textMuted }]}>
+                    {engineSize.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </>
+      )}
+
+      {type === 'PLATE' && (
+        <>
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.plateTypeLabel')}</Text>
+            <View style={[styles.pickerContainer, { flexDirection: rowDirection }]}>
+              {translatedPlateTypeOptions.map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    pickerItemStyle,
+                    plateDetails.plateType === item.value && styles.pickerItemActive,
+                    plateDetails.plateType === item.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+                  ]}
+                  onPress={() =>
+                    setPlateDetails((prev) => ({
+                      ...prev,
+                      plateType: item.value,
+                      plateCategory: PLATE_CATEGORY_OPTIONS[item.value][0] || '',
+                      plateCode: PLATE_CODE_OPTIONS[item.value][0] || '',
+                    }))
+                  }
+                >
+                  <Text style={[styles.pickerItemText, { color: plateDetails.plateType === item.value ? theme.primary : theme.textMuted }]}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.plateCategoryLabel')}</Text>
+            <View style={[styles.pickerContainer, { flexDirection: rowDirection }]}>
+              {plateCategories.map((category) => (
+                <TouchableOpacity
+                  key={category.value}
+                  style={[
+                    pickerItemStyle,
+                    plateDetails.plateCategory === category.value && styles.pickerItemActive,
+                    plateDetails.plateCategory === category.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+                  ]}
+                  onPress={() => setPlateDetails((prev) => ({ ...prev, plateCategory: category.value }))}
+                >
+                  <Text style={[styles.pickerItemText, { color: plateDetails.plateCategory === category.value ? theme.primary : theme.textMuted }]}>{category.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={[styles.row, { flexDirection: rowDirection }]}>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.plateNumberLabel')} *</Text>
+              <TextInput
+                style={inputStyle}
+                value={plateDetails.plateNumber}
+                onChangeText={(text) => setPlateDetails((prev) => ({ ...prev, plateNumber: text.replace(/[^0-9]/g, '') }))}
+                placeholder={t('addListing.enterPlateNumberExample')}
+                {...inputDirectionProps}
+                keyboardType="number-pad"
+                placeholderTextColor={theme.textMuted}
+              />
+            </View>
+
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.plateCodeLabel')}</Text>
+              <View style={[styles.pickerContainer, { flexDirection: rowDirection }]}>
+                {plateCodes.map((code) => (
+                  <TouchableOpacity
+                    key={code.value}
+                    style={[
+                      pickerItemStyle,
+                      plateDetails.plateCode === code.value && styles.pickerItemActive,
+                      plateDetails.plateCode === code.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+                    ]}
+                    onPress={() => setPlateDetails((prev) => ({ ...prev, plateCode: code.value }))}
+                  >
+                    <Text style={[styles.pickerItemText, { color: plateDetails.plateCode === code.value ? theme.primary : theme.textMuted }]}>{code.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+        </>
+      )}
+
+      {type === 'PART' && (
+        <>
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.partCategoryLabel')} *</Text>
+            <View style={[styles.pickerContainer, { flexDirection: rowDirection }]}>
+              {translatedPartCategories.map((category) => (
+                <TouchableOpacity
+                  key={category.value}
+                  style={[
+                    pickerItemStyle,
+                    partDetails.partCategory === category.value && styles.pickerItemActive,
+                    partDetails.partCategory === category.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+                  ]}
+                  onPress={() => setPartDetails((prev) => ({ ...prev, partCategory: category.value }))}
+                >
+                  <Text style={[styles.pickerItemText, { color: partDetails.partCategory === category.value ? theme.primary : theme.textMuted }]}>{category.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.partNameLabel')}</Text>
+            <TextInput
+              style={inputStyle}
+              value={partDetails.partName}
+              onChangeText={(text) => setPartDetails((prev) => ({ ...prev, partName: text }))}
+              placeholder={t('addListing.enterPartNameExample')}
+              {...inputDirectionProps}
+              placeholderTextColor={theme.textMuted}
+            />
+          </View>
+
+          <View style={[styles.row, { flexDirection: rowDirection }]}>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.compatibleMakeLabel')}</Text>
+              <TouchableOpacity style={[inputStyle, styles.selectorField, { flexDirection: rowDirection }]} onPress={() => setShowPartMakeModal(true)}>
+                <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
+                <Text style={[styles.selectorText, { color: partDetails.compatibleCarMake ? theme.text : theme.textMuted, textAlign }]}>
+                  {isCustomPartMake ? (partDetails.compatibleCarMake || t('addListing.allOther')) : (partDetails.compatibleCarMake || t('addListing.selectMakePlaceholder'))}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.compatibleModelLabel')}</Text>
+              <TouchableOpacity
+                style={[inputStyle, styles.selectorField, { flexDirection: rowDirection }, (!partDetails.compatibleCarMake && !isCustomPartMake) && styles.disabledField]}
+                onPress={() => (partDetails.compatibleCarMake || isCustomPartMake) && setShowPartModelModal(true)}
+                disabled={!partDetails.compatibleCarMake && !isCustomPartMake}
+              >
+                <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
+                <Text style={[styles.selectorText, { color: partDetails.compatibleCarModel ? theme.text : theme.textMuted, textAlign }]}>
+                  {isCustomPartModel ? (partDetails.compatibleCarModel || t('addListing.allOther')) : (partDetails.compatibleCarModel || t('addListing.selectModelPlaceholder'))}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {(isCustomPartMake || isCustomPartModel) && (
+            <View style={[styles.row, { flexDirection: rowDirection }]}>
+              {isCustomPartMake && (
+                <View style={[styles.inputGroup, styles.halfWidth]}>
+                  <TextInput
+                    style={inputStyle}
+                    value={partDetails.compatibleCarMake}
+                    onChangeText={(text) => setPartDetails((prev) => ({ ...prev, compatibleCarMake: text, compatibleCarModel: '' }))}
+                    placeholder={t('addListing.enterMake')}
+                    {...inputDirectionProps}
+                    placeholderTextColor={theme.textMuted}
+                  />
+                </View>
+              )}
+              {isCustomPartModel && (
+                <View style={[styles.inputGroup, styles.halfWidth]}>
+                  <TextInput
+                    style={inputStyle}
+                    value={partDetails.compatibleCarModel}
+                    onChangeText={(text) => setPartDetails((prev) => ({ ...prev, compatibleCarModel: text }))}
+                    placeholder={t('addListing.enterModel')}
+                    {...inputDirectionProps}
+                    placeholderTextColor={theme.textMuted}
+                  />
+                </View>
+              )}
+            </View>
+          )}
+
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.conditionLabel')}</Text>
+            <View style={[styles.pickerContainer, { flexDirection: rowDirection }]}>
+              {[
+                { value: 'NEW', label: t('listing.conditionNew') },
+                { value: 'USED', label: t('listing.conditionUsed') },
+                { value: 'REFURBISHED', label: t('addListing.conditionRefurbished') },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    pickerItemStyle,
+                    partDetails.condition === item.value && styles.pickerItemActive,
+                    partDetails.condition === item.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+                  ]}
+                  onPress={() => setPartDetails((prev) => ({ ...prev, condition: item.value as PartDetails['condition'] }))}
+                >
+                  <Text style={[styles.pickerItemText, { color: partDetails.condition === item.value ? theme.primary : theme.textMuted }]}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={[styles.inputGroup, styles.toggleRow]}>
+            <TouchableOpacity
+              style={[
+                styles.toggleTrack,
+                { backgroundColor: partDetails.deliveryAvailable ? theme.primary : theme.border },
+              ]}
+              onPress={() => setPartDetails((prev) => ({ ...prev, deliveryAvailable: !prev.deliveryAvailable }))}
+            >
+              <View
+                style={[
+                  styles.toggleThumb,
+                  { alignSelf: partDetails.deliveryAvailable ? 'flex-start' : 'flex-end' },
+                ]}
+              />
+            </TouchableOpacity>
+            <Text style={[styles.label, { color: theme.text, marginBottom: 0, textAlign }]}>{t('addListing.deliveryAvailableLabel')}</Text>
+          </View>
+        </>
       )}
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>الوصف</Text>
+        <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.priceLabel')} *</Text>
+        <TextInput
+          style={inputStyle}
+          value={formData.price}
+          onChangeText={(text) => setFormData({ ...formData, price: text.replace(/[^0-9.]/g, '') })}
+          placeholder="0.00"
+          {...inputDirectionProps}
+          keyboardType="decimal-pad"
+          placeholderTextColor={theme.textMuted}
+        />
+      </View>
+
+      <View style={styles.inputGroup}>
+        <Text style={[styles.label, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('addListing.descriptionLabel')}</Text>
         <TextInput
           style={[inputStyle, styles.textArea]}
           value={formData.description}
           onChangeText={(text) => setFormData({ ...formData, description: text })}
-          placeholder="اكتب وصف تفصيلي للإعلان..."
-          textAlign="right"
+          placeholder={t('addListing.descriptionPlaceholder')}
+          textAlign={isRTL ? 'right' : 'left'}
+          writingDirection={isRTL ? 'rtl' : 'ltr'}
           multiline
           numberOfLines={4}
           maxLength={5000}
@@ -801,163 +1676,194 @@ export default function AddListingDetailScreen() {
         />
       </View>
 
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>السعر (دينار بحريني) *</Text>
-        <TextInput
-          style={inputStyle}
-          value={formData.price}
-          onChangeText={(text) => setFormData({ ...formData, price: text.replace(/[^0-9.]/g, '') })}
-          placeholder="0.00"
-          textAlign="right"
-          keyboardType="decimal-pad"
-          placeholderTextColor={theme.textMuted}
-        />
-      </View>
+      {renderLocationFields()}
 
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>المحافظة</Text>
-        <View style={styles.pickerContainer}>
-          {Object.keys(GOVERNORATES).map((gov) => (
-            <TouchableOpacity
-              key={gov}
-              style={[
-                pickerItemStyle,
-                formData.locationGovernorate === gov && styles.pickerItemActive,
-                formData.locationGovernorate === gov && { backgroundColor: theme.surface, borderColor: theme.primary },
-              ]}
-              onPress={() => setFormData({ ...formData, locationGovernorate: gov, locationArea: '' })}
-            >
-              <Text
-                style={[
-                  styles.pickerItemText,
-                  { color: theme.textMuted },
-                  formData.locationGovernorate === gov && { color: theme.primary, fontWeight: '500' },
-                ]}
-              >
-                {gov}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>المنطقة</Text>
-        <TouchableOpacity 
-          style={[inputStyle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
-          onPress={() => setShowAreaModal(true)}
-        >
-          <Text style={{ color: formData.locationArea ? theme.text : theme.textMuted }}>
-            {formData.locationArea || 'اختر المنطقة'}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Area Picker Modal */}
       <PickerModal
         visible={showAreaModal}
-        title="اختر المنطقة"
+        title={t('addListing.selectArea')}
         items={GOVERNORATES[formData.locationGovernorate] || []}
         selectedValue={formData.locationArea}
         onSelect={(val) => setFormData({ ...formData, locationArea: val })}
         onClose={() => setShowAreaModal(false)}
       />
 
-      <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>طريقة التواصل المفضلة</Text>
-        <View style={styles.pickerContainer}>
-          {contactPreferences.map((pref) => (
-            <TouchableOpacity
-              key={pref.value}
-              style={[
-                pickerItemStyle,
-                formData.contactPreference === pref.value && styles.pickerItemActive,
-                formData.contactPreference === pref.value && { backgroundColor: theme.surface, borderColor: theme.primary },
-              ]}
-              onPress={() => setFormData({ ...formData, contactPreference: pref.value })}
-            >
-              <Text
-                style={[
-                  styles.pickerItemText,
-                  { color: theme.textMuted },
-                  formData.contactPreference === pref.value && { color: theme.primary, fontWeight: '500' },
-                ]}
-              >
-                {pref.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+      <PickerModal
+        visible={showCarMakeModal}
+        title={t('addListing.selectMake')}
+        items={CAR_BRAND_OPTIONS.map((brand) => brand.nameAr)}
+        selectedValue={isCustomCarMake ? otherOption : carDetails.make}
+        onSelect={(value) => {
+          if (value === otherOption) {
+            setIsCustomCarMake(true);
+            setCarDetails((prev) => ({ ...prev, make: '', model: '' }));
+            return;
+          }
 
-      {/* Pickers for Step 1 */}
-      {type === 'MOTORCYCLE' && (
-      <>
-        <PickerModal
-            visible={showMotorcycleMakeModal}
-            title="اختر الشركة المصنعة"
-            items={MotorcycleBrands.map(b => b.nameAr)}
-            selectedValue={isCustomMotorcycleMake ? 'أخرى' : motorcycleDetails.make}
-            onSelect={(value) => {
-              if (value === 'أخرى') {
-                 setIsCustomMotorcycleMake(true);
-                 setMotorcycleDetails(prev => ({ ...prev, make: '', model: '' }));
-              } else {
-                 setIsCustomMotorcycleMake(false);
-                 setMotorcycleDetails(prev => ({ ...prev, make: value, model: '' }));
-              }
-            }}
-            onClose={() => setShowMotorcycleMakeModal(false)}
-          />
+          setIsCustomCarMake(false);
+          setIsCustomCarModel(false);
+          setIsCustomCarTrim(false);
+          setCarDetails((prev) => ({ ...prev, make: value, model: '', trim: '' }));
+        }}
+        onClose={() => setShowCarMakeModal(false)}
+      />
 
-          <PickerModal
-            visible={showMotorcycleModelModal}
-            title="اختر الموديل"
-            items={availableModels}
-            selectedValue={isCustomMotorcycleModel ? 'أخرى' : motorcycleDetails.model}
-            onSelect={(value) => {
-              if (value === 'أخرى') {
-                 setIsCustomMotorcycleModel(true);
-                 setMotorcycleDetails(prev => ({ ...prev, model: '' }));
-              } else {
-                 setIsCustomMotorcycleModel(false);
-                 setMotorcycleDetails(prev => ({ ...prev, model: value }));
-              }
-            }}
-            onClose={() => setShowMotorcycleModelModal(false)}
-          />
-      </>
-      )}
+      <PickerModal
+        visible={showCarModelModal}
+        title={t('addListing.selectModel')}
+        items={availableCarModels}
+        selectedValue={isCustomCarModel ? otherOption : carDetails.model}
+        onSelect={(value) => {
+          if (value === otherOption) {
+            setIsCustomCarModel(true);
+            setCarDetails((prev) => ({ ...prev, model: '' }));
+            return;
+          }
+
+          setIsCustomCarModel(false);
+          setIsCustomCarTrim(false);
+          setCarDetails((prev) => ({ ...prev, model: value, trim: '' }));
+        }}
+        onClose={() => setShowCarModelModal(false)}
+      />
+
+      <PickerModal
+        visible={showCarTrimModal}
+        title={t('addListing.selectTrim')}
+        items={availableCarTrims}
+        selectedValue={isCustomCarTrim ? otherOption : carDetails.trim}
+        onSelect={(value) => {
+          if (value === otherOption) {
+            setIsCustomCarTrim(true);
+            setCarDetails((prev) => ({ ...prev, trim: '' }));
+            return;
+          }
+
+          setIsCustomCarTrim(false);
+          setCarDetails((prev) => ({ ...prev, trim: value }));
+        }}
+        onClose={() => setShowCarTrimModal(false)}
+      />
+
+      <PickerModal
+        visible={showMotorcycleMakeModal}
+        title={t('addListing.selectMake')}
+        items={MOTORCYCLE_BRAND_OPTIONS.map((brand) => brand.nameAr)}
+        selectedValue={isCustomMotorcycleMake ? otherOption : motorcycleDetails.make}
+        onSelect={(value) => {
+          if (value === otherOption) {
+            setIsCustomMotorcycleMake(true);
+            setMotorcycleDetails((prev) => ({ ...prev, make: '', model: '' }));
+            return;
+          }
+
+          setIsCustomMotorcycleMake(false);
+          setIsCustomMotorcycleModel(false);
+          setMotorcycleDetails((prev) => ({ ...prev, make: value, model: '' }));
+        }}
+        onClose={() => setShowMotorcycleMakeModal(false)}
+      />
+
+      <PickerModal
+        visible={showMotorcycleModelModal}
+        title={t('addListing.selectModel')}
+        items={availableMotorcycleModels}
+        selectedValue={isCustomMotorcycleModel ? otherOption : motorcycleDetails.model}
+        onSelect={(value) => {
+          if (value === otherOption) {
+            setIsCustomMotorcycleModel(true);
+            setMotorcycleDetails((prev) => ({ ...prev, model: '' }));
+            return;
+          }
+
+          setIsCustomMotorcycleModel(false);
+          setMotorcycleDetails((prev) => ({ ...prev, model: value }));
+        }}
+        onClose={() => setShowMotorcycleModelModal(false)}
+      />
+
+      <PickerModal
+        visible={showPartMakeModal}
+        title={t('addListing.selectCompatibleMake')}
+        items={CAR_BRAND_OPTIONS.map((brand) => brand.nameAr)}
+        selectedValue={isCustomPartMake ? otherOption : partDetails.compatibleCarMake}
+        onSelect={(value) => {
+          if (value === otherOption) {
+            setIsCustomPartMake(true);
+            setPartDetails((prev) => ({ ...prev, compatibleCarMake: '', compatibleCarModel: '' }));
+            return;
+          }
+
+          setIsCustomPartMake(false);
+          setIsCustomPartModel(false);
+          setPartDetails((prev) => ({ ...prev, compatibleCarMake: value, compatibleCarModel: '' }));
+        }}
+        onClose={() => setShowPartMakeModal(false)}
+      />
+
+      <PickerModal
+        visible={showPartModelModal}
+        title={t('addListing.selectCompatibleModel')}
+        items={availablePartModels}
+        selectedValue={isCustomPartModel ? otherOption : partDetails.compatibleCarModel}
+        onSelect={(value) => {
+          if (value === otherOption) {
+            setIsCustomPartModel(true);
+            setPartDetails((prev) => ({ ...prev, compatibleCarModel: '' }));
+            return;
+          }
+
+          setIsCustomPartModel(false);
+          setPartDetails((prev) => ({ ...prev, compatibleCarModel: value }));
+        }}
+        onClose={() => setShowPartModelModal(false)}
+      />
+
+      <PickerModal
+        visible={yearPickerTarget !== null}
+        title={t('addListing.selectYear')}
+        items={YEAR_OPTIONS}
+        selectedValue={yearPickerTarget === 'CAR' ? carDetails.year : motorcycleDetails.year}
+        onSelect={(value) => {
+          if (yearPickerTarget === 'CAR') {
+            setCarDetails((prev) => ({ ...prev, year: value }));
+          } else {
+            setMotorcycleDetails((prev) => ({ ...prev, year: value }));
+          }
+        }}
+        onClose={() => setYearPickerTarget(null)}
+        hasOther={false}
+      />
     </View>
   );
   };
 
   const renderCarDetailsForm = () => (
     <View style={styles.form}>
-      <Text style={[styles.sectionTitle, { color: theme.text }]}>تفاصيل السيارة</Text>
+      <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('addListing.carDetailsTitle')}</Text>
 
       <View style={styles.row}>
         <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={[styles.label, { color: theme.text }]}>الصنع *</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('addListing.makeLabel')} *</Text>
           <TextInput
             style={inputStyle}
             value={carDetails.make}
             onChangeText={(text) => setCarDetails({ ...carDetails, make: text })}
-            placeholder="تويوتا"
-            textAlign="right"
+            placeholder={t('addListing.enterMake')}
+            textAlign={textAlign}
+            writingDirection={direction}
             placeholderTextColor={theme.textMuted}
           />
         </View>
 
         <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={[styles.label, { color: theme.text }]}>الموديل *</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('addListing.modelLabel')} *</Text>
           <TextInput
             style={inputStyle}
             value={carDetails.model}
             onChangeText={(text) => setCarDetails({ ...carDetails, model: text })}
-            placeholder="كامري"
-            textAlign="right"
+            placeholder={t('addListing.enterModel')}
+            textAlign={textAlign}
+            writingDirection={direction}
             placeholderTextColor={theme.textMuted}
           />
         </View>
@@ -965,13 +1871,14 @@ export default function AddListingDetailScreen() {
 
       <View style={styles.row}>
         <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={[styles.label, { color: theme.text }]}>السنة *</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('addListing.yearLabel')} *</Text>
           <TextInput
             style={inputStyle}
             value={carDetails.year}
             onChangeText={(text) => setCarDetails({ ...carDetails, year: text.replace(/[^0-9]/g, '') })}
             placeholder="2020"
             textAlign="right"
+            writingDirection="rtl"
             keyboardType="number-pad"
             maxLength={4}
             placeholderTextColor={theme.textMuted}
@@ -979,13 +1886,14 @@ export default function AddListingDetailScreen() {
         </View>
 
         <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={[styles.label, { color: theme.text }]}>الكيلومترات</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('addListing.mileageLabel')}</Text>
           <TextInput
             style={inputStyle}
             value={carDetails.mileageKm}
             onChangeText={(text) => setCarDetails({ ...carDetails, mileageKm: text.replace(/[^0-9]/g, '') })}
             placeholder="50000"
             textAlign="right"
+            writingDirection="rtl"
             keyboardType="number-pad"
             placeholderTextColor={theme.textMuted}
           />
@@ -993,41 +1901,55 @@ export default function AddListingDetailScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>الحالة</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.conditionLabel')}</Text>
         <View style={styles.pickerContainer}>
-          <TouchableOpacity
-            style={[
-              pickerItemStyle,
-              carDetails.condition === 'NEW' && styles.pickerItemActive,
-              carDetails.condition === 'NEW' && { backgroundColor: theme.surface, borderColor: theme.primary },
-            ]}
-            onPress={() => setCarDetails({ ...carDetails, condition: 'NEW' })}
-          >
-            <Text style={[
-              styles.pickerItemText,
-              { color: theme.textMuted },
-              carDetails.condition === 'NEW' && { color: theme.primary, fontWeight: '500' },
-            ]}>جديدة</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              pickerItemStyle,
-              carDetails.condition === 'USED' && styles.pickerItemActive,
-              carDetails.condition === 'USED' && { backgroundColor: theme.surface, borderColor: theme.primary },
-            ]}
-            onPress={() => setCarDetails({ ...carDetails, condition: 'USED' })}
-          >
-            <Text style={[
-              styles.pickerItemText,
-              { color: theme.textMuted },
-              carDetails.condition === 'USED' && { color: theme.primary, fontWeight: '500' },
-            ]}>مستعملة</Text>
-          </TouchableOpacity>
+          {translatedConditionOptions.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                pickerItemStyle,
+                carDetails.condition === option.value && styles.pickerItemActive,
+                carDetails.condition === option.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+              ]}
+              onPress={() => setCarDetails({ ...carDetails, condition: option.value })}
+            >
+              <Text style={[
+                styles.pickerItemText,
+                { color: theme.textMuted },
+                carDetails.condition === option.value && { color: theme.primary, fontWeight: '500' },
+              ]}>{option.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
 
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: theme.text }]}>{t('addListing.trimLabel')}</Text>
+            <TouchableOpacity
+              style={[inputStyle, styles.selectorField, (!carDetails.model && !isCustomCarModel) && styles.disabledField]}
+              onPress={() => (carDetails.model || isCustomCarModel) && setShowCarTrimModal(true)}
+              disabled={!carDetails.model && !isCustomCarModel}
+            >
+              <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
+              <Text style={[styles.selectorText, { color: carDetails.trim ? theme.text : theme.textMuted, textAlign, writingDirection: direction }]}> 
+                {isCustomCarTrim ? (carDetails.trim || t('addListing.allOther')) : (carDetails.trim || t('addListing.selectTrim'))}
+              </Text>
+            </TouchableOpacity>
+            {isCustomCarTrim && (
+              <TextInput
+                style={[inputStyle, { marginTop: 8 }]}
+                value={carDetails.trim}
+                onChangeText={(text) => setCarDetails((prev) => ({ ...prev, trim: text }))}
+                placeholder={t('addListing.enterTrim')}
+                textAlign={textAlign}
+                writingDirection={direction}
+                placeholderTextColor={theme.textMuted}
+              />
+            )}
+          </View>
+
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>ناقل الحركة</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.transmissionLabel')}</Text>
         <View style={styles.pickerContainer}>
           <TouchableOpacity
             style={[
@@ -1041,7 +1963,7 @@ export default function AddListingDetailScreen() {
               styles.pickerItemText,
               { color: theme.textMuted },
               carDetails.transmission === 'AUTO' && { color: theme.primary, fontWeight: '500' },
-            ]}>أوتوماتيك</Text>
+            ]}>{t('addListing.transmissionAuto')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
@@ -1055,44 +1977,42 @@ export default function AddListingDetailScreen() {
               styles.pickerItemText,
               { color: theme.textMuted },
               carDetails.transmission === 'MANUAL' && { color: theme.primary, fontWeight: '500' },
-            ]}>يدوي</Text>
+            ]}>{t('addListing.transmissionManual')}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>نوع الوقود</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.fuelLabel')}</Text>
         <View style={styles.pickerContainer}>
-          {['PETROL', 'DIESEL', 'HYBRID', 'ELECTRIC'].map((fuel) => (
+          {translatedFuelOptions.map((fuel) => (
             <TouchableOpacity
-              key={fuel}
+              key={fuel.value}
               style={[
                 pickerItemStyle,
-                carDetails.fuel === fuel && styles.pickerItemActive,
-                carDetails.fuel === fuel && { backgroundColor: theme.surface, borderColor: theme.primary },
+                carDetails.fuel === fuel.value && styles.pickerItemActive,
+                carDetails.fuel === fuel.value && { backgroundColor: theme.surface, borderColor: theme.primary },
               ]}
-              onPress={() => setCarDetails({ ...carDetails, fuel: fuel as any })}
+              onPress={() => setCarDetails({ ...carDetails, fuel: fuel.value })}
             >
               <Text style={[
                 styles.pickerItemText,
                 { color: theme.textMuted },
-                carDetails.fuel === fuel && { color: theme.primary, fontWeight: '500' },
-              ]}>
-                {fuel === 'PETROL' ? 'بنزين' : fuel === 'DIESEL' ? 'ديزل' : fuel === 'HYBRID' ? 'هايبرد' : 'كهربائي'}
-              </Text>
+                carDetails.fuel === fuel.value && { color: theme.primary, fontWeight: '500' },
+              ]}>{fuel.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>اللون</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.exteriorColorLabel')}</Text>
         <TouchableOpacity 
-          style={[inputStyle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
+          style={[inputStyle, { flexDirection: rowDirection, justifyContent: 'space-between', alignItems: 'center' }]}
           onPress={() => setShowCarColorModal(true)}
         >
-          <Text style={{ color: carDetails.color ? theme.text : theme.textMuted }}>
-            {isCustomCarColor ? (carDetails.color || 'أخرى') : (carDetails.color || 'اختر اللون')}
+          <Text style={{ color: carDetails.color ? theme.text : theme.textMuted, textAlign, writingDirection: direction }}>
+            {isCustomCarColor ? (carDetails.color || t('addListing.allOther')) : (carDetails.color || t('addListing.colorSelectTitle'))}
           </Text>
           <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
         </TouchableOpacity>
@@ -1101,8 +2021,9 @@ export default function AddListingDetailScreen() {
             style={[inputStyle, { marginTop: 8 }]}
             value={carDetails.color}
             onChangeText={(text) => setCarDetails({ ...carDetails, color: text })}
-            placeholder="حدد اللون..."
-            textAlign="right"
+            placeholder={t('addListing.colorPlaceholder')}
+            textAlign={textAlign}
+            writingDirection={direction}
             placeholderTextColor={theme.textMuted}
           />
         )}
@@ -1110,8 +2031,8 @@ export default function AddListingDetailScreen() {
 
       <PickerModal
         visible={showCarColorModal}
-        title="اختر اللون"
-        items={VehicleColors}
+        title={t('addListing.colorSelectTitle')}
+        items={translatedVehicleColors}
         selectedValue={isCustomCarColor ? 'أخرى' : carDetails.color}
         onSelect={(value) => {
           if (value === 'أخرى') {
@@ -1126,50 +2047,68 @@ export default function AddListingDetailScreen() {
       />
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>الفئة</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.trimLabel')}</Text>
         <TextInput
           style={inputStyle}
           value={carDetails.trim}
           onChangeText={(text) => setCarDetails({ ...carDetails, trim: text })}
-          placeholder="LE / فول / نص فل"
-          textAlign="right"
+          placeholder={t('addListing.trimPlaceholder')}
+          textAlign={textAlign}
+          writingDirection={direction}
           placeholderTextColor={theme.textMuted}
         />
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>نوع الهيكل</Text>
-        <TextInput
-          style={inputStyle}
-          value={carDetails.bodyType}
-          onChangeText={(text) => setCarDetails({ ...carDetails, bodyType: text })}
-          placeholder="سيدان / SUV / كوبيه"
-          textAlign="right"
-          placeholderTextColor={theme.textMuted}
-        />
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.bodyTypeLabel')}</Text>
+        <View style={styles.pickerContainer}>
+          {CarBodyTypes.map((type: string) => (
+            <TouchableOpacity
+              key={type}
+              style={[
+                pickerItemStyle,
+                carDetails.bodyType === type && styles.pickerItemActive,
+                carDetails.bodyType === type && { backgroundColor: theme.surface, borderColor: theme.primary },
+              ]}
+              onPress={() => setCarDetails({ ...carDetails, bodyType: type })}
+            >
+              <Text
+                style={[
+                  styles.pickerItemText,
+                  { color: theme.textMuted },
+                  carDetails.bodyType === type && { color: theme.primary, fontWeight: '500' },
+                ]}
+              >
+                {type}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>اللون الداخلي</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.interiorColorLabel')}</Text>
         <TextInput
           style={inputStyle}
           value={carDetails.interiorColor}
           onChangeText={(text) => setCarDetails({ ...carDetails, interiorColor: text })}
-          placeholder="بيج / أسود / أحمر"
-          textAlign="right"
+          placeholder={t('addListing.interiorColorPlaceholder')}
+          textAlign={textAlign}
+          writingDirection={direction}
           placeholderTextColor={theme.textMuted}
         />
       </View>
 
       {carDetails.condition === 'USED' && (
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: theme.text }]}>حالة الهيكل</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('addListing.bodyConditionLabel')}</Text>
           <TextInput
             style={inputStyle}
             value={carDetails.bodyCondition}
             onChangeText={(text) => setCarDetails({ ...carDetails, bodyCondition: text })}
-            placeholder="ممتازة / يوجد صدمات بسيطة / بحاجة لإصلاح"
-            textAlign="right"
+            placeholder={t('addListing.bodyConditionPlaceholder')}
+            textAlign={textAlign}
+            writingDirection={direction}
             placeholderTextColor={theme.textMuted}
           />
         </View>
@@ -1177,13 +2116,14 @@ export default function AddListingDetailScreen() {
 
       {carDetails.condition === 'USED' && (
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: theme.text }]}>نوع الدهان</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('addListing.paintTypeLabel')}</Text>
           <TextInput
             style={inputStyle}
             value={carDetails.paintType}
             onChangeText={(text) => setCarDetails({ ...carDetails, paintType: text })}
-            placeholder="صبغ وكالة / مصبوغ جزئياً / مصبوغ بالكامل"
-            textAlign="right"
+            placeholder={t('addListing.paintTypePlaceholder')}
+            textAlign={textAlign}
+            writingDirection={direction}
             placeholderTextColor={theme.textMuted}
           />
         </View>
@@ -1193,18 +2133,18 @@ export default function AddListingDetailScreen() {
   );
 
 // Constants for new Motorcyle Fields
-const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تيورنج', 'أخرى'];
+const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
 
 // ...
   const renderMotorcycleDetailsForm = () => {
     return (
     <View style={styles.form}>
-      <Text style={[styles.sectionTitle, { color: theme.text }]}>تفاصيل الدراجة النارية</Text>
+      <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('addListing.motorcycleDetailsTitle')}</Text>
 
       <View style={styles.row}>
         {/* Mileage */}
         <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={[styles.label, { color: theme.text }]}>المسافة المقطوعة (كم)</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('addListing.mileageLabel')}</Text>
           <TextInput
             style={[
               inputStyle, 
@@ -1213,7 +2153,8 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
             value={motorcycleDetails.condition === 'NEW' ? '0' : motorcycleDetails.mileageKm}
             onChangeText={(text) => setMotorcycleDetails({ ...motorcycleDetails, mileageKm: text.replace(/[^0-9]/g, '') })}
             placeholder="0"
-            textAlign="right"
+            textAlign={textAlign}
+            writingDirection={direction}
             keyboardType="number-pad"
             placeholderTextColor={theme.textMuted}
             editable={motorcycleDetails.condition !== 'NEW'}
@@ -1222,13 +2163,14 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
 
         {/* Engine Size */}
         <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={[styles.label, { color: theme.text }]}>سعة المحرك (CC)</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('addListing.engineSizeLabel')}</Text>
           <TextInput
             style={inputStyle}
             value={motorcycleDetails.engineSize}
             onChangeText={(text) => setMotorcycleDetails({ ...motorcycleDetails, engineSize: text })}
             placeholder="1000"
-            textAlign="right"
+            textAlign={textAlign}
+            writingDirection={direction}
             keyboardType="number-pad"
             placeholderTextColor={theme.textMuted}
           />
@@ -1237,58 +2179,51 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
 
        {/* Condition */}
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>الحالة</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.conditionLabel')}</Text>
         <View style={styles.pickerContainer}>
-          <TouchableOpacity
-            style={[
-              pickerItemStyle,
-              motorcycleDetails.condition === 'NEW' && styles.pickerItemActive,
-              motorcycleDetails.condition === 'NEW' && { backgroundColor: theme.surface, borderColor: theme.primary },
-            ]}
-            onPress={() => setMotorcycleDetails({ ...motorcycleDetails, condition: 'NEW', mileageKm: '0' })}
-          >
-            <Text style={[
-              styles.pickerItemText,
-              { color: theme.textMuted },
-              motorcycleDetails.condition === 'NEW' && { color: theme.primary, fontWeight: '500' },
-            ]}>جديدة</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              pickerItemStyle,
-              motorcycleDetails.condition === 'USED' && styles.pickerItemActive,
-              motorcycleDetails.condition === 'USED' && { backgroundColor: theme.surface, borderColor: theme.primary },
-            ]}
-            onPress={() => setMotorcycleDetails({ ...motorcycleDetails, condition: 'USED' })}
-          >
-            <Text style={[
-              styles.pickerItemText,
-              { color: theme.textMuted },
-              motorcycleDetails.condition === 'USED' && { color: theme.primary, fontWeight: '500' },
-            ]}>مستعملة</Text>
-          </TouchableOpacity>
+          {translatedConditionOptions.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                pickerItemStyle,
+                motorcycleDetails.condition === option.value && styles.pickerItemActive,
+                motorcycleDetails.condition === option.value && { backgroundColor: theme.surface, borderColor: theme.primary },
+              ]}
+              onPress={() => setMotorcycleDetails({
+                ...motorcycleDetails,
+                condition: option.value,
+                mileageKm: option.value === 'NEW' ? '0' : motorcycleDetails.mileageKm,
+              })}
+            >
+              <Text style={[
+                styles.pickerItemText,
+                { color: theme.textMuted },
+                motorcycleDetails.condition === option.value && { color: theme.primary, fontWeight: '500' },
+              ]}>{option.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
 
       {/* Body Type */}
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>نوع الهيكل</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.bodyTypeLabel')}</Text>
         <View style={styles.pickerContainer}>
-          {MOTORCYCLE_BODY_TYPES.map((type) => (
+          {translatedMotorcycleBodyTypes.map((type) => (
              <TouchableOpacity
-                key={type}
+                key={type.value}
                 style={[
                   pickerItemStyle,
-                  motorcycleDetails.bodyType === type && styles.pickerItemActive,
-                  motorcycleDetails.bodyType === type && { backgroundColor: theme.surface, borderColor: theme.primary },
+                  motorcycleDetails.bodyType === type.value && styles.pickerItemActive,
+                  motorcycleDetails.bodyType === type.value && { backgroundColor: theme.surface, borderColor: theme.primary },
                 ]}
-                onPress={() => setMotorcycleDetails({ ...motorcycleDetails, bodyType: type })}
+                onPress={() => setMotorcycleDetails({ ...motorcycleDetails, bodyType: type.value })}
               >
                 <Text style={[
                   styles.pickerItemText,
                   { color: theme.textMuted },
-                  motorcycleDetails.bodyType === type && { color: theme.primary, fontWeight: '500' },
-                ]}>{type}</Text>
+                  motorcycleDetails.bodyType === type.value && { color: theme.primary, fontWeight: '500' },
+                ]}>{type.label}</Text>
              </TouchableOpacity>
           ))}
         </View>
@@ -1296,7 +2231,7 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
 
       {/* Transmission */}
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>ناقل الحركة</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.transmissionLabel')}</Text>
         <View style={styles.pickerContainer}>
           <TouchableOpacity
             style={[
@@ -1310,7 +2245,7 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
               styles.pickerItemText,
               { color: theme.textMuted },
               motorcycleDetails.transmission === 'AUTO' && { color: theme.primary, fontWeight: '500' },
-            ]}>أوتوماتيك</Text>
+            ]}>{t('addListing.transmissionAuto')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
@@ -1324,20 +2259,20 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
               styles.pickerItemText,
               { color: theme.textMuted },
               motorcycleDetails.transmission === 'MANUAL' && { color: theme.primary, fontWeight: '500' },
-            ]}>يدوي</Text>
+            ]}>{t('addListing.transmissionManual')}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Color Dropdown */}
       <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: theme.text }]}>اللون</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('addListing.exteriorColorLabel')}</Text>
           <TouchableOpacity 
-            style={[inputStyle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}
+            style={[inputStyle, { flexDirection: rowDirection, justifyContent: 'space-between', alignItems: 'center' }]}
             onPress={() => setShowMotorcycleColorModal(true)}
           >
-            <Text style={{ color: motorcycleDetails.color ? theme.text : theme.textMuted }}>
-              {isCustomMotorcycleColor ? (motorcycleDetails.color || 'أخرى') : (motorcycleDetails.color || 'اختر اللون')}
+            <Text style={{ color: motorcycleDetails.color ? theme.text : theme.textMuted, textAlign, writingDirection: direction }}>
+              {isCustomMotorcycleColor ? (motorcycleDetails.color || t('addListing.allOther')) : (motorcycleDetails.color || t('addListing.colorSelectTitle'))}
             </Text>
             <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
           </TouchableOpacity>
@@ -1346,8 +2281,9 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
               style={[inputStyle, { marginTop: 8 }]}
               value={motorcycleDetails.color}
               onChangeText={(text) => setMotorcycleDetails({ ...motorcycleDetails, color: text })}
-              placeholder="حدد اللون..."
-              textAlign="right"
+              placeholder={t('addListing.colorPlaceholder')}
+              textAlign={textAlign}
+              writingDirection={direction}
               placeholderTextColor={theme.textMuted}
             />
           )}
@@ -1356,8 +2292,8 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
       {/* Modals */}
       <PickerModal
         visible={showMotorcycleColorModal}
-        title="اختر اللون"
-        items={VehicleColors}
+        title={t('addListing.colorSelectTitle')}
+        items={translatedVehicleColors}
         selectedValue={isCustomMotorcycleColor ? 'أخرى' : motorcycleDetails.color}
         onSelect={(value) => {
           if (value === 'أخرى') {
@@ -1376,46 +2312,43 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
 
   const renderPlateDetailsForm = () => (
     <View style={styles.form}>
-      <Text style={[styles.sectionTitle, { color: theme.text }]}>تفاصيل اللوحة</Text>
+      <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('addListing.plateDetailsTitle')}</Text>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>رقم اللوحة *</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.plateNumberLabel')} *</Text>
         <TextInput
           style={inputStyle}
           value={plateDetails.plateNumber}
           onChangeText={(text) => setPlateDetails({ ...plateDetails, plateNumber: text })}
-          placeholder="123456"
-          textAlign="right"
+          placeholder={t('addListing.enterPlateNumberExample')}
+          textAlign={textAlign}
+          writingDirection={direction}
           keyboardType="number-pad"
           placeholderTextColor={theme.textMuted}
         />
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>نوع اللوحة</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.plateTypeLabel')}</Text>
         <View style={styles.pickerContainer}>
-          {[
-            { type: 'PRIVATE', label: 'خاصة' },
-            { type: 'TRANSPORT', label: 'نقل مشترك' },
-            { type: 'MOTORCYCLE', label: 'دراجة نارية' }
-          ].map((item) => (
+          {translatedPlateTypeOptions.map((item) => (
             <TouchableOpacity
-              key={item.type}
+              key={item.value}
               style={[
                 pickerItemStyle,
-                plateDetails.plateType === item.type && styles.pickerItemActive,
-                plateDetails.plateType === item.type && { backgroundColor: theme.surface, borderColor: theme.primary },
+                plateDetails.plateType === item.value && styles.pickerItemActive,
+                plateDetails.plateType === item.value && { backgroundColor: theme.surface, borderColor: theme.primary },
               ]}
               onPress={() => setPlateDetails({
                 ...plateDetails,
-                plateType: item.type as any,
-                plateCategory: item.label
+                plateType: item.value,
+                plateCategory: PLATE_CATEGORY_OPTIONS[item.value][0] || ''
               })}
             >
               <Text style={[
                 styles.pickerItemText,
                 { color: theme.textMuted },
-                plateDetails.plateType === item.type && { color: theme.primary, fontWeight: '500' },
+                plateDetails.plateType === item.value && { color: theme.primary, fontWeight: '500' },
               ]}>{item.label}</Text>
             </TouchableOpacity>
           ))}
@@ -1423,13 +2356,14 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>رمز اللوحة (اختياري)</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.plateCodeOptionalLabel')}</Text>
         <TextInput
           style={inputStyle}
           value={plateDetails.plateCode}
           onChangeText={(text) => setPlateDetails({ ...plateDetails, plateCode: text })}
           placeholder="أ"
-          textAlign="right"
+          textAlign={textAlign}
+          writingDirection={direction}
           placeholderTextColor={theme.textMuted}
         />
       </View>
@@ -1438,85 +2372,93 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
 
   const renderPartDetailsForm = () => (
     <View style={styles.form}>
-      <Text style={[styles.sectionTitle, { color: theme.text }]}>تفاصيل قطعة الغيار</Text>
+      <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('addListing.partDetailsTitle')}</Text>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>فئة القطعة *</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.partCategoryLabel')} *</Text>
         <TextInput
           style={inputStyle}
           value={partDetails.partCategory}
           onChangeText={(text) => setPartDetails({ ...partDetails, partCategory: text })}
-          placeholder="محرك / هيكل / داخلية"
-          textAlign="right"
+          placeholder={t('addListing.partCategoryPlaceholder')}
+          textAlign={textAlign}
+          writingDirection={direction}
           placeholderTextColor={theme.textMuted}
         />
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>اسم القطعة</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.partNameLabel')}</Text>
         <TextInput
           style={inputStyle}
           value={partDetails.partName}
           onChangeText={(text) => setPartDetails({ ...partDetails, partName: text })}
-          placeholder="مثال: مصد أمامي"
-          textAlign="right"
+          placeholder={t('addListing.enterPartNameExample')}
+          textAlign={textAlign}
+          writingDirection={direction}
           placeholderTextColor={theme.textMuted}
         />
       </View>
 
       <View style={styles.row}>
         <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={[styles.label, { color: theme.text }]}>الصنع المتوافق</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('addListing.compatibleMakeLabel')}</Text>
           <TextInput
             style={inputStyle}
             value={partDetails.compatibleCarMake}
             onChangeText={(text) => setPartDetails({ ...partDetails, compatibleCarMake: text })}
-            placeholder="تويوتا"
-            textAlign="right"
+            placeholder={t('addListing.enterMake')}
+            textAlign={textAlign}
+            writingDirection={direction}
             placeholderTextColor={theme.textMuted}
           />
         </View>
 
         <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={[styles.label, { color: theme.text }]}>الموديل المتوافق</Text>
+          <Text style={[styles.label, { color: theme.text }]}>{t('addListing.compatibleModelLabel')}</Text>
           <TextInput
             style={inputStyle}
             value={partDetails.compatibleCarModel}
             onChangeText={(text) => setPartDetails({ ...partDetails, compatibleCarModel: text })}
-            placeholder="كامري"
-            textAlign="right"
+            placeholder={t('addListing.enterModel')}
+            textAlign={textAlign}
+            writingDirection={direction}
             placeholderTextColor={theme.textMuted}
           />
         </View>
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text }]}>الحالة</Text>
+        <Text style={[styles.label, { color: theme.text }]}>{t('addListing.conditionLabel')}</Text>
         <View style={styles.pickerContainer}>
-          {['NEW', 'USED', 'REFURBISHED'].map((cond) => (
+          {[
+            { value: 'NEW', label: t('listing.conditionNew') },
+            { value: 'USED', label: t('listing.conditionUsed') },
+            { value: 'REFURBISHED', label: t('addListing.conditionRefurbished') },
+          ].map((cond) => (
             <TouchableOpacity
-              key={cond}
+              key={cond.value}
               style={[
                 pickerItemStyle,
-                partDetails.condition === cond && styles.pickerItemActive,
-                partDetails.condition === cond && { backgroundColor: theme.surface, borderColor: theme.primary },
+                partDetails.condition === cond.value && styles.pickerItemActive,
+                partDetails.condition === cond.value && { backgroundColor: theme.surface, borderColor: theme.primary },
               ]}
-              onPress={() => setPartDetails({ ...partDetails, condition: cond as any })}
+              onPress={() => setPartDetails({ ...partDetails, condition: cond.value as PartDetails['condition'] })}
             >
               <Text style={[
                 styles.pickerItemText,
                 { color: theme.textMuted },
-                partDetails.condition === cond && { color: theme.primary, fontWeight: '500' },
+                partDetails.condition === cond.value && { color: theme.primary, fontWeight: '500' },
               ]}>
-                {cond === 'NEW' ? 'جديدة' : cond === 'USED' ? 'مستعملة' : 'مجددة'}
+                {cond.label}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
-      <View style={[styles.inputGroup, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-        <Text style={[styles.label, { color: theme.text, marginBottom: 0 }]}>هل تتوفر خدمة التوصيل؟</Text>
+      <View style={[styles.inputGroup, { flexDirection: rowDirection, alignItems: 'center', justifyContent: 'space-between' }]}>
+        <Text style={[styles.label, { color: theme.text, marginBottom: 0, textAlign, writingDirection: direction }]}>{t('addListing.deliveryAvailableLabel')}</Text>
         <TouchableOpacity
             style={[
               { width: 50, height: 30, borderRadius: 15, justifyContent: 'center', padding: 2 },
@@ -1538,14 +2480,14 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
 
   const renderImagesStep = () => (
     <View style={styles.form}>
-      <Text style={[styles.sectionTitle, { color: theme.text }]}>الصور</Text>
-      <Text style={[styles.subtitle, { color: theme.textMuted }]}>
-        {type === 'CAR' ? 'يجب إضافة 3 صور على الأقل' : 'أضف صور واضحة للإعلان'}
+      <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('addListing.imagesTitle')}</Text>
+      <Text style={[styles.subtitle, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}> 
+        {type === 'CAR' ? t('addListing.imagesCarSubtitle') : t('addListing.imagesGenericSubtitle')}
       </Text>
 
       {existingMedia.length > 0 && (
         <View style={styles.existingMediaSection}>
-          <Text style={[styles.sectionSubtitle, { color: theme.textMuted }]}>الوسائط الحالية</Text>
+          <Text style={[styles.sectionSubtitle, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>{t('addListing.currentMedia')}</Text>
           <View style={styles.imageGrid}>
             {existingMedia.map((media) => (
               <View key={media.id} style={styles.imageContainer}>
@@ -1586,12 +2528,12 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
 
       <TouchableOpacity style={[styles.addImageButton, { backgroundColor: theme.surface, borderColor: theme.primary }]} onPress={pickImages}>
         <Ionicons name="images" size={32} color={theme.primary} />
-        <Text style={[styles.addImageText, { color: theme.primary }]}>اختر صور ({images.length}/15)</Text>
+        <Text style={[styles.addImageText, { color: theme.primary }]}>{t('addListing.chooseImages', { count: images.length })}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={[styles.addImageButton, { backgroundColor: theme.surface, borderColor: theme.primary }]} onPress={pickVideos}>
         <Ionicons name="videocam-outline" size={32} color={theme.primary} />
-        <Text style={[styles.addImageText, { color: theme.primary }]}>اختر فيديو ({videos.length}/6)</Text>
+        <Text style={[styles.addImageText, { color: theme.primary }]}>{t('addListing.chooseVideos', { count: videos.length })}</Text>
       </TouchableOpacity>
 
       <View style={styles.imageGrid}>
@@ -1638,7 +2580,7 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
       </View>
 
       {isEditMode ? (
-        <View style={styles.editActions}>
+        <View style={[styles.editActions, { flexDirection: rowDirection }]}>
           <TouchableOpacity
             style={[styles.submitButton, styles.submitSecondaryButton, isLoading && styles.submitButtonDisabled]}
             onPress={() => submitListing('draft')}
@@ -1647,7 +2589,7 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.submitButtonText}>حفظ كمسودة</Text>
+              <Text style={styles.submitButtonText}>{t('addListing.saveDraft')}</Text>
             )}
           </TouchableOpacity>
 
@@ -1659,7 +2601,7 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.submitButtonText}>إعادة نشر</Text>
+              <Text style={styles.submitButtonText}>{t('addListing.republish')}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -1672,7 +2614,7 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
           {isLoading ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.submitButtonText}>نشر الإعلان</Text>
+            <Text style={styles.submitButtonText}>{t('addListing.publish')}</Text>
           )}
         </TouchableOpacity>
       )}
@@ -1694,12 +2636,12 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
       <PageHeader
         title={
           type === 'CAR'
-            ? 'إعلان سيارة'
+            ? t('addListing.carTitle')
             : type === 'MOTORCYCLE'
-            ? 'إعلان دراجة نارية'
+            ? t('addListing.motorcycleTitle')
             : type === 'PLATE'
-            ? 'إعلان لوحة'
-            : 'إعلان قطعة غيار'
+            ? t('addListing.plateTitle')
+            : t('addListing.partTitle')
         }
         backgroundColor={theme.card}
         borderColor={theme.border}
@@ -1710,21 +2652,17 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
 
       <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 20 }}>
         {step === 1 && renderBasicInfoForm()}
-        {step === 2 && type === 'CAR' && renderCarDetailsForm()}
-        {step === 2 && type === 'MOTORCYCLE' && renderMotorcycleDetailsForm()}
-        {step === 2 && type === 'PLATE' && renderPlateDetailsForm()}
-        {step === 2 && type === 'PART' && renderPartDetailsForm()}
-        {step === 3 && renderImagesStep()}
+        {step === 2 && renderImagesStep()}
       </ScrollView>
 
-      {step < 3 && (
-        <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
+      {step < totalSteps && (
+        <View style={[styles.footer, { backgroundColor: theme.card, borderTopColor: theme.border, flexDirection: rowDirection }]}>
           {step > 1 && (
             <TouchableOpacity
               style={[styles.button, styles.secondaryButton, { backgroundColor: theme.card, borderColor: theme.border }]}
               onPress={handlePreviousStep}
             >
-              <Text style={[styles.secondaryButtonText, { color: theme.textMuted }]}>السابق</Text>
+              <Text style={[styles.secondaryButtonText, { color: theme.textMuted }]}>{t('addListing.previous')}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
@@ -1735,7 +2673,7 @@ const MOTORCYCLE_BODY_TYPES = ['رياضية', 'كروزر', 'سكوتر', 'تي
             {isSaving ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.primaryButtonText}>التالي</Text>
+              <Text style={styles.primaryButtonText}>{t('addListing.next')}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -1819,12 +2757,16 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     marginBottom: 8,
     textAlign: 'right',
+    alignSelf: 'flex-end',
+    width: '100%',
   },
   subtitle: {
     fontSize: 14,
     color: '#64748B',
     marginBottom: 20,
     textAlign: 'right',
+    alignSelf: 'flex-end',
+    width: '100%',
   },
   inputGroup: {
     marginBottom: 20,
@@ -1835,6 +2777,8 @@ const styles = StyleSheet.create({
     color: '#334155',
     marginBottom: 8,
     textAlign: 'right',
+    alignSelf: 'flex-end',
+    width: '100%',
   },
   input: {
     backgroundColor: '#FFFFFF',
@@ -1844,13 +2788,29 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: '#1E293B',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   textArea: {
     height: 100,
     textAlignVertical: 'top',
   },
+  selectorField: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  selectorText: {
+    flex: 1,
+    fontSize: 16,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  disabledField: {
+    opacity: 0.5,
+  },
   pickerContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     flexWrap: 'wrap',
     gap: 8,
   },
@@ -1875,7 +2835,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     gap: 12,
   },
   halfWidth: {
@@ -1899,7 +2859,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   imageGrid: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     flexWrap: 'wrap',
     gap: 12,
   },
@@ -1921,6 +2881,8 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginBottom: 12,
     textAlign: 'right',
+    alignSelf: 'flex-end',
+    width: '100%',
   },
   loadingContainer: {
     flex: 1,
@@ -1935,7 +2897,7 @@ const styles = StyleSheet.create({
   removeImageButton: {
     position: 'absolute',
     top: 4,
-    right: 4,
+    left: 4,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     zIndex: 2,
@@ -1970,17 +2932,35 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   editActions: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     gap: 12,
     marginTop: 24,
   },
   footer: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     padding: 16,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
     gap: 12,
+  },
+  toggleRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  toggleTrack: {
+    width: 50,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    padding: 2,
+  },
+  toggleThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#FFFFFF',
   },
   button: {
     flex: 1,

@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useTheme } from '../../../context/ThemeContext';
+import { useAppTranslation, useLanguage } from '../../../context/LanguageContext';
 import { PageHeader } from '../../../components/ui/page-header';
 import api from '../../../services/api';
 
@@ -32,17 +33,11 @@ interface PaymentTransaction {
   listing?: { id: string; title: string; status: string } | null;
 }
 
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  PAID:          { label: 'مدفوع',         color: '#16A34A', bg: '#DCFCE7' },
-  PENDING:       { label: 'معلق',         color: '#D97706', bg: '#FEF3C7' },
-  PENDING_PROOF: { label: 'قيد المراجعة', color: '#7C3AED', bg: '#EDE9FE' },
-  FAILED:        { label: 'فشل',          color: '#DC2626', bg: '#FEE2E2' },
-  REFUNDED:      { label: 'مسترجع',       color: '#6B7280', bg: '#F3F4F6' },
-};
-
 export default function PaymentsScreen() {
   const router = useRouter();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL, language } = useLanguage();
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [invoiceTx, setInvoiceTx] = useState<any>(null);
@@ -53,6 +48,23 @@ export default function PaymentsScreen() {
   const textColor = isDark ? '#F8FAFC' : '#0A0B14';
   const mutedColor = isDark ? '#94A3B8' : '#64748B';
   const borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
+  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
+
+  const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
+    PAID:          { label: t('payments.statusPaid'), color: '#16A34A', bg: '#DCFCE7' },
+    PENDING:       { label: t('payments.statusPending'), color: '#D97706', bg: '#FEF3C7' },
+    PENDING_PROOF: { label: t('payments.statusPendingProof'), color: '#7C3AED', bg: '#EDE9FE' },
+    FAILED:        { label: t('payments.statusFailed'), color: '#DC2626', bg: '#FEE2E2' },
+    REFUNDED:      { label: t('payments.statusRefunded'), color: '#6B7280', bg: '#F3F4F6' },
+  };
+
+  const PAYMENT_TYPE_LABELS: Record<string, string> = {
+    LISTING_FEE: t('payments.typeListingFee'),
+    FEATURED_LISTING: t('payments.typeFeaturedListing'),
+    SHOWROOM_SUBSCRIPTION: t('payments.typeShowroomSubscription'),
+    INDIVIDUAL_PACKAGE: t('payments.typeIndividualPackage'),
+  };
 
   useEffect(() => {
     api.get('/payments/my-transactions')
@@ -77,21 +89,21 @@ export default function PaymentsScreen() {
     const canUploadProof = item.status === 'PENDING';
     return (
       <View style={[styles.txCard, { backgroundColor: cardBg, borderColor }]}>
-        <View style={styles.txRow}>
+        <View style={[styles.txRow, rowDirection]}>
           <View style={[styles.statusPill, { backgroundColor: st.bg }]}>
             <Text style={[styles.statusText, { color: st.color }]}>{st.label}</Text>
           </View>
-          <Text style={[styles.amount, { color: textColor }]}>
+          <Text style={[styles.amount, { color: textColor }, dirText]}>
             {Number(item.amount).toFixed(3)} {item.currency}
           </Text>
         </View>
         {item.listing && (
-          <Text style={[styles.listingTitle, { color: textColor }]} numberOfLines={1}>
+          <Text style={[styles.listingTitle, { color: textColor }, dirText]} numberOfLines={1}>
             {item.listing.title}
           </Text>
         )}
-        <Text style={[styles.dateText, { color: mutedColor }]}>
-          {new Date(item.createdAt).toLocaleDateString('ar-BH', {
+        <Text style={[styles.dateText, { color: mutedColor }, dirText]}>
+          {new Date(item.createdAt).toLocaleDateString(language === 'ar' ? 'ar-BH' : 'en-GB', {
             year: 'numeric', month: 'long', day: 'numeric',
           })}
         </Text>
@@ -111,7 +123,7 @@ export default function PaymentsScreen() {
             }
             activeOpacity={0.8}
           >
-            <Text style={styles.uploadBtnText}>رفع إثبات الدفع</Text>
+            <Text style={styles.uploadBtnText}>{t('payments.uploadProof')}</Text>
           </TouchableOpacity>
         )}
         {item.status === 'PAID' && (
@@ -124,7 +136,7 @@ export default function PaymentsScreen() {
             {loadingInvoiceId === item.id ? (
               <ActivityIndicator size="small" color="#10B981" />
             ) : (
-              <Text style={[styles.uploadBtnText, { color: '#10B981' }]}>عرض الفاتورة</Text>
+              <Text style={[styles.uploadBtnText, { color: '#10B981' }]}>{t('payments.viewInvoice')}</Text>
             )}
           </TouchableOpacity>
         )}
@@ -137,11 +149,11 @@ export default function PaymentsScreen() {
       setLoadingInvoiceId(transactionId);
       const res = await api.get(`/payments/transaction/${transactionId}`);
       const tx = res?.data?.data ?? res?.data;
-      if (!tx) throw new Error('لم يتم العثور على بيانات المعاملة');
+      if (!tx) throw new Error(t('payments.transactionNotFound'));
       setInvoiceTx(tx);
     } catch (err: any) {
       console.error('download invoice error', err);
-      Alert.alert('خطأ', err?.message || 'فشل تحميل الفاتورة');
+      Alert.alert(t('common.error'), err?.message || t('payments.loadInvoiceFailed'));
     } finally {
       setLoadingInvoiceId(null);
     }
@@ -152,42 +164,42 @@ export default function PaymentsScreen() {
     try {
       const amount = Number(invoiceTx.amount ?? 0).toFixed(3);
       const currency = invoiceTx.currency ?? 'BHD';
-      const serviceType = PAYMENT_TYPE_LABELS[invoiceTx.paymentType] ?? invoiceTx.paymentType ?? 'دفع';
+      const serviceType = PAYMENT_TYPE_LABELS[invoiceTx.paymentType] ?? invoiceTx.paymentType ?? t('payments.paymentTypeDefault');
       const dateStr = new Date(invoiceTx.paidAt ?? invoiceTx.createdAt ?? Date.now())
-        .toLocaleDateString('ar-BH', { year: 'numeric', month: 'long', day: 'numeric' });
+        .toLocaleDateString(language === 'ar' ? 'ar-BH' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
       const txId = (invoiceTx.id ?? '').slice(0, 20) + '…';
 
       const rows = [
-        { k: 'رقم المعاملة', v: txId },
-        { k: 'نوع الخدمة', v: serviceType },
-        { k: 'تاريخ الدفع', v: dateStr },
-        ...(invoiceTx.listing?.title ? [{ k: 'الإعلان', v: invoiceTx.listing.title }] : []),
-        ...(invoiceTx.providerRef ? [{ k: 'مرجع الدفع', v: invoiceTx.providerRef }] : []),
+        { k: t('payments.transactionNumber'), v: txId },
+        { k: t('payments.serviceType'), v: serviceType },
+        { k: t('payments.paymentDate'), v: dateStr },
+        ...(invoiceTx.listing?.title ? [{ k: t('payments.listingLabel'), v: invoiceTx.listing.title }] : []),
+        ...(invoiceTx.providerRef ? [{ k: t('payments.paymentReference'), v: invoiceTx.providerRef }] : []),
       ];
 
       const rowsHtml = rows.map(r => `
         <tr>
-          <td style="padding:12px 16px;color:#64748B;font-size:13px;text-align:right;border-bottom:1px solid #F1F5F9;">${r.k}</td>
-          <td style="padding:12px 16px;color:#0A0B14;font-size:13px;font-weight:600;text-align:left;border-bottom:1px solid #F1F5F9;">${r.v}</td>
+          <td style="padding:12px 16px;color:#64748B;font-size:13px;text-align:${isRTL ? 'right' : 'left'};border-bottom:1px solid #F1F5F9;">${r.k}</td>
+          <td style="padding:12px 16px;color:#0A0B14;font-size:13px;font-weight:600;text-align:${isRTL ? 'left' : 'right'};border-bottom:1px solid #F1F5F9;">${r.v}</td>
         </tr>`).join('');
 
       const html = `
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html dir="${isRTL ? 'rtl' : 'ltr'}" lang="${language}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>فاتورة KOM</title>
+  <title>${t('payments.invoiceTitle')}</title>
 </head>
-<body style="margin:0;padding:20px;background:#F2F5FC;font-family:Arial,Helvetica,sans-serif;direction:rtl;">
+<body style="margin:0;padding:20px;background:#F2F5FC;font-family:Arial,Helvetica,sans-serif;direction:${isRTL ? 'rtl' : 'ltr'};">
   <div style="max-width:480px;margin:0 auto;background:white;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.12);">
 
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#0E1830,#162444);padding:28px 24px;text-align:center;">
       <img src="https://res.cloudinary.com/dusyeyipu/image/upload/v1772134340/kom-platform/kom-logo.png"
            alt="KOM" style="width:80px;height:80px;border-radius:40px;object-fit:cover;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;" />
-      <p style="margin:0;color:#D4AF37;font-size:13px;">منصة KOM للسيارات</p>
-      <h2 style="margin:8px 0 0;color:#FFFFFF;font-size:20px;font-weight:800;">فاتورة رسمية</h2>
+       <p style="margin:0;color:#D4AF37;font-size:13px;">${t('payments.brandLine')}</p>
+       <h2 style="margin:8px 0 0;color:#FFFFFF;font-size:20px;font-weight:800;">${t('payments.officialInvoice')}</h2>
     </div>
 
     <!-- Dashed -->
@@ -195,11 +207,11 @@ export default function PaymentsScreen() {
 
     <!-- Amount -->
     <div style="text-align:center;padding:20px 24px;">
-      <p style="margin:0 0 8px;color:#64748B;font-size:13px;">المبلغ المدفوع</p>
+      <p style="margin:0 0 8px;color:#64748B;font-size:13px;">${t('payments.paidAmount')}</p>
       <p style="margin:0;font-size:44px;font-weight:900;color:#D4AF37;">${amount} <span style="font-size:22px;color:#94A3B8;font-weight:600;">${currency}</span></p>
       <div style="display:inline-flex;align-items:center;gap:6px;background:#DCFCE7;padding:6px 18px;border-radius:20px;margin-top:14px;">
         <span style="color:#16A34A;font-size:16px;">&#10003;</span>
-        <span style="color:#16A34A;font-size:13px;font-weight:700;">تم الدفع بنجاح</span>
+        <span style="color:#16A34A;font-size:13px;font-weight:700;">${t('payments.paidSuccessfully')}</span>
       </div>
     </div>
 
@@ -218,7 +230,7 @@ export default function PaymentsScreen() {
 
     <!-- Footer -->
     <div style="text-align:center;padding:18px 24px 24px;background:#F8FAFC;">
-      <p style="margin:0 0 4px;color:#64748B;font-size:13px;">شكراً لاستخدامك منصة KOM</p>
+      <p style="margin:0 0 4px;color:#64748B;font-size:13px;">${t('payments.thanksLine')}</p>
       <p style="margin:0;color:#D4AF37;font-size:12px;font-weight:700;">kom.bh</p>
     </div>
   </div>
@@ -228,12 +240,12 @@ export default function PaymentsScreen() {
       const { uri } = await Print.printToFileAsync({ html, base64: false });
       await Sharing.shareAsync(uri, {
         mimeType: 'application/pdf',
-        dialogTitle: 'مشاركة فاتورة KOM',
+        dialogTitle: t('payments.shareInvoiceDialog'),
         UTI: 'com.adobe.pdf',
       });
     } catch (err) {
       console.error('shareInvoice error', err);
-      Alert.alert('خطأ', 'فشل تصدير الفاتورة');
+      Alert.alert(t('common.error'), t('payments.exportInvoiceFailed'));
     }
   }
 
@@ -242,33 +254,33 @@ export default function PaymentsScreen() {
       <StatusBar style='light' />
 
       <PageHeader
-        title="مدفوعاتي"
+        title={t('payments.title')}
         variant="gradient"
-        onBack={() => router.back()}
+        onBack={() => router.replace('/profile')}
       />
 
       <View style={{ flex: 1, backgroundColor: bg }}>
       {/* Summary card */}
-      <View style={[styles.summaryCard, { backgroundColor: cardBg }]}>
+      <View style={[styles.summaryCard, { backgroundColor: cardBg }, rowDirection]}>
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: '#D4AF37' }]}>
-            {totalPaid.toFixed(3)} د.ب
+          <Text style={[styles.summaryValue, { color: '#D4AF37' }, dirText]}>
+            {totalPaid.toFixed(3)} {t('common.bhd')}
           </Text>
-          <Text style={[styles.summaryLabel, { color: mutedColor }]}>إجمالي المدفوع</Text>
+          <Text style={[styles.summaryLabel, { color: mutedColor }, dirText]}>{t('payments.totalPaid')}</Text>
         </View>
         <View style={[styles.summaryDivider, { backgroundColor: borderColor }]} />
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: textColor }]}>
+          <Text style={[styles.summaryValue, { color: textColor }, dirText]}>
             {transactions.filter((t) => t.status === 'PAID').length}
           </Text>
-          <Text style={[styles.summaryLabel, { color: mutedColor }]}>عمليات ناجحة</Text>
+          <Text style={[styles.summaryLabel, { color: mutedColor }, dirText]}>{t('payments.successfulTransactions')}</Text>
         </View>
         <View style={[styles.summaryDivider, { backgroundColor: borderColor }]} />
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: textColor }]}>
+          <Text style={[styles.summaryValue, { color: textColor }, dirText]}>
             {transactions.length}
           </Text>
-          <Text style={[styles.summaryLabel, { color: mutedColor }]}>إجمالي العمليات</Text>
+          <Text style={[styles.summaryLabel, { color: mutedColor }, dirText]}>{t('payments.totalTransactions')}</Text>
         </View>
       </View>
 
@@ -277,9 +289,9 @@ export default function PaymentsScreen() {
       ) : transactions.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="cash-outline" size={56} color="#D4AF37" style={{ marginBottom: 12 }} />
-          <Text style={[styles.emptyTitle, { color: textColor }]}>لا توجد مدفوعات</Text>
-          <Text style={[styles.emptySub, { color: mutedColor }]}>
-            لم يتم إجراء أي عمليات دفع بعد
+          <Text style={[styles.emptyTitle, { color: textColor }, dirText]}>{t('payments.noPayments')}</Text>
+          <Text style={[styles.emptySub, { color: mutedColor }, dirText]}>
+            {t('payments.noPaymentsSubtitle')}
           </Text>
         </View>
       ) : (
@@ -316,8 +328,8 @@ export default function PaymentsScreen() {
                 style={inv.logoImage}
                 contentFit="cover"
               />
-              <Text style={inv.brandName}>منصة KOM للسيارات</Text>
-              <Text style={inv.invoiceLabel}>فاتورة رسمية</Text>
+              <Text style={inv.brandName}>{t('payments.brandLine')}</Text>
+              <Text style={inv.invoiceLabel}>{t('payments.officialInvoice')}</Text>
             </View>
 
             {/* Dashed */}
@@ -325,14 +337,14 @@ export default function PaymentsScreen() {
 
             {/* Amount */}
             <View style={inv.amountSection}>
-              <Text style={inv.amountLabel}>المبلغ المدفوع</Text>
+              <Text style={inv.amountLabel}>{t('payments.paidAmount')}</Text>
               <Text style={inv.amountValue}>
                 {Number(invoiceTx?.amount ?? 0).toFixed(3)}
                 <Text style={inv.amountCurrency}> {invoiceTx?.currency ?? 'BHD'}</Text>
               </Text>
-              <View style={inv.paidBadge}>
+              <View style={[inv.paidBadge, rowDirection]}>
                 <Ionicons name="checkmark-circle" size={15} color="#16A34A" />
-                <Text style={inv.paidText}>تم الدفع بنجاح</Text>
+                <Text style={inv.paidText}>{t('payments.paidSuccessfully')}</Text>
               </View>
             </View>
 
@@ -341,14 +353,15 @@ export default function PaymentsScreen() {
 
             {/* Details */}
             <View style={inv.details}>
-              <InvRow k="رقم المعاملة" v={(invoiceTx?.id ?? '').slice(0, 18) + '…'} />
-              <InvRow k="نوع الخدمة" v={PAYMENT_TYPE_LABELS[invoiceTx?.paymentType] ?? invoiceTx?.paymentType ?? 'دفع'} />
+              <InvRow k={t('payments.transactionNumber')} v={(invoiceTx?.id ?? '').slice(0, 18) + '…'} isRTL={isRTL} />
+              <InvRow k={t('payments.serviceType')} v={PAYMENT_TYPE_LABELS[invoiceTx?.paymentType] ?? invoiceTx?.paymentType ?? t('payments.paymentTypeDefault')} isRTL={isRTL} />
               <InvRow
-                k="تاريخ الدفع"
-                v={new Date(invoiceTx?.paidAt ?? invoiceTx?.createdAt ?? Date.now()).toLocaleDateString('ar-BH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                k={t('payments.paymentDate')}
+                v={new Date(invoiceTx?.paidAt ?? invoiceTx?.createdAt ?? Date.now()).toLocaleDateString(language === 'ar' ? 'ar-BH' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
+                isRTL={isRTL}
               />
-              {invoiceTx?.listing?.title && <InvRow k="الإعلان" v={invoiceTx.listing.title} />}
-              {invoiceTx?.providerRef && <InvRow k="مرجع الدفع" v={invoiceTx.providerRef} />}
+              {invoiceTx?.listing?.title && <InvRow k={t('payments.listingLabel')} v={invoiceTx.listing.title} isRTL={isRTL} />}
+              {invoiceTx?.providerRef && <InvRow k={t('payments.paymentReference')} v={invoiceTx.providerRef} isRTL={isRTL} />}
             </View>
 
             {/* Dashed */}
@@ -356,14 +369,14 @@ export default function PaymentsScreen() {
 
             {/* Footer */}
             <View style={inv.footer}>
-              <Text style={inv.footerLine1}>شكراً لاستخدامك منصة KOM</Text>
+              <Text style={inv.footerLine1}>{t('payments.thanksLine')}</Text>
               <Text style={inv.footerLine2}>kom.bh</Text>
             </View>
 
             {/* Share */}
-            <TouchableOpacity style={inv.shareBtn} onPress={shareInvoice} activeOpacity={0.85}>
+            <TouchableOpacity style={[inv.shareBtn, rowDirection]} onPress={shareInvoice} activeOpacity={0.85}>
               <Ionicons name="share-social-outline" size={18} color="#D4AF37" />
-              <Text style={inv.shareBtnText}>مشاركة الفاتورة</Text>
+              <Text style={inv.shareBtnText}>{t('payments.shareInvoice')}</Text>
             </TouchableOpacity>
 
           </Pressable>
@@ -432,18 +445,13 @@ const styles = StyleSheet.create({
 });
 
 // ─── Invoice header constants ────────────────────────────────────
-const PAYMENT_TYPE_LABELS: Record<string, string> = {
-  LISTING_FEE:           'رسوم نشر إعلان',
-  FEATURED_LISTING:      'إعلان مميز',
-  SHOWROOM_SUBSCRIPTION: 'اشتراك معرض',
-  INDIVIDUAL_PACKAGE:    'باقة فردية',
-};
-
-function InvRow({ k, v }: { k: string; v: string }) {
+function InvRow({ k, v, isRTL }: { k: string; v: string; isRTL: boolean }) {
+  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
+  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
   return (
-    <View style={inv.row}>
-      <Text style={inv.rowValue} numberOfLines={1}>{v}</Text>
-      <Text style={inv.rowKey}>{k}</Text>
+    <View style={[inv.row, rowDirection]}>
+      <Text style={[inv.rowValue, dirText]} numberOfLines={1}>{v}</Text>
+      <Text style={[inv.rowKey, dirText]}>{k}</Text>
     </View>
   );
 }

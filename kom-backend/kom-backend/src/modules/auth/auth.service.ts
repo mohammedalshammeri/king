@@ -5,9 +5,12 @@ import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
+  HttpException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { OAuth2Client } from 'google-auth-library';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -15,7 +18,16 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { EmailService } from '../email/email.service';
 import { LuckService } from '../luck/luck.service';
 import { NotificationType, UserRole } from '@prisma/client';
-import { RegisterDto, LoginDto, RefreshTokenDto, AuthResponseDto, TokenPayload } from './dto';
+import {
+  RegisterDto,
+  LoginDto,
+  RefreshTokenDto,
+  AuthResponseDto,
+  SocialAuthDto,
+  SocialProvider,
+  TokenPayload,
+  UserType,
+} from './dto';
 
 const ACCOUNT_DELETION_PREFIX = 'ACCOUNT_DELETION_PENDING::';
 const ACCOUNT_DELETION_GRACE_DAYS = 30;
@@ -28,8 +40,18 @@ type PendingDeletionMetadata = {
   originalIsActive: boolean;
 };
 
+type SocialProfile = {
+  email?: string;
+  fullName?: string;
+  providerUserId: string;
+};
+
+const APPLE_JWKS = createRemoteJWKSet(new URL('https://appleid.apple.com/auth/keys'));
+
 @Injectable()
 export class AuthService {
+  private readonly googleClient = new OAuth2Client();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -224,6 +246,77 @@ export class AuthService {
     };
   }
 
+  async socialAuth(dto: SocialAuthDto): Promise<AuthResponseDto> {
+    const profile = await this.verifySocialIdentity(dto.provider, dto.idToken);
+
+    if (!profile.email) {
+      throw new BadRequestException('Unable to determine email from the social provider');
+    }
+
+    const normalizedEmail = this.normalizeEmail(profile.email);
+    const pendingDeletedUser = await this.findPendingDeletedAccountByEmail(normalizedEmail);
+    if (pendingDeletedUser) {
+      this.throwPendingDeletionException(pendingDeletedUser);
+    }
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      include: {
+        individualProfile: true,
+        showroomProfile: true,
+      },
+    });
+
+    if (existingUser) {
+      if (existingUser.isBanned) {
+        throw new ForbiddenException('Your account has been banned');
+      }
+
+      if (!existingUser.isActive) {
+        throw new ForbiddenException('Your account is not active');
+      }
+
+      await this.prisma.user.update({
+        where: { id: existingUser.id },
+        data: { lastLoginAt: new Date() },
+      });
+
+      const tokens = await this.generateTokens(existingUser.id, existingUser.email, existingUser.role);
+      await this.saveRefreshToken(existingUser.id, tokens.refreshToken);
+
+      return {
+        user: {
+          id: existingUser.id,
+          email: existingUser.email,
+          phone: existingUser.phone,
+          role: existingUser.role,
+        },
+        ...tokens,
+      };
+    }
+
+    const createdUser = await this.createSocialUser(dto, normalizedEmail, profile.fullName);
+    const luckCode = await this.luckService.assignCodeToNewUser(createdUser.id);
+    const tokens = await this.generateTokens(createdUser.id, createdUser.email, createdUser.role);
+    await this.saveRefreshToken(createdUser.id, tokens.refreshToken);
+    await this.prisma.user.update({
+      where: { id: createdUser.id },
+      data: { lastLoginAt: new Date() },
+    });
+
+    return {
+      user: {
+        id: createdUser.id,
+        email: createdUser.email,
+        phone: createdUser.phone,
+        role: createdUser.role,
+        luckCode: luckCode ?? undefined,
+      },
+      ...tokens,
+      message: 'Social authentication successful',
+    };
+  }
+
   async restoreAccount(dto: { email: string; password: string }): Promise<AuthResponseDto> {
     const normalizedEmail = this.normalizeEmail(dto.email);
     const user = await this.findPendingDeletedAccountByEmail(normalizedEmail);
@@ -349,6 +442,10 @@ export class AuthService {
         ...tokens,
       };
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
@@ -482,6 +579,155 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  private async verifySocialIdentity(
+    provider: SocialProvider,
+    idToken: string,
+  ): Promise<SocialProfile> {
+    switch (provider) {
+      case SocialProvider.GOOGLE:
+        return this.verifyGoogleIdentity(idToken);
+      case SocialProvider.APPLE:
+        return this.verifyAppleIdentity(idToken);
+      default:
+        throw new BadRequestException('Unsupported social provider');
+    }
+  }
+
+  private async verifyGoogleIdentity(idToken: string): Promise<SocialProfile> {
+    const audiences = this.configService.get<string[]>('auth.googleClientIds') || [];
+    if (!audiences.length) {
+      throw new BadRequestException('Google sign-in is not configured on the server');
+    }
+
+    const ticket = await this.googleClient.verifyIdToken({
+      idToken,
+      audience: audiences,
+    });
+    const payload = ticket.getPayload();
+
+    if (!payload?.sub || !payload.email || !payload.email_verified) {
+      throw new UnauthorizedException('Invalid Google identity token');
+    }
+
+    return {
+      email: payload.email,
+      fullName: payload.name,
+      providerUserId: payload.sub,
+    };
+  }
+
+  private async verifyAppleIdentity(idToken: string): Promise<SocialProfile> {
+    const audience = this.configService.get<string>('auth.appleAudience');
+    const { payload } = await jwtVerify(idToken, APPLE_JWKS, {
+      issuer: 'https://appleid.apple.com',
+      audience,
+    });
+
+    const email = typeof payload.email === 'string' ? payload.email : undefined;
+    const subject = typeof payload.sub === 'string' ? payload.sub : undefined;
+    const emailVerified = payload.email_verified === true || payload.email_verified === 'true';
+
+    if (!subject || (email && !emailVerified)) {
+      throw new UnauthorizedException('Invalid Apple identity token');
+    }
+
+    return {
+      email,
+      providerUserId: subject,
+    };
+  }
+
+  private async createSocialUser(
+    dto: SocialAuthDto,
+    normalizedEmail: string,
+    providerFullName?: string,
+  ) {
+    const role = dto.userType === UserType.SHOWROOM ? UserRole.USER_SHOWROOM : UserRole.USER_INDIVIDUAL;
+
+    if (dto.phone) {
+      const existingPhoneUser = await this.prisma.user.findFirst({
+        where: { phone: dto.phone },
+        select: { id: true },
+      });
+
+      if (existingPhoneUser) {
+        throw new ConflictException('User with this phone already exists');
+      }
+    }
+
+    const user = await this.prisma.$transaction(async (prisma) => {
+      const newUser = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          phone: dto.phone,
+          role,
+          isActive: true,
+        },
+      });
+
+      if (role === UserRole.USER_INDIVIDUAL) {
+        await prisma.individualProfile.create({
+          data: {
+            userId: newUser.id,
+            fullName: dto.fullName?.trim() || providerFullName?.trim() || 'User',
+            governorate: dto.governorate,
+            city: dto.city,
+          },
+        });
+      } else {
+        if (!dto.showroomName?.trim()) {
+          throw new BadRequestException('Showroom name is required for showroom accounts');
+        }
+
+        await prisma.showroomProfile.create({
+          data: {
+            userId: newUser.id,
+            showroomName: dto.showroomName.trim(),
+            crNumber: dto.crNumber,
+            merchantType: dto.merchantType ?? null,
+            governorate: dto.governorate,
+            city: dto.city,
+          },
+        });
+      }
+
+      return newUser;
+    });
+
+    await this.notifyNewRegistration(user.id, user.email, user.role);
+
+    return user;
+  }
+
+  private async notifyNewRegistration(userId: string, email: string, role: UserRole): Promise<void> {
+    if (role === UserRole.USER_SHOWROOM) {
+      await this.notificationsService.notifyAdmins(
+        NotificationType.SYSTEM,
+        'تسجيل معرض جديد',
+        `تم تسجيل معرض جديد (${email}) وهو مفعل مباشرة.`,
+        {
+          userId,
+          email,
+          role,
+          userType: 'SHOWROOM',
+        },
+      );
+      return;
+    }
+
+    await this.notificationsService.notifyAdmins(
+      NotificationType.SYSTEM,
+      'مستخدم فردي جديد',
+      `تم تسجيل مستخدم فردي جديد (${email}).`,
+      {
+        userId,
+        email,
+        role,
+        userType: 'INDIVIDUAL',
+      },
+    );
   }
 
   private async generateTokens(

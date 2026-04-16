@@ -9,12 +9,15 @@ import { useChatStore } from '@/store/chatStore';
 import { useTheme } from '../../context/ThemeContext';
 import { useCallback } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 // Using Chat interface from store logic implicitly via the hook data
 
 export default function ChatScreen() {
   const { isAuthenticated } = useAuthStore();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL, language } = useLanguage();
   const { chats, fetchChats, isLoading } = useChatStore();
 
   const theme = {
@@ -43,17 +46,17 @@ export default function ChatScreen() {
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
     if (diffInHours < 24) {
-      return date.toLocaleTimeString('ar-BH', { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString(language === 'ar' ? 'ar-BH' : 'en-US', { hour: '2-digit', minute: '2-digit' });
     } else if (diffInHours < 48) {
-      return 'أمس';
+      return t('chat.yesterday');
     } else {
-      return date.toLocaleDateString('ar-BH', { day: 'numeric', month: 'short' });
+      return date.toLocaleDateString(language === 'ar' ? 'ar-BH' : 'en-US', { day: 'numeric', month: 'short' });
     }
   };
 
   const renderChatCard = ({ item }: { item: any }) => (
     <TouchableOpacity
-      style={[styles.chatCard, { backgroundColor: theme.card }]}
+      style={[styles.chatCard, { backgroundColor: theme.card, flexDirection: isRTL ? 'row-reverse' : 'row' }]}
       onPress={() => router.push({
         pathname: '/chat/[id]',
         params: {
@@ -65,7 +68,7 @@ export default function ChatScreen() {
       })}
     >
       {/* Gold accent stripe on right side */}
-      {item.unreadCount > 0 && <View style={styles.cardAccent} />}
+      {item.unreadCount > 0 && <View style={[styles.cardAccent, isRTL ? styles.cardAccentRtl : styles.cardAccentLtr]} />}
 
       <View style={styles.avatarContainer}>
         <View style={[styles.avatarRing, item.unreadCount > 0 && styles.avatarRingUnread]}>
@@ -84,28 +87,28 @@ export default function ChatScreen() {
         {item.isOnline && <View style={styles.onlineIndicator} />}
       </View>
 
-      <View style={styles.chatContent}>
-        <View style={styles.chatHeader}>
-          <Text style={[styles.userName, { color: theme.text }]}>{item.otherUserName}</Text>
+      <View style={[styles.chatContent, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+        <View style={[styles.chatHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          <Text style={[styles.userName, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{item.otherUserName}</Text>
           {item.lastMessageTime && (
             <Text style={[styles.time]}>{formatTime(item.lastMessageTime)}</Text>
           )}
         </View>
 
-        <Text style={[styles.listingTitle]} numberOfLines={1}>
+        <Text style={[styles.listingTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]} numberOfLines={1}>
           {item.listingTitle}
         </Text>
 
-        <View style={styles.lastMessageRow}>
+        <View style={[styles.lastMessageRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
           <Text
             style={[
               styles.lastMessage,
-              { color: theme.textMuted },
+              { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' },
               item.unreadCount > 0 && [styles.lastMessageUnread, { color: theme.text }],
             ]}
             numberOfLines={1}
           >
-            {item.lastMessage || 'لا توجد رسائل'}
+            {item.lastMessage || t('chat.noMessages')}
           </Text>
           {item.unreadCount > 0 && (
             <View style={styles.unreadBadge}>
@@ -130,15 +133,15 @@ export default function ChatScreen() {
       <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.emptyContainer}>
           <Ionicons name="chatbubbles-outline" size={64} color={theme.textMuted} />
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>تسجيل الدخول مطلوب</Text>
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>{t('chat.loginRequired')}</Text>
           <Text style={[styles.emptyText, { color: theme.textMuted }]}>
-            يجب تسجيل الدخول لرؤية المحادثات
+            {t('chat.loginRequiredMessage')}
           </Text>
           <TouchableOpacity
             style={styles.loginButton}
             onPress={() => router.push('/(auth)/login')}
           >
-            <Text style={styles.loginButtonText}>تسجيل الدخول</Text>
+            <Text style={styles.loginButtonText}>{t('auth.login')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -148,7 +151,7 @@ export default function ChatScreen() {
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: theme.background }]}>
       <PageHeader
-        title="المحادثات"
+        title={t('chat.title')}
         showBack={true}
         variant="gradient"
       />
@@ -160,9 +163,9 @@ export default function ChatScreen() {
       ) : chats.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="chatbubbles-outline" size={64} color={theme.textMuted} />
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>لا توجد محادثات</Text>
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>{t('chat.noChats')}</Text>
           <Text style={[styles.emptyText, { color: theme.textMuted }]}>
-            ابدأ محادثة من خلال التواصل مع البائعين في الإعلانات
+            {t('chat.startChatHint')}
           </Text>
         </View>
       ) : (
@@ -241,13 +244,20 @@ const styles = StyleSheet.create({
   },
   cardAccent: {
     position: 'absolute',
-    right: 0,
     top: 0,
     bottom: 0,
     width: 4,
+    backgroundColor: '#D4AF37',
+  },
+  cardAccentRtl: {
+    right: 0,
     borderTopRightRadius: 18,
     borderBottomRightRadius: 18,
-    backgroundColor: '#D4AF37',
+  },
+  cardAccentLtr: {
+    left: 0,
+    borderTopLeftRadius: 18,
+    borderBottomLeftRadius: 18,
   },
   avatarContainer: {
     position: 'relative',

@@ -6,10 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../../constants/Colors';
 import { useAuthStore } from '@/store/authStore';
+import { useChatStore } from '@/store/chatStore';
 import api from '@/services/api';
 import { getApiBaseUrl } from '@/services/api-url';
 import { useTheme } from '../../context/ThemeContext';
 import { io, Socket } from 'socket.io-client';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 interface Message {
   id: string;
@@ -29,9 +31,14 @@ export default function ChatDetailScreen() {
   }>();
   const chatId = Array.isArray(params.id) ? params.id[0] : params.id;
   const { user } = useAuthStore();
+  const { chats, fetchChats } = useChatStore();
   const flatListRef = useRef<FlatList>(null);
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { language, isRTL } = useLanguage();
   const insets = useSafeAreaInsets();
+  const chatSummary = chats.find((chat) => chat.id === chatId);
+  const headerName = params.otherUserName || chatSummary?.otherUserName || t('chat.conversation');
 
   const theme = {
     background: isDark ? '#0f172a' : '#ECE5DD',
@@ -127,6 +134,9 @@ export default function ChatDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchMessages();
+      if (!params.otherUserName) {
+        void fetchChats();
+      }
     }, [chatId])
   );
 
@@ -166,7 +176,7 @@ export default function ChatDetailScreen() {
 
   const formatMessageTime = (timestamp: string) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('ar-BH', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString(language === 'ar' ? 'ar-BH' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
   };
 
   const renderMessage = ({ item }: { item: Message }) => {
@@ -228,12 +238,12 @@ export default function ChatDetailScreen() {
       >
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <View style={styles.backCircle}>
-            <Ionicons name="arrow-forward" size={18} color="#D4AF37" />
+            <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={18} color="#D4AF37" />
           </View>
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerName}>{params.otherUserName}</Text>
-          <Text style={styles.headerStatus}>متصل الآن</Text>
+          <Text style={[styles.headerName, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{headerName}</Text>
+          <Text style={[styles.headerStatus, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('chat.onlineNow')}</Text>
         </View>
         <View style={{ width: 44 }} />
       </LinearGradient>
@@ -258,8 +268,8 @@ export default function ChatDetailScreen() {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Ionicons name="chatbubbles-outline" size={48} color={theme.textMuted} />
-                <Text style={[styles.emptyTitle, { color: theme.text }]}>{isLoading ? 'جاري التحميل...' : 'لا توجد رسائل'}</Text>
-                <Text style={[styles.emptyText, { color: theme.textMuted }]}>ابدأ المحادثة بإرسال رسالة</Text>
+                <Text style={[styles.emptyTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{isLoading ? t('common.loading') : t('chat.noMessages')}</Text>
+                <Text style={[styles.emptyText, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('chat.startConversation')}</Text>
               </View>
             }
           />
@@ -274,11 +284,10 @@ export default function ChatDetailScreen() {
           }
         ]}>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#1f2937' : '#FFFFFF', color: theme.text, borderColor: theme.border }]}
-            placeholder="اكتب رسالتك..."
+            style={[styles.input, { backgroundColor: isDark ? '#1f2937' : '#FFFFFF', color: theme.text, borderColor: theme.border, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}
+            placeholder={t('chat.messagePlaceholder')}
             value={inputText}
             onChangeText={setInputText}
-            textAlign="right"
             multiline
             maxLength={500}
             placeholderTextColor={theme.textMuted}
@@ -306,7 +315,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   header: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -333,19 +342,20 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: 'flex-end',
+    paddingHorizontal: 12,
   },
   headerName: {
     fontSize: 16,
     fontWeight: '700',
     color: '#D4AF37',
-    textAlign: 'center',
+    width: '100%',
   },
   headerStatus: {
     fontSize: 12,
     color: '#34D399',
     marginTop: 2,
-    textAlign: 'center',
+    width: '100%',
   },
   headerAction: {
     padding: 4,

@@ -40,11 +40,11 @@ export class PushService {
       try {
         await this.sendToDevice(device.token, device.platform, title, body, data);
         this.logger.log(`Push notification sent to ${device.platform} device for user ${userId}`);
-      } catch (error) {
+      } catch (error: unknown) {
         this.logger.error(`Failed to send push notification to device ${device.id}:`, error);
 
         // Mark token as inactive if it's invalid
-        if (this.isInvalidTokenError(error)) {
+        if (this.isInvalidTokenError(this.asPushError(error))) {
           await this.prisma.deviceToken.update({
             where: { id: device.id },
             data: { isActive: false },
@@ -130,18 +130,30 @@ export class PushService {
   ): Promise<void> {
     await this.prisma.deviceToken.upsert({
       where: { token },
-      create: {
-        ...(userId ? { userId } : {}),
-        token,
-        platform,
-        isActive: true,
-      },
-      update: {
-        ...(userId ? { userId } : {}),
-        platform,
-        isActive: true,
-        updatedAt: new Date(),
-      },
+      create: userId
+        ? {
+            userId,
+            token,
+            platform,
+            isActive: true,
+          }
+        : {
+            token,
+            platform,
+            isActive: true,
+          },
+      update: userId
+        ? {
+            userId,
+            platform,
+            isActive: true,
+            updatedAt: new Date(),
+          }
+        : {
+            platform,
+            isActive: true,
+            updatedAt: new Date(),
+          },
     });
   }
 
@@ -156,8 +168,8 @@ export class PushService {
     for (const device of guestTokens) {
       try {
         await this.sendToDevice(device.token, device.platform, title, body, data);
-      } catch (error) {
-        if (this.isInvalidTokenError(error)) {
+      } catch (error: unknown) {
+        if (this.isInvalidTokenError(this.asPushError(error))) {
           await this.prisma.deviceToken.update({
             where: { id: device.id },
             data: { isActive: false },
@@ -173,5 +185,13 @@ export class PushService {
       where: { token },
       data: { isActive: false },
     });
+  }
+
+  private asPushError(error: unknown): { code?: string; message?: string } {
+    if (error && typeof error === 'object') {
+      return error as { code?: string; message?: string };
+    }
+
+    return {};
   }
 }

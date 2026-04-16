@@ -17,6 +17,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const isProduction = process.env.NODE_ENV === 'production';
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
@@ -67,6 +68,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
       `${request.method} ${request.url} - ${status} - ${message}`,
       exception instanceof Error ? exception.stack : undefined,
     );
+
+    if (isProduction && status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      message = 'Internal server error';
+      details = undefined;
+      code = 'INTERNAL_ERROR';
+    }
 
     // Send response
     response.status(status).json({

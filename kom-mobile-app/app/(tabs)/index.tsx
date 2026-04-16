@@ -25,6 +25,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/context/ThemeContext';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 import { Colors } from '@/constants/Colors';
 import { CarBrands, MotorcycleBrands } from '@/constants/CarData';
 import StoriesRail, { StoryUser } from '@/components/stories/StoriesRail';
@@ -44,6 +45,11 @@ type SafeModelItem = {
   valueEn: string;
   valueAr: string;
 };
+
+type VehicleBrand = (typeof CarBrands)[number];
+
+const HOME_CAR_BRANDS = CarBrands.filter((brand) => brand.id !== 'all');
+const HOME_MOTORCYCLE_BRANDS = MotorcycleBrands.filter((brand) => brand.id !== 'all');
 
 // ============================================
 // UTILITY: Convert any value to a safe string
@@ -75,11 +81,15 @@ function getKey(value: unknown, index: number, prefix: string = 'item'): string 
 // ============================================
 // BUILD MODEL ITEMS
 // ============================================
-function buildSafeModelItems(brand: { models?: unknown[] } | null | undefined): SafeModelItem[] {
+function buildSafeModelItems(
+  brand: { models?: unknown[] } | null | undefined,
+  language: 'ar' | 'en',
+  t: (key: string, options?: Record<string, unknown>) => string,
+): SafeModelItem[] {
   const result: SafeModelItem[] = [];
   result.push({
     key: 'safe-model-all',
-    label: 'الكل',
+    label: t('search.categoryAll'),
     valueEn: '__ALL__',
     valueAr: '__ALL__',
   });
@@ -100,11 +110,12 @@ function buildSafeModelItems(brand: { models?: unknown[] } | null | undefined): 
       const modelObj = model as Record<string, unknown>;
       enStr = typeof modelObj.en === 'string' ? modelObj.en : '';
       arStr = typeof modelObj.ar === 'string' ? modelObj.ar : '';
-      labelStr = arStr || enStr || `موديل ${i + 1}`;
+      labelStr = language === 'ar' ? (arStr || enStr) : (enStr || arStr);
+      labelStr = labelStr || t('search.modelFallback', { index: i + 1 });
       if (!enStr) enStr = arStr || `model_${i}`;
       if (!arStr) arStr = enStr;
     } else {
-      labelStr = `موديل ${i + 1}`;
+      labelStr = t('search.modelFallback', { index: i + 1 });
       enStr = `unknown_model_${i}`;
       arStr = labelStr;
     }
@@ -119,7 +130,7 @@ function buildSafeModelItems(brand: { models?: unknown[] } | null | undefined): 
   
   result.push({
     key: 'safe-model-other',
-    label: 'أخرى',
+    label: t('common.other'),
     valueEn: '__OTHER__',
     valueAr: '__OTHER__',
   });
@@ -127,39 +138,50 @@ function buildSafeModelItems(brand: { models?: unknown[] } | null | undefined): 
   return result;
 }
 
-const filterOptions: { label: string; value: FilterType; image: any }[] = [
-  { label: 'الكل', value: 'ALL', image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=150&q=80' },
-  { label: 'سيارات', value: 'CAR', image: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=150&q=80' },
-  { label: 'دراجات', value: 'MOTORCYCLE', image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=150&q=80' },
-  { label: 'لوحات', value: 'PLATE', image: require('@/assets/images/plate-placeholder.png') },
-  { label: 'قطع غيار', value: 'PART', image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=150&q=80' },
-];
+function getFilterOptions(t: (key: string) => string): { label: string; value: FilterType; image: any }[] {
+  return [
+    { label: t('search.categoryAll'), value: 'ALL', image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=150&q=80' },
+    { label: t('search.categoryCars'), value: 'CAR', image: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=150&q=80' },
+    { label: t('search.categoryMotorcycles'), value: 'MOTORCYCLE', image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=150&q=80' },
+    { label: t('search.categoryPlates'), value: 'PLATE', image: require('@/assets/images/plate-placeholder.png') },
+    { label: t('search.categoryParts'), value: 'PART', image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=150&q=80' },
+  ];
+}
 
-function formatTimeAgo(dateString: string | undefined | null) {
+function formatTimeAgo(
+  dateString: string | undefined | null,
+  language: 'ar' | 'en',
+  t: (key: string, options?: Record<string, unknown>) => string,
+) {
   if (!dateString) return '';
   
   const date = new Date(dateString);
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return 'الآن';
-  
+
+  if (diffInSeconds < 60) return t('notifications.justNow');
+
+  const formatter = new Intl.RelativeTimeFormat(language === 'ar' ? 'ar' : 'en', {
+    numeric: 'auto',
+    style: language === 'ar' ? 'long' : 'short',
+  });
+
   const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) return `قبل ${diffInMinutes} ${diffInMinutes === 1 ? 'دقيقة' : diffInMinutes === 2 ? 'دقيقتين' : (diffInMinutes >= 3 && diffInMinutes <= 10) ? 'دقائق' : 'دقيقة'}`;
-  
+  if (diffInMinutes < 60) return formatter.format(-diffInMinutes, 'minute');
+
   const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `قبل ${diffInHours} ${diffInHours === 1 ? 'ساعة' : diffInHours === 2 ? 'ساعتين' : (diffInHours >= 3 && diffInHours <= 10) ? 'ساعات' : 'ساعة'}`;
-  
+  if (diffInHours < 24) return formatter.format(-diffInHours, 'hour');
+
   const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) return `قبل ${diffInDays} ${diffInDays === 1 ? 'يوم' : diffInDays === 2 ? 'يومين' : (diffInDays >= 3 && diffInDays <= 10) ? 'أيام' : 'يوم'}`;
+  if (diffInDays < 7) return formatter.format(-diffInDays, 'day');
 
   const diffInWeeks = Math.floor(diffInDays / 7);
-  if (diffInWeeks < 4) return `قبل ${diffInWeeks} ${diffInWeeks === 1 ? 'أسبوع' : diffInWeeks === 2 ? 'أسبوعين' : (diffInWeeks >= 3 && diffInWeeks <= 10) ? 'أسابيع' : 'أسبوع'}`;
-  
-  const diffInMonths = Math.floor(diffInDays / 30);
-  if (diffInMonths < 12) return `قبل ${diffInMonths} ${diffInMonths === 1 ? 'شهر' : diffInMonths === 2 ? 'شهرين' : (diffInMonths >= 3 && diffInMonths <= 10) ? 'أشهر' : 'شهر'}`;
+  if (diffInWeeks < 4) return formatter.format(-diffInWeeks, 'week');
 
-  return date.toLocaleDateString('ar-EG');
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths < 12) return formatter.format(-diffInMonths, 'month');
+
+  return date.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB');
 }
 
 const styles = StyleSheet.create({
@@ -258,7 +280,7 @@ const styles = StyleSheet.create({
     paddingStart: 16,
     paddingEnd: 0, // Zero end padding - titles stick to the edge
     paddingVertical: 16,
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
   },
   sectionTitle: {
     fontSize: 20,
@@ -315,7 +337,7 @@ const styles = StyleSheet.create({
     right: 0,
     height: 70,
     justifyContent: 'flex-end',
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
     paddingHorizontal: 10,
     paddingBottom: 8,
   },
@@ -331,7 +353,7 @@ const styles = StyleSheet.create({
   typeBadge: {
     position: 'absolute',
     top: 8,
-    left: 8,
+    right: 8,
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 10,
@@ -344,7 +366,7 @@ const styles = StyleSheet.create({
   cardContent: {
     padding: 11,
     paddingStart: 14,
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
     width: '100%',
   },
   cardTitle: {
@@ -506,7 +528,7 @@ const styles = StyleSheet.create({
   imageCountBadge: {
     position: 'absolute',
     top: 8,
-    left: 8,
+    right: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
@@ -532,7 +554,7 @@ const styles = StyleSheet.create({
   }
 });
 
-const FilterHeader = React.memo(({ selectedFilter, onSelect, theme }: { selectedFilter: any, onSelect: any, theme: any }) => {
+const FilterHeader = React.memo(({ selectedFilter, onSelect, theme, options, isRTL }: { selectedFilter: any, onSelect: any, theme: any, options: { label: string; value: FilterType; image: any }[], isRTL: boolean }) => {
   const scrollRef = useRef<any>(null);
 
 
@@ -545,10 +567,10 @@ const FilterHeader = React.memo(({ selectedFilter, onSelect, theme }: { selected
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={[
             styles.filterScroll,
-            { flexDirection: 'row' },
+            { flexDirection: isRTL ? 'row-reverse' : 'row' },
           ]}
         >
-          {filterOptions.map((option) => {
+          {options.map((option) => {
             const isActive = selectedFilter === option.value;
             return (
               <TouchableOpacity
@@ -561,10 +583,11 @@ const FilterHeader = React.memo(({ selectedFilter, onSelect, theme }: { selected
                   source={typeof option.image === 'string' ? { uri: option.image } : option.image}
                   style={styles.categoryImage}
                   contentFit="cover"
+                  pointerEvents="none"
                 />
-                <View style={[styles.categoryOverlay, isActive && { backgroundColor: 'rgba(212, 175, 55, 0.4)' }]} />
+                <View style={[styles.categoryOverlay, isActive && { backgroundColor: 'rgba(212, 175, 55, 0.4)' }]} pointerEvents="none" />
                 
-                <Text style={styles.categoryText}>
+                <Text style={styles.categoryText} pointerEvents="none">
                   {option.label}
                 </Text>
               </TouchableOpacity>
@@ -578,6 +601,8 @@ const FilterHeader = React.memo(({ selectedFilter, onSelect, theme }: { selected
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const { t } = useAppTranslation();
+  const { language, isRTL } = useLanguage();
 
   // Query key — changes trigger a new fetch (React Query caches by key)
   const [queryFilter, setQueryFilter] = useState<FilterType>('ALL');
@@ -592,8 +617,8 @@ export default function HomeScreen() {
   // Filter Modal States
   const [modalVisible, setModalVisible] = useState(false);
   const [filterStep, setFilterStep] = useState<'BRAND' | 'MODEL' | 'MOTO_BRAND' | 'PLATE_TYPE'>('BRAND');
-  const [selectedBrand, setSelectedBrand] = useState<any>(null);
-  const [selectedMotoBrand, setSelectedMotoBrand] = useState<any>(null);
+  const [selectedBrand, setSelectedBrand] = useState<VehicleBrand | null>(null);
+  const [selectedMotoBrand, setSelectedMotoBrand] = useState<VehicleBrand | null>(null);
   
   // Stories State
   const [addStoryVisible, setAddStoryVisible] = useState(false);
@@ -607,6 +632,7 @@ export default function HomeScreen() {
 
   const { isDark } = useTheme();
   const { isAuthenticated } = useAuthStore();
+  const filterOptions = getFilterOptions(t as any);
 
   // ─── React Query: cached listings fetch ──────────────────────────────────
   const { data: listings = [], isLoading: loading, refetch } = useQuery<any[]>({
@@ -659,14 +685,14 @@ export default function HomeScreen() {
       // أحدث العروض — المميزة فقط، إذا لم توجد لا يظهر القسم
       const featured = listings.filter((l: any) => l.isFeatured === true).slice(0, 10);
       if (featured.length > 0) {
-        data.push({ type: 'CATEGORY_SECTION', id: 'sec_latest', title: '⭐ أحدث العروض المميزة', filterType: null, items: featured });
+        data.push({ type: 'CATEGORY_SECTION', id: 'sec_latest', title: t('home.latestFeatured'), filterType: null, items: featured });
       }
       // قسم لكل فئة
       const categories = [
-        { key: 'CAR',        title: 'سيارات',     filterType: 'CAR'        as FilterType },
-        { key: 'MOTORCYCLE', title: 'دراجات',     filterType: 'MOTORCYCLE' as FilterType },
-        { key: 'PLATE',      title: 'لوحات',      filterType: 'PLATE'      as FilterType },
-        { key: 'PART',       title: 'قطع غيار',   filterType: 'PART'       as FilterType },
+        { key: 'CAR',        title: t('search.categoryCars'),        filterType: 'CAR'        as FilterType },
+        { key: 'MOTORCYCLE', title: t('search.categoryMotorcycles'), filterType: 'MOTORCYCLE' as FilterType },
+        { key: 'PLATE',      title: t('search.categoryPlates'),      filterType: 'PLATE'      as FilterType },
+        { key: 'PART',       title: t('search.categoryParts'),       filterType: 'PART'       as FilterType },
       ];
       for (const cat of categories) {
         const items = listings.filter((l: any) => l.type === cat.key).slice(0, 10);
@@ -695,7 +721,7 @@ export default function HomeScreen() {
     }
 
     return [{ data }];
-  }, [filteredListings, listings, selectedFilter]);
+  }, [filteredListings, listings, selectedFilter, t]);
 
   const theme = {
     background: isDark ? '#0A0B14' : '#F2F5FC',
@@ -730,29 +756,18 @@ export default function HomeScreen() {
   const toText = safeString;
   const getLocalizedText = safeString;
   const getListingTitle = (item: any) => safeString(item?.title, '');
-  const getListingCity = (item: any) => safeString(item?.city, 'البحرين');
+  const getListingCity = (item: any) => safeString(item?.city, t('common.bahrain'));
+  const getBrandLabel = (brand: any) => language === 'ar' ? (brand?.nameAr || brand?.name || '') : (brand?.name || brand?.nameAr || '');
 
   const handleFilterChange = (filter: FilterType) => {
-    // Save current as previous before switching in case of cancel
     setPreviousFilter(selectedFilter);
     setSelectedFilter(filter);
-    
-    // IF selecting a complex type, don't fetch yet - just open modal
-    if (filter === 'CAR') {
-      setFilterStep('BRAND');
-      setModalVisible(true);
-      return; 
-    } else if (filter === 'MOTORCYCLE') {
-      setFilterStep('MOTO_BRAND');
-      setModalVisible(true);
-      return;
-    } else if (filter === 'PLATE') {
-      setFilterStep('PLATE_TYPE');
-      setModalVisible(true);
-      return;
-    }
 
-    // For simple filters (ALL/PART), fetch immediately
+    setModalVisible(false);
+    setSelectedBrand(null);
+    setSelectedMotoBrand(null);
+    setFilterStep('BRAND');
+
     fetchListings(filter);
   };
 
@@ -764,6 +779,10 @@ export default function HomeScreen() {
        const makeName = selectedBrand.nameAr || selectedBrand.name;
        fetchListings(selectedFilter, { make: makeName });
     } 
+     else if (selectedFilter === 'MOTORCYCLE' && selectedMotoBrand) {
+       const makeName = selectedMotoBrand.nameAr || selectedMotoBrand.name;
+       fetchListings('MOTORCYCLE', { make: makeName });
+     }
     // If we have selected a PLATE type but not fully committed via handlePlateTypeSelect...
     // Actually handlePlateTypeSelect closes the modal itself. 
     // So if we are here, we likely cancelled the plate type selection.
@@ -780,24 +799,12 @@ export default function HomeScreen() {
   };
 
   const handleBrandSelect = (brand: any) => {
-    if (brand.id === 'all') {
-      fetchListings('CAR', { make: undefined, model: undefined });
-      closeModal();
-      return;
-    }
-    
     setSelectedBrand(brand);
     // Don't fetch here, just move to next step
     setFilterStep('MODEL');
   };
 
   const handleMotoBrandSelect = (brand: any) => {
-    if (brand.id === 'all') {
-       fetchListings('MOTORCYCLE', { make: undefined, model: undefined });
-       setModalVisible(false); // Directly close
-       return;
-    }
-    
     setSelectedMotoBrand(brand);
     // For motorcycles, we don't have models yet, so fetch directly
     const makeName = brand.nameAr || brand.name;
@@ -891,20 +898,25 @@ export default function HomeScreen() {
       item.type === 'PART'       ? '#F59E0B' :
       '#3B82F6';
     const typeLabel =
-      item.type === 'PLATE' ? 'لوحة' :
-      item.type === 'MOTORCYCLE' ? 'دراجة' :
-      item.type === 'PART' ? 'قطعة' : 'سيارة';
+      item.type === 'PLATE' ? t('listing.types.plate') :
+      item.type === 'MOTORCYCLE' ? t('listing.types.motorcycle') :
+      item.type === 'PART' ? t('listing.types.part') : t('listing.types.car');
 
     return (
       <TouchableOpacity
         style={[styles.card, { backgroundColor: theme.surface }]}
-        onPress={() => router.push(`/listing/${item.id}`)}
+        onPress={() =>
+          router.push({
+            pathname: '/listing/[id]',
+            params: { id: String(item.id), backLink: '/(tabs)/index' },
+          })
+        }
         activeOpacity={0.88}
       >
         {/* Colored top accent bar */}
-        <View style={{ height: 3, backgroundColor: typeAccent }} />
+        <View style={{ height: 3, backgroundColor: typeAccent }} pointerEvents="none" />
 
-        <View style={styles.imageContainer}>
+        <View style={styles.imageContainer} pointerEvents="none">
           {imageUri ? (
             <Image
               source={{ uri: imageUri }}
@@ -912,6 +924,7 @@ export default function HomeScreen() {
               contentFit="cover"
               cachePolicy="memory-disk"
               transition={200}
+              pointerEvents="none"
             />
           ) : (
             <View style={[styles.cardImage, styles.noImage, { backgroundColor: typeAccent + '18' }]}>
@@ -937,7 +950,7 @@ export default function HomeScreen() {
                 typeof item.price === 'number'
                   ? item.price.toLocaleString()
                   : Number(item.price || 0).toLocaleString()
-              )} د.ب
+              )} {t('common.bhd')}
             </Text>
           </LinearGradient>
 
@@ -947,7 +960,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View style={styles.cardContent}>
+        <View style={styles.cardContent} pointerEvents="none">
           <Text style={[styles.cardTitle, { color: theme.text }]} numberOfLines={1}>
             {toText(getListingTitle(item))}
           </Text>
@@ -957,11 +970,11 @@ export default function HomeScreen() {
           <View style={styles.cardFooter}>
             <View style={styles.metaRow}>
               <Ionicons name="location-sharp" size={11} color={typeAccent} />
-              <Text style={[styles.metaText, { color: theme.subText }]}>{toText(getListingCity(item), 'البحرين')}</Text>
+              <Text style={[styles.metaText, { color: theme.subText }]}>{toText(getListingCity(item), t('common.bahrain'))}</Text>
             </View>
             <View style={styles.metaRow}>
               <Ionicons name="time-outline" size={11} color={theme.muted} />
-              <Text style={[styles.metaText, { color: theme.muted }]}>{toText(formatTimeAgo(item.postedAt || item.createdAt))}</Text>
+              <Text style={[styles.metaText, { color: theme.muted }]}>{toText(formatTimeAgo(item.postedAt || item.createdAt, language, t))}</Text>
             </View>
           </View>
         </View>
@@ -1034,7 +1047,7 @@ export default function HomeScreen() {
 
             {/* Favorites heart */}
             <TouchableOpacity
-              onPress={() => router.push('/favorites')}
+              onPress={() => router.push({ pathname: '/favorites', params: { source: 'home' } })}
               style={[styles.iconButton, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
             >
               <Ionicons name="heart" size={22} color='#D4AF37' />
@@ -1055,6 +1068,8 @@ export default function HomeScreen() {
             selectedFilter={selectedFilter} 
             onSelect={handleFilterChange} 
             theme={theme} 
+            options={filterOptions}
+            isRTL={isRTL}
           />
         </View>
 
@@ -1079,9 +1094,9 @@ export default function HomeScreen() {
           renderItem={({ item }) => {
             if (item.type === 'HEADER_TITLE') {
               return (
-                <View style={{ width: '100%', paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row' }}>
+                <View style={{ width: '100%', paddingHorizontal: 16, paddingVertical: 16, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                   <View>
-                    <Text style={{ fontSize: 20, fontWeight: '800', textAlign: 'right', color: theme.text, writingDirection: 'rtl' }}>أحدث العروض</Text>
+                    <Text style={{ fontSize: 20, fontWeight: '800', textAlign: isRTL ? 'right' : 'left', color: theme.text, writingDirection: isRTL ? 'rtl' : 'ltr' }}>{t('home.latestOffers')}</Text>
                     <View style={{ height: 3, width: 40, backgroundColor: Colors.primary, borderRadius: 2, marginTop: 4 }} />
                   </View>
                 </View>
@@ -1092,7 +1107,7 @@ export default function HomeScreen() {
               return (
                 <View style={{ marginBottom: 4 }}>
                   <View style={{
-                    flexDirection: 'row',
+                    flexDirection: isRTL ? 'row' : 'row-reverse',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     paddingHorizontal: 16,
@@ -1100,12 +1115,12 @@ export default function HomeScreen() {
                     paddingBottom: 12,
                   }}>
                     <View>
-                      <Text style={{ fontSize: 18, fontWeight: '800', textAlign: 'right', color: theme.text }}>{item.title}</Text>
+                      <Text style={{ fontSize: 18, fontWeight: '800', textAlign: isRTL ? 'right' : 'left', color: theme.text, writingDirection: isRTL ? 'rtl' : 'ltr' }}>{item.title}</Text>
                       <View style={{ height: 3, width: 36, backgroundColor: Colors.primary, borderRadius: 2, marginTop: 4 }} />
                     </View>
                     {item.filterType && (
                       <TouchableOpacity onPress={() => handleFilterChange(item.filterType)}>
-                        <Text style={{ color: Colors.primary, fontSize: 13, fontWeight: '600' }}>عرض الكل ←</Text>
+                        <Text style={{ color: Colors.primary, fontSize: 13, fontWeight: '600', textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }}>{t('home.showAll')}</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -1146,7 +1161,7 @@ export default function HomeScreen() {
             !loading && filteredListings.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <Ionicons name="car-sport-outline" size={60} color="#e5e5e5" />
-                <Text style={[styles.emptyText, { color: theme.muted, marginTop: 10 }]}>لا توجد إعلانات مطابقة</Text>
+                <Text style={[styles.emptyText, { color: theme.muted, marginTop: 10 }]}>{t('home.noMatchingListings')}</Text>
               </View>
             ) : null
           }
@@ -1162,10 +1177,10 @@ export default function HomeScreen() {
             <View style={[styles.modalContent, { backgroundColor: theme.surface }]}> 
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: theme.text }]}> 
-                  {filterStep === 'BRAND' ? 'اختر الماركة' : 
-                  filterStep === 'MOTO_BRAND' ? 'اختر الشركة المصنعة' :
-                  filterStep === 'PLATE_TYPE' ? 'اختر نوع اللوحة' :
-                  'اختر الموديل'}
+                  {filterStep === 'BRAND' ? t('home.chooseBrand') : 
+                  filterStep === 'MOTO_BRAND' ? t('home.chooseManufacturer') :
+                  filterStep === 'PLATE_TYPE' ? t('home.choosePlateType') :
+                  t('home.chooseModel')}
                 </Text>
                 <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
                   <Ionicons name="close" size={24} color={theme.text} />
@@ -1174,7 +1189,7 @@ export default function HomeScreen() {
               
               {filterStep === 'BRAND' && (
                 <FlatList
-                  data={CarBrands}
+                  data={HOME_CAR_BRANDS}
                   keyExtractor={(item, index) => getKey(item?.id ?? item?.name, index, 'brand')}
                   numColumns={3}
                   contentContainerStyle={styles.brandGrid}
@@ -1191,7 +1206,7 @@ export default function HomeScreen() {
                           transition={200}
                         />
                       </View>
-                      <Text style={[styles.brandName, { color: theme.text }]}>{toText(item.nameAr ?? item.name)}</Text>
+                      <Text style={[styles.brandName, { color: theme.text }]}>{getBrandLabel(item)}</Text>
                     </TouchableOpacity>
                   )}
                 />
@@ -1199,7 +1214,7 @@ export default function HomeScreen() {
 
               {filterStep === 'MOTO_BRAND' && (
                 <FlatList
-                  data={MotorcycleBrands}
+                  data={HOME_MOTORCYCLE_BRANDS}
                   keyExtractor={(item) => item.id}
                   numColumns={3}
                   contentContainerStyle={styles.brandGrid}
@@ -1216,7 +1231,7 @@ export default function HomeScreen() {
                           transition={200}
                         />
                       </View>
-                      <Text style={[styles.brandName, { color: theme.text }]}>{toText(item.nameAr ?? item.name)}</Text>
+                      <Text style={[styles.brandName, { color: theme.text }]}>{getBrandLabel(item)}</Text>
                     </TouchableOpacity>
                   )}
                 />
@@ -1225,10 +1240,10 @@ export default function HomeScreen() {
               {filterStep === 'PLATE_TYPE' && (
                 <View style={styles.modelList}>
                   {[
-                    { id: 'ALL', label: 'الكل' },
-                    { id: 'PRIVATE', label: 'خصوصي' },
-                    { id: 'TRANSPORT', label: 'نقل' },
-                    { id: 'MOTORCYCLE', label: 'دراجة نارية' }
+                    { id: 'ALL', label: t('search.categoryAll') },
+                    { id: 'PRIVATE', label: t('home.platePrivate') },
+                    { id: 'TRANSPORT', label: t('home.plateTransport') },
+                    { id: 'MOTORCYCLE', label: t('home.plateMotorcycle') }
                   ].map((pt) => (
                     <TouchableOpacity 
                         key={pt.id}
@@ -1236,7 +1251,7 @@ export default function HomeScreen() {
                         onPress={() => handlePlateTypeSelect(pt.id)}
                       >
                         <Text style={[styles.modelName, { color: theme.text }]}>{pt.label}</Text>
-                        <Ionicons name="chevron-back" size={20} color={theme.muted} />
+                        <Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={20} color={theme.muted} />
                       </TouchableOpacity>
                   ))}
                 </View>
@@ -1245,11 +1260,11 @@ export default function HomeScreen() {
               {filterStep === 'MODEL' && (
                 <View style={{ flex: 1 }}>
                   <TouchableOpacity onPress={() => setFilterStep('BRAND')} style={styles.backButton}>
-                  <Ionicons name="arrow-forward" size={20} color={theme.primary} />
-                  <Text style={[styles.backText, { color: theme.primary }]}>العودة للماركات</Text>
+                  <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color={theme.primary} />
+                  <Text style={[styles.backText, { color: theme.primary }]}>{t('home.backToBrands')}</Text>
                   </TouchableOpacity>
                   <FlatList<SafeModelItem>
-                    data={buildSafeModelItems(selectedBrand)}
+                    data={buildSafeModelItems(selectedBrand, language, t as any)}
                     keyExtractor={(item: SafeModelItem) => item.key}
                     contentContainerStyle={styles.modelList}
                     renderItem={({ item }: { item: SafeModelItem }) => (
@@ -1260,7 +1275,7 @@ export default function HomeScreen() {
                         <Text style={[styles.modelName, { color: theme.text }]}> 
                           {item.label}
                         </Text>
-                        <Ionicons name="chevron-back" size={20} color={theme.muted} />
+                        <Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={20} color={theme.muted} />
                       </TouchableOpacity>
                     )}
                   />

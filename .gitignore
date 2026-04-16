@@ -25,3 +25,7 @@ test-create-10-users.js
 # Credentials
 credentials.json
 credentials/
+
+# Hostinger deployment secrets
+hostinger/.env
+hostinger/backend.env

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import AdsBanner from '@/components/ads/AdsBanner';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity, Share, Dimensions, FlatList, Alert, Linking, Platform, Modal, I18nManager } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity, Share, Dimensions, FlatList, Alert, Linking, Platform, Modal } from 'react-native';
 import { useLocalSearchParams, Stack, router, useFocusEffect } from 'expo-router';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '../../context/ThemeContext';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PageHeader } from '@/components/ui/page-header';
 
@@ -26,10 +27,6 @@ interface MediaItem {
   thumbnailUrl?: string;
   mimeType?: string;
 }
-
-const IS_RTL = I18nManager.isRTL;
-const RTL_TEXT = { textAlign: 'right' as const, writingDirection: 'rtl' as const };
-const RTL_ROW = { flexDirection: 'row' as const };
 
 // Helper component for Media Items to allow hooks usage
 // NOTE: useVideoPlayer must always be called at the top level (Rules of Hooks).
@@ -106,6 +103,15 @@ interface ListingDetail {
   partDetails?: any;
 }
 
+interface FeaturedPackage {
+  id: string;
+  nameAr?: string;
+  nameEn?: string;
+  name?: string;
+  price: number;
+  durationDays: number;
+}
+
 function normalizeListing(raw: any): ListingDetail {
   const rawMedia: any[] = Array.isArray(raw?.media) ? raw.media : [];
 
@@ -132,7 +138,7 @@ function normalizeListing(raw: any): ListingDetail {
     owner?.showroomProfile?.showroomName ||
     owner?.email ||
     raw?.user?.name ||
-    'معلن';
+    '-';
 
   const showroomPhones = Array.isArray(owner?.showroomProfile?.contactPhones)
     ? owner.showroomProfile.contactPhones
@@ -207,6 +213,8 @@ export default function ListingDetailScreen() {
   const backLinkStr = Array.isArray(backLink) ? backLink[0] : (backLink || '/(tabs)/index');
   const { user, isAuthenticated } = useAuthStore();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { language, isRTL } = useLanguage();
 
   // Luxury Theme Colors
   const theme = {
@@ -229,12 +237,14 @@ export default function ListingDetailScreen() {
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
   const [showFeatureModal, setShowFeatureModal] = useState(false);
-  const [featuredPackages, setFeaturedPackages] = useState<{ id: string; nameAr: string; price: number; durationDays: number }[]>([]);
+  const [featuredPackages, setFeaturedPackages] = useState<FeaturedPackage[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(false);
   const [initiatingFeature, setInitiatingFeature] = useState(false);
   const insets = useSafeAreaInsets();
   const mainListRef = useRef<FlatList>(null);
   const thumbsListRef = useRef<FlatList>(null);
+  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
+  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
 
   const checkFavoriteStatus = useCallback(async () => {
     if (!listingId) return;
@@ -273,11 +283,11 @@ export default function ListingDetailScreen() {
       } catch (err: any) {
         console.error('Error fetching listing details:', err);
         if (err?.response?.status === 401) {
-          setError('هذا الإعلان غير متاح (سجّل دخولك لعرض إعلاناتك غير المنشورة)');
+          setError(t('listing.unavailableAuth'));
         } else if (err?.response?.status === 404) {
-          setError('الإعلان غير موجود أو غير متاح');
+          setError(t('listing.unavailable'));
         } else {
-          setError('تعذر تحميل تفاصيل الإعلان');
+          setError(t('listing.loadFailed'));
         }
       } finally {
         setLoading(false);
@@ -287,17 +297,17 @@ export default function ListingDetailScreen() {
     if (listingId) {
       fetchListing();
     }
-  }, [listingId]);
+  }, [listingId, t]);
 
   const handleBack = () => {
-    router.navigate('/' as any);
+    router.navigate(backLinkStr as any);
   };
 
   const handleShare = async () => {
     try {
       if (listing) {
         await Share.share({
-          message: `شاهد هذا الإعلان على KOM: ${listing.title} بسعر ${listing.price} د.ب`,
+          message: t('listing.shareMessage', { title: listing.title, price: listing.price, currency: t('common.bhd') }),
         });
       }
     } catch (error) {
@@ -308,28 +318,28 @@ export default function ListingDetailScreen() {
   const handleCall = () => {
     const phone = listing?.user.phone?.toString().trim();
     if (!phone) {
-      Alert.alert('تنبيه', 'لا يوجد لهذا المعلن رقم هاتف');
+      Alert.alert(t('common.warning'), t('listing.noAdvertiserPhone'));
       return;
     }
 
     const cleaned = phone.replace(/[^\d+]/g, '');
     const telUrl = Platform.OS === 'web' ? `tel:${cleaned}` : `tel:${cleaned}`;
     Linking.openURL(telUrl).catch(() => {
-      Alert.alert('خطأ', 'تعذر فتح تطبيق الاتصال');
+      Alert.alert(t('common.error'), t('listing.openDialerFailed'));
     });
   };
 
   const handleWhatsApp = () => {
     const phone = listing?.user.phone?.toString().trim();
     if (!phone) {
-      Alert.alert('تنبيه', 'لا يوجد لهذا المعلن رقم هاتف');
+      Alert.alert(t('common.warning'), t('listing.noAdvertiserPhone'));
       return;
     }
 
     const cleaned = phone.replace(/[^\d+]/g, '');
     const waUrl = `https://wa.me/${encodeURIComponent(cleaned)}`;
     Linking.openURL(waUrl).catch(() => {
-      Alert.alert('خطأ', 'تعذر فتح واتساب');
+      Alert.alert(t('common.error'), t('listing.openWhatsAppFailed'));
     });
   };
 
@@ -389,9 +399,9 @@ export default function ListingDetailScreen() {
       setFavoritesCount(previousCount);
 
       if (err?.response?.status === 401) {
-        alert('يجب تسجيل الدخول لإضافة الإعلانات للمفضلة');
+        Alert.alert(t('common.warning'), t('listing.loginToFavorite'));
       } else {
-        alert('حدث خطأ أثناء تحديث المفضلة. حاول مرة أخرى.');
+        Alert.alert(t('common.error'), t('listing.favoriteUpdateFailed'));
       }
     } finally {
       setFavoriteLoading(false);
@@ -411,7 +421,7 @@ export default function ListingDetailScreen() {
         const data = res.data?.data ?? res.data;
         setFeaturedPackages(Array.isArray(data) ? data : []);
       } catch {
-        Alert.alert('خطأ', 'تعذر تحميل باقات التمييز');
+        Alert.alert(t('common.error'), t('listing.featuredPackagesLoadFailed'));
         setShowFeatureModal(false);
       } finally {
         setLoadingPackages(false);
@@ -419,7 +429,7 @@ export default function ListingDetailScreen() {
     }
   };
 
-  const handleSelectPackage = async (pkg: { id: string; nameAr: string; price: number; durationDays: number }) => {
+  const handleSelectPackage = async (pkg: FeaturedPackage) => {
     if (initiatingFeature || !listingId) return;
     setInitiatingFeature(true);
     try {
@@ -439,8 +449,8 @@ export default function ListingDetailScreen() {
         },
       });
     } catch (e: any) {
-      const msg = e?.response?.data?.message || 'تعذر بدء عملية الدفع';
-      Alert.alert('خطأ', msg);
+      const msg = e?.response?.data?.message || t('listing.paymentStartFailed');
+      Alert.alert(t('common.error'), msg);
     } finally {
       setInitiatingFeature(false);
     }
@@ -497,9 +507,9 @@ export default function ListingDetailScreen() {
   if (error || !listing) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: theme.background }]}>
-        <Text style={[styles.errorText, RTL_TEXT]}>{error || 'الإعلان غير موجود'}</Text>
+        <Text style={[styles.errorText, dirText]}>{error || t('listing.unavailable')}</Text>
         <TouchableOpacity style={styles.backButtonSimple} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>عودة</Text>
+          <Text style={styles.backButtonText}>{t('common.back')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -511,12 +521,12 @@ export default function ListingDetailScreen() {
         listing.type === 'PLATE' ? '#059669' : '#F59E0B';
 
   const typeLabel =
-    listing.type === 'CAR' ? 'سيارة' :
-      listing.type === 'MOTORCYCLE' ? 'دراجة نارية' :
-        listing.type === 'PLATE' ? 'لوحة' : 'قطعة غيار';
+    listing.type === 'CAR' ? t('listing.types.car') :
+      listing.type === 'MOTORCYCLE' ? t('listing.types.motorcycle') :
+        listing.type === 'PLATE' ? t('listing.types.plate') : t('listing.types.part');
 
-  const specs = getListingSpecs(listing);
-  const quickSpecs = getQuickSpecs(listing);
+  const specs = getListingSpecs(listing, t as any, language);
+  const quickSpecs = getQuickSpecs(listing, t as any);
   const allSpecs = specs.metaData;
 
   // Card background - subtle, not pitch black
@@ -531,7 +541,7 @@ export default function ListingDetailScreen() {
       <StatusBar style="light" />
 
       <PageHeader
-        title="تفاصيل الإعلان"
+        title={t('listing.detailsTitle')}
         variant="gradient"
         onBack={handleBack}
         rightSlot={(
@@ -587,12 +597,12 @@ export default function ListingDetailScreen() {
           />
           {/* Price badge overlaid on hero */}
           <View style={styles.heroPriceBadge}>
-            <Text style={[styles.heroPriceNum, RTL_TEXT]}>{Number(listing.price).toLocaleString()}</Text>
-            <Text style={[styles.heroPriceCur, RTL_TEXT]}> د.ب</Text>
+            <Text style={[styles.heroPriceNum, dirText]}>{Number(listing.price).toLocaleString()}</Text>
+            <Text style={[styles.heroPriceCur, dirText]}> {t('common.bhd')}</Text>
           </View>
           {/* Type badge */}
           <View style={[styles.heroTypeBadge, { backgroundColor: accentColor }]}>
-            <Text style={[styles.heroTypeTxt, RTL_TEXT]}>{typeLabel}</Text>
+            <Text style={[styles.heroTypeTxt, dirText]}>{typeLabel}</Text>
           </View>
           {/* Counter */}
           {listing.media.length > 1 && (
@@ -624,18 +634,18 @@ export default function ListingDetailScreen() {
 
           {/* ── Title & Meta row ── */}
           <View style={[styles.titleBlock, { backgroundColor: cardBg, borderColor }]}>
-            <Text style={[styles.titleTxt, { color: theme.text }, RTL_TEXT]}>{listing.title}</Text>
-            <View style={styles.metaRow}>
+            <Text style={[styles.titleTxt, { color: theme.text }, dirText]}>{listing.title}</Text>
+            <View style={[styles.metaRow, rowDirection]}>
               {!!listing.location && (
-                <View style={styles.metaItem}>
+                <View style={[styles.metaItem, rowDirection]}>
                   <Ionicons name="location-outline" size={13} color={accentColor} />
-                  <Text style={[styles.metaTxt, { color: theme.textMuted }, RTL_TEXT]}>{listing.location}</Text>
+                  <Text style={[styles.metaTxt, { color: theme.textMuted }, dirText]}>{listing.location}</Text>
                 </View>
               )}
-              <View style={styles.metaItem}>
+              <View style={[styles.metaItem, rowDirection]}>
                 <Ionicons name="time-outline" size={13} color={theme.textMuted} />
-                <Text style={[styles.metaTxt, { color: theme.textMuted }, RTL_TEXT]}>
-                  {new Date(listing.postedAt).toLocaleDateString('ar-BH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                <Text style={[styles.metaTxt, { color: theme.textMuted }, dirText]}>
+                  {new Date(listing.postedAt).toLocaleDateString(language === 'ar' ? 'ar-BH' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </Text>
               </View>
             </View>
@@ -646,7 +656,7 @@ export default function ListingDetailScreen() {
             <View style={[styles.quickBlock, { backgroundColor: cardBg, borderColor }]}>
               <View style={[styles.blockHeader, { borderBottomColor: borderColor }]}>
                 <View style={[styles.blockAccent, { backgroundColor: accentColor }]} />
-                <Text style={[styles.blockTitle, { color: theme.text }, RTL_TEXT]}>نظرة سريعة</Text>
+                <Text style={[styles.blockTitle, { color: theme.text }, dirText]}>{t('listing.quickLook')}</Text>
               </View>
               <View style={styles.quickGrid}>
                 {quickSpecs.map((item, i) => (
@@ -654,8 +664,8 @@ export default function ListingDetailScreen() {
                     <View style={[styles.quickIcon, { backgroundColor: accentColor + '20' }]}>
                       <Ionicons name={item.icon as any} size={18} color={accentColor} />
                     </View>
-                    <Text style={[styles.quickVal, { color: theme.text }, RTL_TEXT]} numberOfLines={1}>{item.value}</Text>
-                    <Text style={[styles.quickLbl, { color: theme.textMuted }, RTL_TEXT]}>{item.label}</Text>
+                    <Text style={[styles.quickVal, { color: theme.text }, dirText]} numberOfLines={1}>{item.value}</Text>
+                    <Text style={[styles.quickLbl, { color: theme.textMuted }, dirText]}>{item.label}</Text>
                   </View>
                 ))}
               </View>
@@ -667,7 +677,7 @@ export default function ListingDetailScreen() {
             <View style={[styles.specsBlock, { backgroundColor: cardBg, borderColor }]}>
               <View style={[styles.blockHeader, { borderBottomColor: borderColor }]}>
                 <View style={[styles.blockAccent, { backgroundColor: accentColor }]} />
-                <Text style={[styles.blockTitle, { color: theme.text }, RTL_TEXT]}>معلومات الإعلان</Text>
+                <Text style={[styles.blockTitle, { color: theme.text }, dirText]}>{t('listing.infoTitle')}</Text>
               </View>
               {allSpecs.map((spec, i) => (
   <View
@@ -679,7 +689,7 @@ export default function ListingDetailScreen() {
     ]}
   >
     <Text
-      style={[styles.specLbl, { color: theme.textMuted }]}
+      style={[styles.specLbl, { color: theme.textMuted }, dirText]}
       numberOfLines={1}
     >
       {spec.label}
@@ -687,7 +697,7 @@ export default function ListingDetailScreen() {
 
     {spec.isLink ? (
       <Text
-        style={[styles.specVal, { color: accentColor }]}
+        style={[styles.specVal, { color: accentColor }, dirText]}
         numberOfLines={2}
         onPress={() =>
           Linking.openURL(`https://maps.google.com/?q=${listing.location}`)
@@ -697,7 +707,7 @@ export default function ListingDetailScreen() {
       </Text>
     ) : (
       <Text
-        style={[styles.specVal, { color: theme.text }]}
+        style={[styles.specVal, { color: theme.text }, dirText]}
         numberOfLines={2}
       >
         {spec.value}
@@ -713,9 +723,9 @@ export default function ListingDetailScreen() {
             <View style={[styles.descBlock, { backgroundColor: cardBg, borderColor }]}>
               <View style={[styles.blockHeader, { borderBottomColor: borderColor }]}>
                 <View style={[styles.blockAccent, { backgroundColor: accentColor }]} />
-                <Text style={[styles.blockTitle, { color: theme.text }, RTL_TEXT]}>الوصف</Text>
+                <Text style={[styles.blockTitle, { color: theme.text }, dirText]}>{t('listing.descriptionTitle')}</Text>
               </View>
-              <Text style={[styles.descTxt, { color: theme.textMuted }, RTL_TEXT]}>{listing.description}</Text>
+              <Text style={[styles.descTxt, { color: theme.textMuted }, dirText]}>{listing.description}</Text>
             </View>
           )}
 
@@ -723,28 +733,28 @@ export default function ListingDetailScreen() {
           <View style={[styles.sellerBlock, { backgroundColor: cardBg, borderColor }]}>
             <View style={[styles.blockHeader, { borderBottomColor: borderColor }]}>
               <View style={[styles.blockAccent, { backgroundColor: accentColor }]} />
-              <Text style={[styles.blockTitle, { color: theme.text }, RTL_TEXT]}>المعلن</Text>
+              <Text style={[styles.blockTitle, { color: theme.text }, dirText]}>{t('listing.sellerTitle')}</Text>
             </View>
-            <View style={styles.sellerRow}>
+            <View style={[styles.sellerRow, rowDirection]}>
               <View style={[styles.sellerAvt, { backgroundColor: accentColor + '25' }]}>
                 <Text style={[styles.sellerInit, { color: accentColor }]}>
-                  {listing.user.name.charAt(0)}
+                  {(listing.user.name || t('listing.advertiserFallback')).charAt(0)}
                 </Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.sellerName, { color: theme.text }, RTL_TEXT]}>{listing.user.name}</Text>
-                <View style={styles.verifiedRow}>
+                <Text style={[styles.sellerName, { color: theme.text }, dirText]}>{listing.user.name || t('listing.advertiserFallback')}</Text>
+                <View style={[styles.verifiedRow, rowDirection]}>
                   <Ionicons name="shield-checkmark" size={13} color="#10B981" />
-                  <Text style={[styles.verifiedTxt, RTL_TEXT]}>عضو موثوق</Text>
+                  <Text style={[styles.verifiedTxt, dirText]}>{t('listing.trustedMember')}</Text>
                 </View>
               </View>
               {listing.user.phone && (
                 <TouchableOpacity
                   onPress={handleCall}
-                  style={[styles.callPill, { backgroundColor: accentColor + '15', borderColor: accentColor + '50' }]}
+                  style={[styles.callPill, rowDirection, { backgroundColor: accentColor + '15', borderColor: accentColor + '50' }]}
                 >
                   <Ionicons name="call-outline" size={15} color={accentColor} />
-                  <Text style={[styles.callPillTxt, { color: accentColor }, RTL_TEXT]}>اتصال</Text>
+                  <Text style={[styles.callPillTxt, { color: accentColor }, dirText]}>{t('listing.call')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -761,31 +771,31 @@ export default function ListingDetailScreen() {
         style={[styles.ctaWrap, { paddingBottom: Math.max(insets.bottom, 16) }]}
         pointerEvents="box-none"
       >
-        <View style={styles.ctaRow}>
+        <View style={[styles.ctaRow, rowDirection]}>
           {listing?.user?.phone ? (
             <>
-              <TouchableOpacity style={[styles.ctaCallBtn, { borderColor }]} onPress={handleCall}>
+              <TouchableOpacity style={[styles.ctaCallBtn, rowDirection, { borderColor }]} onPress={handleCall}>
                 <Ionicons name="call" size={19} color={isDark ? '#FFF' : '#0A0B14'} />
-                <Text style={[styles.ctaCallTxt, { color: isDark ? '#FFF' : '#0A0B14' }, RTL_TEXT]}>اتصال</Text>
+                <Text style={[styles.ctaCallTxt, { color: isDark ? '#FFF' : '#0A0B14' }, dirText]}>{t('listing.call')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.ctaWABtn} onPress={handleWhatsApp}>
+              <TouchableOpacity style={[styles.ctaWABtn, rowDirection]} onPress={handleWhatsApp}>
                 <Ionicons name="logo-whatsapp" size={19} color="#FFF" />
-                <Text style={[styles.ctaWATxt, RTL_TEXT]}>واتساب</Text>
+                <Text style={[styles.ctaWATxt, dirText]}>{t('listing.whatsapp')}</Text>
               </TouchableOpacity>
             </>
           ) : (
             <View style={[styles.ctaCallBtn, { flex: 2, borderColor, opacity: 0.5 }]}>
-              <Text style={[styles.ctaCallTxt, { color: theme.textMuted }, RTL_TEXT]}>لا يوجد رقم هاتف</Text>
+              <Text style={[styles.ctaCallTxt, { color: theme.textMuted }, dirText]}>{t('listing.noPhoneNumber')}</Text>
             </View>
           )}
           {isAuthenticated && listing?.ownerId && user?.id && listing.ownerId !== user.id && (
             <TouchableOpacity
-              style={styles.ctaChatBtn}
+              style={[styles.ctaChatBtn, rowDirection]}
               onPress={handleChat}
               disabled={chatLoading}
             >
               <Ionicons name="chatbubble-ellipses" size={19} color="#ffffff" />
-              <Text style={[styles.ctaChatTxt, RTL_TEXT]}>محادثة</Text>
+              <Text style={[styles.ctaChatTxt, dirText]}>{t('listing.chat')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -793,12 +803,12 @@ export default function ListingDetailScreen() {
         {/* Feature button — only for listing owner */}
         {isAuthenticated && listing?.ownerId && user?.id && listing.ownerId === user.id && (
           <TouchableOpacity
-            style={styles.ctaFeatureBtn}
+            style={[styles.ctaFeatureBtn, rowDirection]}
             onPress={handleOpenFeatureModal}
             activeOpacity={0.85}
           >
             <Ionicons name="star" size={18} color="#0A0B14" />
-            <Text style={[styles.ctaFeatureTxt, RTL_TEXT]}>مَيِّز إعلانك ⭐</Text>
+            <Text style={[styles.ctaFeatureTxt, dirText]}>{t('listing.featureYourListing')}</Text>
           </TouchableOpacity>
         )}
       </LinearGradient>
@@ -815,18 +825,18 @@ export default function ListingDetailScreen() {
             {/* Handle */}
             <View style={[styles.modalHandle, { backgroundColor: isDark ? '#2A3A5A' : '#CBD5E1' }]} />
 
-            <Text style={[styles.modalTitle, { color: isDark ? '#F0F4FC' : '#0A0B14' }, RTL_TEXT]}>
-              اختر باقة التمييز
+            <Text style={[styles.modalTitle, { color: isDark ? '#F0F4FC' : '#0A0B14' }, dirText]}>
+              {t('listing.chooseFeaturedPackage')}
             </Text>
-            <Text style={[styles.modalSub, { color: isDark ? '#8899BB' : '#64748b' }, RTL_TEXT]}>
-              سيظهر إعلانك في قائمة الإعلانات المميزة لمدة الباقة
+            <Text style={[styles.modalSub, { color: isDark ? '#8899BB' : '#64748b' }, dirText]}>
+              {t('listing.chooseFeaturedPackageSubtitle')}
             </Text>
 
             {loadingPackages ? (
               <ActivityIndicator color="#D4AF37" style={{ marginVertical: 32 }} />
             ) : featuredPackages.length === 0 ? (
-              <Text style={[styles.modalEmpty, { color: isDark ? '#8899BB' : '#64748b' }, RTL_TEXT]}>
-                لا توجد باقات تمييز متاحة حالياً
+              <Text style={[styles.modalEmpty, { color: isDark ? '#8899BB' : '#64748b' }, dirText]}>
+                {t('listing.noFeaturedPackages')}
               </Text>
             ) : (
               <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 360 }}>
@@ -844,14 +854,14 @@ export default function ListingDetailScreen() {
                       </View>
                     </View>
                     <View style={styles.pkgMid}>
-                      <Text style={[styles.pkgName, { color: isDark ? '#F0F4FC' : '#0A0B14' }, RTL_TEXT]}>{pkg.nameAr}</Text>
-                      <Text style={[styles.pkgDuration, { color: isDark ? '#8899BB' : '#64748b' }, RTL_TEXT]}>
-                        {pkg.durationDays} يوم تمييز
+                      <Text style={[styles.pkgName, { color: isDark ? '#F0F4FC' : '#0A0B14' }, dirText]}>{language === 'ar' ? (pkg.nameAr || pkg.nameEn || pkg.name || '') : (pkg.nameEn || pkg.nameAr || pkg.name || '')}</Text>
+                      <Text style={[styles.pkgDuration, { color: isDark ? '#8899BB' : '#64748b' }, dirText]}>
+                        {t('listing.featuredDays', { count: pkg.durationDays })}
                       </Text>
                     </View>
                     <View style={styles.pkgRight}>
-                      <Text style={[styles.pkgPrice, RTL_TEXT]}>{pkg.price.toFixed(3)}</Text>
-                      <Text style={[styles.pkgCurrency, { color: isDark ? '#8899BB' : '#64748b' }, RTL_TEXT]}>د.ب</Text>
+                      <Text style={[styles.pkgPrice, dirText]}>{pkg.price.toFixed(3)}</Text>
+                      <Text style={[styles.pkgCurrency, { color: isDark ? '#8899BB' : '#64748b' }, dirText]}>{t('common.bhd')}</Text>
                     </View>
                   </TouchableOpacity>
                 ))}
@@ -862,7 +872,7 @@ export default function ListingDetailScreen() {
               style={[styles.modalCancelBtn, { borderColor: isDark ? '#1E2D4A' : '#EEF2FA' }]}
               onPress={() => setShowFeatureModal(false)}
             >
-              <Text style={[styles.modalCancelTxt, { color: isDark ? '#8899BB' : '#64748b' }, RTL_TEXT]}>إلغاء</Text>
+              <Text style={[styles.modalCancelTxt, { color: isDark ? '#8899BB' : '#64748b' }, dirText]}>{t('common.cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -918,7 +928,7 @@ const styles = StyleSheet.create({
   heroGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 130 },
   // Price overlay on hero
   heroPriceBadge: {
-    position: 'absolute', bottom: 50, left: 16,
+    position: 'absolute', bottom: 50, right: 16,
     flexDirection: 'row', alignItems: 'flex-end',
   },
   heroPriceNum: {
@@ -929,12 +939,12 @@ const styles = StyleSheet.create({
     color: 'rgba(212,175,55,0.8)', fontSize: 15, fontWeight: '700', marginBottom: 4,
   },
   heroTypeBadge: {
-    position: 'absolute', bottom: 18, left: 16,
+    position: 'absolute', bottom: 18, right: 16,
     paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8,
   },
   heroTypeTxt: { color: '#FFF', fontSize: 12, fontWeight: '800', letterSpacing: 0.3 },
   heroCnt: {
-    position: 'absolute', bottom: 18, right: 16,
+    position: 'absolute', bottom: 18, left: 16,
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: 'rgba(0,0,0,0.5)',
     borderRadius: 16, paddingHorizontal: 9, paddingVertical: 4,
@@ -1123,103 +1133,163 @@ const styles = StyleSheet.create({
   modalCancelTxt: { fontSize: 15, fontWeight: '700' },
 });
 
-function getQuickSpecs(listing: ListingDetail): { icon: string; value: string; label: string }[] {
+function getQuickSpecs(listing: ListingDetail, t: (key: string) => string): { icon: string; value: string; label: string }[] {
   const q: { icon: string; value: string; label: string }[] = [];
   const v = (x: any) => (x !== null && x !== undefined && x !== '' && x !== '-' ? String(x) : null);
 
   if (listing.type === 'CAR' && listing.carDetails) {
     const d = Array.isArray(listing.carDetails) ? listing.carDetails[0] : listing.carDetails;
-    if (v(d.make)) q.push({ icon: 'car-sport-outline', value: d.make, label: 'الماركة' });
-    if (v(d.year)) q.push({ icon: 'calendar-outline', value: String(d.year), label: 'السنة' });
-    if (v(d.mileageKm)) q.push({ icon: 'speedometer-outline', value: Number(d.mileageKm).toLocaleString(), label: 'الكيلو' });
-    if (v(d.transmission)) q.push({ icon: 'git-branch-outline', value: d.transmission === 'MANUAL' ? 'عادي' : 'أوتو', label: 'الناقل' });
-    if (v(d.condition)) q.push({ icon: 'star-outline', value: d.condition === 'NEW' ? 'جديد' : 'مستعمل', label: 'الحالة' });
+    if (v(d.make)) q.push({ icon: 'car-sport-outline', value: d.make, label: t('listing.specBrand') });
+    if (v(d.year)) q.push({ icon: 'calendar-outline', value: String(d.year), label: t('listing.specYear') });
+    if (v(d.mileageKm)) q.push({ icon: 'speedometer-outline', value: Number(d.mileageKm).toLocaleString(), label: t('listing.specMileage') });
+    if (v(d.transmission)) q.push({ icon: 'git-branch-outline', value: d.transmission === 'MANUAL' ? t('listing.transmissionManual') : t('listing.transmissionAutomatic'), label: t('listing.specTransmission') });
+    if (v(d.condition)) q.push({ icon: 'star-outline', value: d.condition === 'NEW' ? t('listing.conditionNew') : t('listing.conditionUsed'), label: t('listing.specCondition') });
   } else if (listing.type === 'MOTORCYCLE' && listing.motorcycleDetails) {
     const d = Array.isArray(listing.motorcycleDetails) ? listing.motorcycleDetails[0] : listing.motorcycleDetails;
-    if (v(d.make)) q.push({ icon: 'bicycle-outline', value: d.make, label: 'الماركة' });
-    if (v(d.year)) q.push({ icon: 'calendar-outline', value: String(d.year), label: 'السنة' });
-    if (v(d.engineSize)) q.push({ icon: 'flash-outline', value: d.engineSize, label: 'المحرك' });
-    if (v(d.condition)) q.push({ icon: 'star-outline', value: d.condition === 'NEW' ? 'جديد' : 'مستعمل', label: 'الحالة' });
+    if (v(d.make)) q.push({ icon: 'bicycle-outline', value: d.make, label: t('listing.specBrand') });
+    if (v(d.year)) q.push({ icon: 'calendar-outline', value: String(d.year), label: t('listing.specYear') });
+    if (v(d.engineSize)) q.push({ icon: 'flash-outline', value: d.engineSize, label: t('listing.specEngine') });
+    if (v(d.condition)) q.push({ icon: 'star-outline', value: d.condition === 'NEW' ? t('listing.conditionNew') : t('listing.conditionUsed'), label: t('listing.specCondition') });
   } else if (listing.type === 'PLATE' && listing.plateDetails) {
     const d = Array.isArray(listing.plateDetails) ? listing.plateDetails[0] : listing.plateDetails;
-    if (v(d.plateNumber)) q.push({ icon: 'id-card-outline', value: d.plateNumber, label: 'الرقم' });
-    if (v(d.plateType)) q.push({ icon: 'car-outline', value: d.plateType, label: 'النوع' });
-    if (v(d.plateCategory)) q.push({ icon: 'pricetag-outline', value: d.plateCategory, label: 'الفئة' });
+    if (v(d.plateNumber)) q.push({ icon: 'id-card-outline', value: d.plateNumber, label: t('listing.specNumber') });
+    if (v(d.plateType)) q.push({ icon: 'car-outline', value: getPlateTypeLabel(d.plateType, t), label: t('listing.specType') });
+    if (v(d.plateCategory)) q.push({ icon: 'pricetag-outline', value: getPlateCategoryLabel(d.plateCategory, t), label: t('listing.specCategory') });
   } else if (listing.type === 'PART' && listing.partDetails) {
     const d = Array.isArray(listing.partDetails) ? listing.partDetails[0] : listing.partDetails;
-    if (v(d.partName)) q.push({ icon: 'build-outline', value: d.partName, label: 'القطعة' });
-    if (v(d.brand)) q.push({ icon: 'ribbon-outline', value: d.brand, label: 'الماركة' });
-    if (v(d.condition)) q.push({ icon: 'star-outline', value: d.condition === 'NEW' ? 'جديد' : 'مستعمل', label: 'الحالة' });
+    if (v(d.partName)) q.push({ icon: 'build-outline', value: d.partName, label: t('listing.specPart') });
+    if (v(d.brand)) q.push({ icon: 'ribbon-outline', value: d.brand, label: t('listing.specBrand') });
+    if (v(d.condition)) q.push({ icon: 'star-outline', value: getListingConditionLabel(d.condition, t), label: t('listing.specCondition') });
   }
 
   return q;
 }
 
-function getCategoryName(listing: ListingDetail) {
-  if (listing.type === 'CAR' || listing.type === 'MOTORCYCLE' || listing.type === 'PART' || listing.type === 'PLATE') return 'سيارات ومركبات';
+function getCategoryName(listing: ListingDetail, t: (key: string) => string) {
+  if (listing.type === 'CAR' || listing.type === 'MOTORCYCLE' || listing.type === 'PART' || listing.type === 'PLATE') return t('listing.categoryVehicles');
   return '-';
 }
 
-function getSubCategoryName(listing: ListingDetail) {
-  if (listing.type === 'CAR') return 'سيارات للبيع';
-  if (listing.type === 'MOTORCYCLE') return 'دراجات نارية';
-  if (listing.type === 'PART') return listing.partDetails?.subCategory || 'قطع غيار';
-  if (listing.type === 'PLATE') return 'أرقام لوحات مركبات';
+function getSubCategoryName(listing: ListingDetail, t: (key: string) => string) {
+  if (listing.type === 'CAR') return t('listing.subCategoryCars');
+  if (listing.type === 'MOTORCYCLE') return t('listing.subCategoryMotorcycles');
+  if (listing.type === 'PART') return listing.partDetails?.subCategory || t('listing.subCategoryParts');
+  if (listing.type === 'PLATE') return t('listing.subCategoryPlates');
   return '-';
 }
 
-function getListingSpecs(listing: ListingDetail) {
+function getListingConditionLabel(condition: string | undefined, t: (key: string) => string) {
+  if (condition === 'NEW') return t('listing.conditionNew');
+  if (condition === 'USED') return t('listing.conditionUsed');
+  if (condition === 'REFURBISHED') return t('addListing.conditionRefurbished');
+  return condition || '-';
+}
+
+function getPlateTypeLabel(plateType: string | undefined, t: (key: string) => string) {
+  if (plateType === 'PRIVATE') return t('addListing.platePrivate');
+  if (plateType === 'TRANSPORT') return t('addListing.plateTransport');
+  if (plateType === 'MOTORCYCLE') return t('addListing.plateMotorcycle');
+  return plateType || '-';
+}
+
+function getPlateCategoryLabel(category: string | undefined, t: (key: string) => string) {
+  switch (category) {
+    case 'عادي':
+      return t('addListing.plateCategoryRegular');
+    case 'مميز':
+      return t('addListing.plateCategorySpecial');
+    case 'ثنائي':
+      return t('addListing.plateCategoryDouble');
+    case 'ثلاثي':
+      return t('addListing.plateCategoryTriple');
+    case 'رباعي':
+      return t('addListing.plateCategoryQuad');
+    case 'خماسي':
+      return t('addListing.plateCategoryFive');
+    case 'نقل خفيف':
+      return t('addListing.plateCategoryLightTransport');
+    case 'نقل ثقيل':
+      return t('addListing.plateCategoryHeavyTransport');
+    case 'أجرة':
+      return t('addListing.plateCategoryTaxi');
+    default:
+      return category || '-';
+  }
+}
+
+function getMotorcycleBodyTypeLabel(bodyType: string | undefined, t: (key: string) => string) {
+  switch (bodyType) {
+    case 'رياضية':
+      return t('addListing.motorcycleBodySport');
+    case 'سكوتر':
+      return t('addListing.motorcycleBodyScooter');
+    case 'كروزر':
+      return t('addListing.motorcycleBodyCruiser');
+    case 'تجوال':
+      return t('addListing.motorcycleBodyTouring');
+    case 'ديرت بايك':
+      return t('addListing.motorcycleBodyDirtBike');
+    case 'نيكد':
+      return t('addListing.motorcycleBodyNaked');
+    case 'أدفنشر':
+      return t('addListing.motorcycleBodyAdventure');
+    default:
+      return bodyType || '-';
+  }
+}
+
+function getListingSpecs(listing: ListingDetail, t: (key: string) => string, language: string) {
   const metaData: { label: string; value: string; isLink?: boolean }[] = [];
   const mainSpecs: { label: string; value: string; isLink?: boolean }[] = [];
 
   const val = (v: any) => v || '-';
-  const date = listing.postedAt ? new Date(listing.postedAt).toLocaleDateString('en-GB') : '-';
+  const date = listing.postedAt ? new Date(listing.postedAt).toLocaleDateString(language === 'ar' ? 'ar-BH' : 'en-GB') : '-';
 
   // Left Column (Meta Data) in RTL
   // metaData.push({ label: 'الموقع على الخريطة', value: 'عرض على الخريطة', isLink: true }); // Removed as per request
-  metaData.push({ label: 'الحي', value: val(listing.locationArea) });
-  metaData.push({ label: 'المدينة', value: val(listing.locationGovernorate) });
-  metaData.push({ label: 'القسم الفرعي', value: getSubCategoryName(listing) });
-  metaData.push({ label: 'القسم', value: getCategoryName(listing) });
-  metaData.push({ label: 'إعلان رقم', value: val(listing.adNumber) });
-  metaData.push({ label: 'تاريخ النشر', value: date });
+  metaData.push({ label: t('listing.specDistrict'), value: val(listing.locationArea) });
+  metaData.push({ label: t('listing.specCity'), value: val(listing.locationGovernorate) });
+  metaData.push({ label: t('listing.specSubCategory'), value: getSubCategoryName(listing, t) });
+  metaData.push({ label: t('listing.specSection'), value: getCategoryName(listing, t) });
+  metaData.push({ label: t('listing.specAdNumber'), value: val(listing.adNumber) });
+  metaData.push({ label: t('listing.specPostedAt'), value: date });
 
   // Right Column (Main Specs)
   if (listing.type === 'CAR' && listing.carDetails) {
     const d = Array.isArray(listing.carDetails) ? listing.carDetails[0] : listing.carDetails;
     const isNew = d.condition === 'NEW';
 
-    mainSpecs.push({ label: 'الحالة', value: isNew ? 'جديد' : 'مستعمل' });
-    mainSpecs.push({ label: 'النوع', value: val(d.make) });
-    mainSpecs.push({ label: 'موديل', value: val(d.model) });
-    mainSpecs.push({ label: 'الفئة', value: val(d.trim) });
-    mainSpecs.push({ label: 'نوع الهيكل', value: val(d.bodyType) });
-    if (d.specs?.seats) mainSpecs.push({ label: 'عدد المقاعد', value: val(d.specs.seats) });
-    mainSpecs.push({ label: 'نوع ناقل الحركة', value: d.transmission === 'MANUAL' ? 'عادي' : 'اوتوماتيك' });
-    mainSpecs.push({ label: 'سعة المحرك', value: val(d.engineSize) });
+    mainSpecs.push({ label: t('listing.specCondition'), value: isNew ? t('listing.conditionNew') : t('listing.conditionUsed') });
+    mainSpecs.push({ label: t('listing.specType'), value: val(d.make) });
+    mainSpecs.push({ label: t('listing.specModel'), value: val(d.model) });
+    mainSpecs.push({ label: t('listing.specClass'), value: val(d.trim) });
+    mainSpecs.push({ label: t('listing.specBodyType'), value: val(d.bodyType) });
+    if (d.specs?.seats) mainSpecs.push({ label: t('listing.specSeats'), value: val(d.specs.seats) });
+    mainSpecs.push({ label: t('listing.specTransmissionType'), value: d.transmission === 'MANUAL' ? t('listing.transmissionManual') : t('listing.transmissionAutomatic') });
+    mainSpecs.push({ label: t('listing.specEngineSize'), value: val(d.engineSize) });
 
     if (!isNew) {
-      if (d.color) mainSpecs.push({ label: 'اللون الخارجي', value: val(d.color) });
-      if (d.specs?.interiorColor) mainSpecs.push({ label: 'اللون الداخلي', value: val(d.specs.interiorColor) });
-      if (d.specs?.bodyCondition) mainSpecs.push({ label: 'حالة الهيكل', value: val(d.specs.bodyCondition) });
-      if (d.specs?.paintType || d.specs?.paint) mainSpecs.push({ label: 'الدهان', value: val(d.specs.paintType || d.specs.paint) });
-      mainSpecs.push({ label: 'طريقة الدفع', value: 'كاش' });
+      if (d.color) mainSpecs.push({ label: t('listing.specExteriorColor'), value: val(d.color) });
+      if (d.specs?.interiorColor) mainSpecs.push({ label: t('listing.specInteriorColor'), value: val(d.specs.interiorColor) });
+      if (d.specs?.bodyCondition) mainSpecs.push({ label: t('listing.specBodyCondition'), value: val(d.specs.bodyCondition) });
+      if (d.specs?.paintType || d.specs?.paint) mainSpecs.push({ label: t('listing.specPaint'), value: val(d.specs.paintType || d.specs.paint) });
+      mainSpecs.push({ label: t('listing.specPaymentMethod'), value: t('listing.paymentCash') });
     }
   } else if (listing.type === 'MOTORCYCLE' && listing.motorcycleDetails) {
     const d = Array.isArray(listing.motorcycleDetails) ? listing.motorcycleDetails[0] : listing.motorcycleDetails;
-    mainSpecs.push({ label: 'الحالة', value: d.condition === 'NEW' ? 'جديد' : 'مستعمل' });
-    mainSpecs.push({ label: 'النوع', value: val(d.make) });
-    mainSpecs.push({ label: 'الفئة', value: val(d.model) });
-    mainSpecs.push({ label: 'سنة الصنع', value: val(d.year) });
-    if (d.condition !== 'NEW') mainSpecs.push({ label: 'الكيلومترات', value: val(d.mileageKm) });
-    mainSpecs.push({ label: 'سعة المحرك', value: val(d.engineSize) || '600 - 749 سي سي' });
-    mainSpecs.push({ label: 'نوع الهيكل', value: 'رياضية' });
+    mainSpecs.push({ label: t('listing.specCondition'), value: getListingConditionLabel(d.condition, t) });
+    mainSpecs.push({ label: t('listing.specType'), value: val(d.make) });
+    mainSpecs.push({ label: t('listing.specCategory'), value: val(d.model) });
+    mainSpecs.push({ label: t('listing.specMadeYear'), value: val(d.year) });
+    if (d.condition !== 'NEW') mainSpecs.push({ label: t('listing.specKilometers'), value: val(d.mileageKm) });
+    mainSpecs.push({ label: t('listing.specEngineSize'), value: val(d.engineSize) || '600 - 749 cc' });
+    mainSpecs.push({ label: t('listing.specBodyType'), value: getMotorcycleBodyTypeLabel(d.bodyType, t) });
   } else if (listing.type === 'PART' && listing.partDetails) {
     const d = Array.isArray(listing.partDetails) ? listing.partDetails[0] : listing.partDetails;
     const isNew = d.condition === 'NEW';
-    mainSpecs.push({ label: 'الحالة', value: isNew ? 'جديد' : 'مستعمل' });
+    mainSpecs.push({ label: t('listing.specCondition'), value: getListingConditionLabel(d.condition, t) });
     if (isNew) {
-      mainSpecs.push({ label: 'هل لديك خدمة توصيل؟', value: 'نعم' });
+      mainSpecs.push({ label: t('listing.specDeliveryService'), value: t('listing.deliveryYes') });
     }
   } else if (listing.type === 'PLATE') {
     // For plates, user image shows no specific specs on right side, mainly meta info

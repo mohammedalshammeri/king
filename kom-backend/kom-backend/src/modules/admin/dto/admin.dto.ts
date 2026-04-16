@@ -36,7 +36,7 @@ export class CreateAdminDto {
   @ApiProperty({ example: 'info@kotm.app' })
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @ApiProperty({ example: 'SecurePassword123!' })
   @IsString()
@@ -46,7 +46,7 @@ export class CreateAdminDto {
     message:
       'Password must contain at least one uppercase letter, one lowercase letter, one number and one special character',
   })
-  password: string;
+  password!: string;
 
   @ApiPropertyOptional({ type: AdminPermissionsDto })
   @IsOptional()
@@ -107,18 +107,27 @@ export class BanUserDto {
   @IsNotEmpty()
   @MinLength(10)
   @MaxLength(500)
-  reason: string;
+  reason!: string;
+}
+
+export class RejectUserDto {
+  @ApiProperty({ example: 'بيانات التسجيل غير مكتملة أو غير صحيحة' })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(10)
+  @MaxLength(500)
+  reason!: string;
 }
 
 export class UpdateSystemSettingDto {
   @ApiProperty({ example: 'LISTING_FEE_BHD' })
   @IsString()
   @IsNotEmpty()
-  key: string;
+  key!: string;
 
   @ApiProperty({ example: '5' })
   @IsNotEmpty()
-  value: string | number | boolean;
+  value!: string | number | boolean;
 
   @ApiPropertyOptional({ enum: ['string', 'number', 'boolean', 'json'] })
   @IsOptional()

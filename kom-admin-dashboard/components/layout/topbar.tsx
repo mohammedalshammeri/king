@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import { getNotifications, getUnreadCount, markAllNotificationsRead, markNotificationRead } from "../../lib/services/notifications";
 import type { NotificationItem } from "../../lib/types";
 import { useToast } from "../ui/toast";
+import { useAdminI18n } from "../../context/i18n-context";
 
 interface TopbarProps {
   onMenuClick?: () => void;
@@ -14,6 +15,7 @@ interface TopbarProps {
 export function Topbar({ onMenuClick }: TopbarProps) {
   const { user, logout } = useAuth();
   const { pushToast } = useToast();
+  const { language, t, toggleLanguage } = useAdminI18n();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -72,7 +74,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch {
-      pushToast({ type: "error", message: "تعذر تحديث الإشعارات" });
+      pushToast({ type: "error", message: t("topbar.notificationsUpdateFailed") });
     }
   };
 
@@ -82,7 +84,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch {
-      pushToast({ type: "error", message: "تعذر تحديث الإشعار" });
+      pushToast({ type: "error", message: t("topbar.notificationUpdateFailed") });
     }
   };
 
@@ -103,18 +105,21 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           </svg>
         </Button>
         <div>
-          <h1 className="text-lg font-bold text-gray-900">لوحة التحكم</h1>
-          <p className="hidden md:block text-xs text-gray-500 mt-0.5">مرحباً بك في نظام إدارة ملك السوق</p>
+          <h1 className="text-lg font-bold text-gray-900">{t("topbar.title")}</h1>
+          <p className="hidden md:block text-xs text-gray-500 mt-0.5">{t("topbar.subtitle")}</p>
         </div>
       </div>
       <div className="flex items-center gap-4 text-sm">
+        <Button variant="outline" size="sm" onClick={toggleLanguage} className="h-9 px-3 text-xs">
+          {t("topbar.toggleLanguage")}
+        </Button>
         <div className="relative">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setOpen((prev) => !prev)}
             className="relative h-9 w-9 p-0"
-            aria-label="الإشعارات"
+            aria-label={t("topbar.notificationAriaLabel")}
           >
             <svg
               className="h-4 w-4"
@@ -138,7 +143,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           {open && (
             <div className="absolute right-0 mt-2 w-80 rounded-xl border border-gray-100 bg-white shadow-lg z-50">
               <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
-                <span className="text-sm font-semibold text-gray-800">الإشعارات</span>
+                <span className="text-sm font-semibold text-gray-800">{t("topbar.notifications")}</span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -146,12 +151,12 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                   onClick={handleMarkAllRead}
                   disabled={loading || notifications.length === 0}
                 >
-                  تعليم الكل كمقروء
+                  {t("topbar.markAllRead")}
                 </Button>
               </div>
               <div className="max-h-96 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <div className="p-4 text-xs text-gray-500 text-center">لا توجد إشعارات</div>
+                  <div className="p-4 text-xs text-gray-500 text-center">{t("topbar.noNotifications")}</div>
                 ) : (
                   notifications.map((item) => (
                     <div
@@ -163,7 +168,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                           <div className="text-sm font-semibold text-gray-800">{item.title}</div>
                           <div className="text-xs text-gray-600 mt-1">{item.body}</div>
                           <div className="text-[10px] text-gray-400 mt-2">
-                            {new Date(item.createdAt).toLocaleString("ar-BH")}
+                            {new Date(item.createdAt).toLocaleString(language === "ar" ? "ar-BH" : "en-GB")}
                           </div>
                         </div>
                         {!item.isRead && (
@@ -173,7 +178,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                             className="text-xs"
                             onClick={() => handleMarkRead(item.id)}
                           >
-                            تم
+                            {t("topbar.markReadDone")}
                           </Button>
                         )}
                       </div>
@@ -187,11 +192,11 @@ export function Topbar({ onMenuClick }: TopbarProps) {
         <div className="text-left hidden sm:block">
           <div className="font-semibold text-gray-800">{user?.email}</div>
           <div className="text-xs text-gray-500">
-            {user?.role === "SUPER_ADMIN" ? "مدير النظام" : "مسؤول"}
+            {user?.role === "SUPER_ADMIN" ? t("topbar.systemAdmin") : t("topbar.admin")}
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={logout} className="gap-2 text-xs h-9">
-          تسجيل الخروج
+          {t("topbar.logout")}
         </Button>
       </div>
     </header>

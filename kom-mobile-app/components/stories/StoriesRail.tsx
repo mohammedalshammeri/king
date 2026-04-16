@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/context/ThemeContext';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 export interface StoryUser {
   userId: string;
@@ -24,6 +25,8 @@ interface StoriesRailProps {
 export default function StoriesRail({ onPressStory, onAddStory, refreshTrigger }: StoriesRailProps) {
   const { user } = useAuthStore();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
   const [stories, setStories] = useState<StoryUser[]>([]);
   const scrollRef = useRef<any>(null);
 
@@ -70,7 +73,7 @@ export default function StoriesRail({ onPressStory, onAddStory, refreshTrigger }
               <Ionicons name="add" size={16} color="white" />
             </View>
           </View>
-          <Text style={[styles.username, { color: usernameClr }]}>إضافة قصة</Text>
+          <Text style={[styles.username, { color: usernameClr, writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.addStory')}</Text>
         </TouchableOpacity>
 
         {/* Stories List */}
@@ -103,7 +106,7 @@ export default function StoriesRail({ onPressStory, onAddStory, refreshTrigger }
                 />
               </View>
             </LinearGradient>
-            <Text style={[styles.username, { color: usernameClr }]} numberOfLines={1}>{storyUser.userName}</Text>
+            <Text style={[styles.username, { color: usernameClr, writingDirection: isRTL ? 'rtl' : 'ltr' }]} numberOfLines={1}>{storyUser.userName || t('feed.defaultStoryUser')}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>

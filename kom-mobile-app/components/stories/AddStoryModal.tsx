@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import api from '@/services/api';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/context/ThemeContext';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 interface AddStoryModalProps {
   visible: boolean;
@@ -20,6 +21,8 @@ export default function AddStoryModal({ visible, onClose, onSuccess }: AddStoryM
   const [media, setMedia] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [uploading, setUploading] = useState(false);
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
   const theme = {
     background: isDark ? '#0A0B14' : '#F2F5FC',
@@ -49,7 +52,7 @@ export default function AddStoryModal({ visible, onClose, onSuccess }: AddStoryM
         }
     } catch (e) {
         console.log(e);
-        Alert.alert('Error', 'Please allow permission to access gallery');
+      Alert.alert(t('stories.permissionTitle'), t('stories.permissionMessage'));
     }
   };
 
@@ -76,12 +79,12 @@ export default function AddStoryModal({ visible, onClose, onSuccess }: AddStoryM
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       
-      Alert.alert('تم الإرسال', 'القصة قيد المراجعة من قبل الإدارة');
+      Alert.alert(t('stories.submittedTitle'), t('stories.submittedMessage'));
       setMedia(null);
       onSuccess();
     } catch (error) {
       console.log(error);
-      Alert.alert('خطأ', 'فشل رفع القصة');
+      Alert.alert(t('common.error'), t('stories.uploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -97,25 +100,25 @@ export default function AddStoryModal({ visible, onClose, onSuccess }: AddStoryM
           end={{ x: 1, y: 0 }}
           style={styles.header}
         >
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <TouchableOpacity onPress={onClose} style={[styles.closeBtn, isRTL ? styles.closeBtnRtl : styles.closeBtnLtr]} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <View style={styles.closeCircle}>
-              <Ionicons name="arrow-forward" size={18} color="#D4AF37" />
+              <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={18} color="#D4AF37" />
             </View>
           </TouchableOpacity>
-          <Text style={styles.title}>إضافة قصة</Text>
+          <Text style={[styles.title, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.addStory')}</Text>
           <View style={styles.closeBtnPlaceholder} />
         </LinearGradient>
 
         <View style={[styles.content, { backgroundColor: theme.background }]}>
            {!media ? (
-               <View style={styles.buttons}>
+                 <View style={[styles.buttons, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                    <TouchableOpacity style={styles.btn} onPress={() => pickMedia('image')}>
                        <Ionicons name="image" size={32} color="white" />
-                       <Text style={styles.btnText}>اختر صورة</Text>
+                     <Text style={[styles.btnText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.chooseImage')}</Text>
                    </TouchableOpacity>
                    <TouchableOpacity style={styles.btn} onPress={() => pickMedia('video')}>
                        <Ionicons name="videocam" size={32} color="white" />
-                       <Text style={styles.btnText}>اختر فيديو</Text>
+                     <Text style={[styles.btnText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.chooseVideo')}</Text>
                    </TouchableOpacity>
                </View>
            ) : (
@@ -132,12 +135,12 @@ export default function AddStoryModal({ visible, onClose, onSuccess }: AddStoryM
                        <Image source={{ uri: media.uri }} style={styles.previewMedia} contentFit="contain" />
                    )}
                    
-                   <View style={styles.actions}>
+                     <View style={[styles.actions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                         <TouchableOpacity style={[styles.actionBtn, styles.cancelBtn, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setMedia(null)} disabled={uploading}>
-                            <Text style={[styles.cancelText, { color: theme.text }]}>إلغاء</Text>
+                        <Text style={[styles.cancelText, { color: theme.text, writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('common.cancel')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.actionBtn, styles.uploadBtn]} onPress={uploadStory} disabled={uploading}>
-                            {uploading ? <ActivityIndicator color="white" /> : <Text style={styles.uploadText}>نشر القصة</Text>}
+                        {uploading ? <ActivityIndicator color="white" /> : <Text style={[styles.uploadText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.publishStory')}</Text>}
                         </TouchableOpacity>
                    </View>
                </View>
@@ -166,13 +169,18 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     position: 'absolute',
-    right: 16,
     top: 0,
     bottom: 0,
     justifyContent: 'center',
     width: 44,
     alignItems: 'center',
     zIndex: 2,
+  },
+  closeBtnRtl: {
+    right: 16,
+  },
+  closeBtnLtr: {
+    left: 16,
   },
   closeCircle: {
     width: 36,

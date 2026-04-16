@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { PageHeader } from '@/components/ui/page-header';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 
 interface FavoriteListing {
   id: string;
@@ -23,7 +24,10 @@ interface FavoriteListing {
 
 export default function FavoritesScreen() {
   const router = useRouter();
+  const { source } = useLocalSearchParams<{ source?: string }>();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
   const { isAuthenticated } = useAuthStore();
   const [favorites, setFavorites] = useState<FavoriteListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -164,7 +168,7 @@ export default function FavoritesScreen() {
       <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: theme.background }]}>
         <Stack.Screen options={{ headerShown: false }} />
         <PageHeader
-          title="المفضلة"
+          title={t('favorites.title')}
           variant="gradient"
         />
         <View style={styles.centerContainer}>
@@ -178,30 +182,30 @@ export default function FavoritesScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['left', 'right', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
       <PageHeader
-        title="المفضلة"
+        title={t('favorites.title')}
         variant="gradient"
-        onBack={() => router.replace('/')} 
+        onBack={() => router.replace(source === 'profile' ? '/profile' : '/')} 
       />
       
       {!isAuthenticated ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="lock-closed-outline" size={64} color={theme.textMuted} />
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>تسجيل الدخول مطلوب</Text>
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>{t('favorites.loginRequired')}</Text>
           <Text style={[styles.emptyText, { color: theme.textMuted, marginBottom: 24 }]}>
-            يرجى تسجيل الدخول لمشاهدة إعلاناتك المفضلة
+            {t('favorites.loginRequiredMessage')}
           </Text>
           <TouchableOpacity 
             style={[styles.loginButton, { backgroundColor: theme.primary }]} 
             onPress={() => router.push('/(auth)/login')}
           >
-            <Text style={styles.loginButtonText}>تسجيل الدخول</Text>
+            <Text style={styles.loginButtonText}>{t('auth.login')}</Text>
           </TouchableOpacity>
         </View>
       ) : favorites.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="heart-outline" size={64} color={theme.textMuted} />
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>لا توجد إعلانات مفضلة</Text>
-          <Text style={[styles.emptyText, { color: theme.textMuted }]}>أضف إعلاناتك المفضلة لتسهيل الوصول إليها</Text>
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>{t('favorites.emptyTitle')}</Text>
+          <Text style={[styles.emptyText, { color: theme.textMuted }]}>{t('favorites.emptyMessage')}</Text>
         </View>
       ) : (
         <FlatList

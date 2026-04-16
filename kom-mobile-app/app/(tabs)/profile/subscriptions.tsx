@@ -8,16 +8,17 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  I18nManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../../context/ThemeContext';
+import { useAppTranslation, useLanguage } from '../../../context/LanguageContext';
 import api from '../../../services/api';
+import PageHeader from '../../../components/ui/page-header';
 
 interface SubscriptionPackage {
   id: string;
@@ -42,18 +43,16 @@ interface Subscription {
   package: SubscriptionPackage;
 }
 
-const RTL_TEXT = {
-  textAlign: 'right' as const,
-  writingDirection: 'rtl' as const,
-};
-
 // ✅ Unicode RTL mark (RLM) — يثبت الاتجاه مع الأرقام والرموز (: / .)
 const RLM = '\u200F';
 
 export default function SubscriptionsScreen() {
   const router = useRouter();
+  const { returnToListingId } = useLocalSearchParams<{ returnToListingId?: string }>();
   const navigation = useNavigation();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL, language } = useLanguage();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [packages, setPackages] = useState<SubscriptionPackage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +64,8 @@ export default function SubscriptionsScreen() {
   const cardBg = isDark ? '#111827' : '#FFFFFF';
   const textColor = isDark ? '#F8FAFC' : '#0A0B14';
   const mutedColor = isDark ? '#94A3B8' : '#64748B';
+  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
+  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
 
   const fetchData = async () => {
     try {
@@ -112,27 +113,27 @@ export default function SubscriptionsScreen() {
     let durationLabel: string;
     if (selectedDuration === '3' && pkg?.price3Months) {
       amount = Number(pkg.price3Months);
-      durationLabel = '3 أشهر';
+      durationLabel = t('subscriptions.threeMonths');
     } else if (selectedDuration === '6' && pkg?.price6Months) {
       amount = Number(pkg.price6Months);
-      durationLabel = '6 أشهر';
+      durationLabel = t('subscriptions.sixMonths');
     } else if (selectedDuration === '12' && pkg?.price12Months) {
       amount = Number(pkg.price12Months);
-      durationLabel = 'سنة كاملة';
+      durationLabel = t('subscriptions.oneYear');
     } else {
       amount = Number(pkg?.priceMonthly ?? 0);
-      durationLabel = 'شهر واحد';
+      durationLabel = t('subscriptions.oneMonth');
     }
 
     const amountStr = amount.toFixed(3);
 
     Alert.alert(
-      'الدفع عبر Benefit',
-      `${RLM}الباقة: ${pkg?.name}\n${RLM}المدة: ${durationLabel}\n${RLM}المبلغ: ${RLM}${amountStr}${RLM} د.ب${RLM}`,
+      t('subscriptions.benefitPaymentTitle'),
+      `${RLM}${t('subscriptions.packageLabel')}: ${pkg?.name}\n${RLM}${t('subscriptions.durationLabel')}: ${durationLabel}\n${RLM}${t('subscriptions.amountLabel')}: ${RLM}${amountStr}${RLM} ${t('common.bhd')}${RLM}`,
       [
-        { text: 'إلغاء', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'متابعة',
+          text: t('subscriptions.continue'),
           onPress: async () => {
             setSubscribing(true);
             try {
@@ -152,6 +153,7 @@ export default function SubscriptionsScreen() {
                   amount: String(transaction.amount),
                   currency: transaction.currency ?? 'BHD',
                   paymentType: 'SUBSCRIPTION',
+                  returnToListingId: returnToListingId ?? '',
                 },
               });
             } catch (e: any) {
@@ -160,11 +162,11 @@ export default function SubscriptionsScreen() {
                 e?.response?.data?.error?.message ||
                 e?.response?.data?.message ||
                 (Array.isArray(e?.response?.data?.error?.details) ? e.response.data.error.details[0] : null);
-              let msg = serverMsg || e?.message || 'فشل إنشاء عملية الدفع';
+              let msg = serverMsg || e?.message || t('subscriptions.paymentInitFailed');
               if (e?.response?.status === 403) {
-                msg = serverMsg || 'غير مصرح: حسابك يحتاج أن يكون معرضًا (Showroom) لإجراء هذه العملية.';
+                msg = serverMsg || t('subscriptions.showroomOnlyError');
               }
-              Alert.alert('خطأ', msg);
+              Alert.alert(t('common.error'), msg);
             } finally {
               setSubscribing(false);
             }
@@ -181,7 +183,7 @@ export default function SubscriptionsScreen() {
   const isActive = subscription?.status === 'ACTIVE' && daysLeft > 0;
 
   const endDateText = subscription?.endDate
-    ? new Date(subscription.endDate).toLocaleDateString('ar-BH')
+    ? new Date(subscription.endDate).toLocaleDateString(language === 'ar' ? 'ar-BH' : 'en-GB')
     : '';
 
   if (loading) {
@@ -196,45 +198,41 @@ export default function SubscriptionsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: '#0E1830' }]} edges={['left', 'right', 'bottom']}>
       <StatusBar style='light' />
 
-      {/* Header */}
-      <LinearGradient
-        colors={['#0E1830', '#162444']}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-        style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-forward" size={20} color='#D4AF37' />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, RTL_TEXT, { color: '#D4AF37' }]}>اشتراكاتي</Text>
-        <View style={{ width: 40 }} />
-      </LinearGradient>
+      <PageHeader
+        title={t('subscriptions.title')}
+        variant="gradient"
+        onBack={() => router.replace('/profile')}
+      />
 
       <ScrollView style={{ backgroundColor: bg }} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Current subscription card */}
         {subscription && subscription.package && (
           <View style={[styles.card, { backgroundColor: cardBg }]}>
-            <View style={styles.cardHeader}>
-              <Text style={[styles.cardTitle, { color: textColor }, RTL_TEXT]}>الاشتراك الحالي</Text>
+            <View style={[styles.cardHeader, rowDirection]}>
+              <Text style={[styles.cardTitle, { color: textColor }, dirText]}>{t('subscriptions.currentSubscription')}</Text>
               <View style={[styles.statusBadge, { backgroundColor: isActive ? '#DCFCE7' : '#FEE2E2' }]}>
-                <Text style={[styles.statusText, { color: isActive ? '#16A34A' : '#DC2626' }, RTL_TEXT]}>
-                  {isActive ? 'نشط' : 'منتهي'}
+                <Text style={[styles.statusText, { color: isActive ? '#16A34A' : '#DC2626' }, dirText]}>
+                  {isActive ? t('subscriptions.statusActive') : t('subscriptions.statusExpired')}
                 </Text>
               </View>
             </View>
 
-            <Text style={[styles.pkgName, { color: '#D4AF37' }, RTL_TEXT]}>{subscription.package.name}</Text>
+            <Text style={[styles.pkgName, { color: '#D4AF37' }, dirText]}>{subscription.package.name}</Text>
 
-            <View style={styles.statsRow}>
+            <View style={[styles.statsRow, rowDirection]}>
               <StatBox
-                label="الإعلانات المستخدمة"
+                label={t('subscriptions.listingsUsed')}
                 // ✅ ثبّت الاتجاه لأن فيه " / " وأرقام
                 value={`${RLM}${subscription.listingsUsed} / ${subscription.package.maxListings ?? 0}${RLM}`}
                 color="#3B82F6"
+                isRTL={isRTL}
               />
               <StatBox
-                label="الأيام المتبقية"
+                label={t('subscriptions.daysLeft')}
                 // ✅ ثبّت الاتجاه لأن فيه رقم + كلمة
-                value={`${RLM}${daysLeft}${RLM} يوم`}
+                value={`${RLM}${daysLeft}${RLM} ${t('subscriptions.dayUnit')}`}
                 color={daysLeft <= 3 ? '#EF4444' : '#16A34A'}
+                isRTL={isRTL}
               />
             </View>
 
@@ -248,9 +246,9 @@ export default function SubscriptionsScreen() {
               />
             </View>
 
-            <Text style={[styles.dateText, { color: mutedColor }, RTL_TEXT]}>
+            <Text style={[styles.dateText, { color: mutedColor }, dirText]}>
               {/* ✅ ":" + تاريخ -> لازم RLM */}
-              {RLM}ينتهي في:{RLM} {endDateText}
+              {RLM}{t('subscriptions.endsOn')}:{RLM} {endDateText}
             </Text>
           </View>
         )}
@@ -259,22 +257,22 @@ export default function SubscriptionsScreen() {
         {subscription && !subscription.package && (
           <View style={[styles.card, styles.emptyCard, { backgroundColor: cardBg }]}>
             <Ionicons name="warning-outline" size={48} color="#EF4444" style={{ marginBottom: 12 }} />
-            <Text style={[styles.emptyText, { color: textColor }, RTL_TEXT]}>الباقة غير متاحة</Text>
-            <Text style={[styles.emptySub, { color: mutedColor }, RTL_TEXT]}>اختر باقة جديدة أدناه</Text>
+            <Text style={[styles.emptyText, { color: textColor }, dirText]}>{t('subscriptions.packageUnavailable')}</Text>
+            <Text style={[styles.emptySub, { color: mutedColor }, dirText]}>{t('subscriptions.chooseNewPackageBelow')}</Text>
           </View>
         )}
 
         {!subscription && (
           <View style={[styles.card, styles.emptyCard, { backgroundColor: cardBg }]}>
             <Ionicons name="ribbon-outline" size={48} color="#D4AF37" style={{ marginBottom: 12 }} />
-            <Text style={[styles.emptyText, { color: textColor }, RTL_TEXT]}>لا يوجد اشتراك نشط</Text>
-            <Text style={[styles.emptySub, { color: mutedColor }, RTL_TEXT]}>اختر إحدى الباقات أدناه للبدء</Text>
+            <Text style={[styles.emptyText, { color: textColor }, dirText]}>{t('subscriptions.noActiveSubscription')}</Text>
+            <Text style={[styles.emptySub, { color: mutedColor }, dirText]}>{t('subscriptions.choosePackageToStart')}</Text>
           </View>
         )}
 
         {/* Packages */}
-        <Text style={[styles.sectionTitle, { color: textColor }, RTL_TEXT]}>
-          {isActive ? 'تجديد أو تغيير الباقة' : 'اختر باقة'}
+        <Text style={[styles.sectionTitle, { color: textColor }, dirText]}>
+          {isActive ? t('subscriptions.renewOrChangePackage') : t('subscriptions.choosePackage')}
         </Text>
 
         {packages.map((pkg) => {
@@ -283,11 +281,11 @@ export default function SubscriptionsScreen() {
 
           // Compute price options that exist for this package
           const durationOptions: { key: '1' | '3' | '6' | '12'; label: string; price: number; saving?: string }[] = [
-            { key: '1', label: 'شهر', price: Number(pkg.priceMonthly) },
+            { key: '1', label: t('subscriptions.oneMonthShort'), price: Number(pkg.priceMonthly) },
           ];
-          if (pkg.price3Months) durationOptions.push({ key: '3', label: '3 أشهر', price: Number(pkg.price3Months) });
-          if (pkg.price6Months) durationOptions.push({ key: '6', label: '6 أشهر', price: Number(pkg.price6Months) });
-          if (pkg.price12Months) durationOptions.push({ key: '12', label: 'سنة', price: Number(pkg.price12Months) });
+          if (pkg.price3Months) durationOptions.push({ key: '3', label: t('subscriptions.threeMonths'), price: Number(pkg.price3Months) });
+          if (pkg.price6Months) durationOptions.push({ key: '6', label: t('subscriptions.sixMonths'), price: Number(pkg.price6Months) });
+          if (pkg.price12Months) durationOptions.push({ key: '12', label: t('subscriptions.oneYearShort'), price: Number(pkg.price12Months) });
 
           // Active price to display (when this card is selected use selectedDuration)
           const activeOption = durationOptions.find((o) => o.key === selectedDuration) ?? durationOptions[0];
@@ -315,18 +313,18 @@ export default function SubscriptionsScreen() {
             >
               {isCurrent && (
                 <View style={styles.currentBadge}>
-                  <Text style={[styles.currentBadgeText, RTL_TEXT]}>الباقة الحالية</Text>
+                  <Text style={[styles.currentBadgeText, dirText]}>{t('subscriptions.currentPackage')}</Text>
                 </View>
               )}
 
               <View style={styles.pkgRow}>
-                <Text style={[styles.pkgCardName, { color: textColor }, RTL_TEXT]}>{pkg.name}</Text>
+                <Text style={[styles.pkgCardName, { color: textColor }, dirText]}>{pkg.name}</Text>
 
                 <View style={styles.priceCol}>
-                  <Text style={[styles.pkgPrice, RTL_TEXT]}>
-                    {RLM}{pkgAmount}{RLM} د.ب{RLM}
+                  <Text style={[styles.pkgPrice, dirText]}>
+                    {RLM}{pkgAmount}{RLM} {t('common.bhd')}{RLM}
                   </Text>
-                  <Text style={[styles.pkgPriceSub, { color: mutedColor }, RTL_TEXT]}>
+                  <Text style={[styles.pkgPriceSub, { color: mutedColor }, dirText]}>
                     {RLM} / {activeOption.label} {RLM}
                   </Text>
                 </View>
@@ -335,23 +333,23 @@ export default function SubscriptionsScreen() {
               {pkg.discountNote && (
                 <View style={styles.discountBadge}>
                   <Ionicons name="pricetag" size={12} color="#16A34A" />
-                  <Text style={[styles.discountText, RTL_TEXT]}>{pkg.discountNote}</Text>
+                  <Text style={[styles.discountText, dirText]}>{pkg.discountNote}</Text>
                 </View>
               )}
 
-              {pkg.description && <Text style={[styles.pkgDesc, { color: mutedColor }, RTL_TEXT]}>{pkg.description}</Text>}
+              {pkg.description && <Text style={[styles.pkgDesc, { color: mutedColor }, dirText]}>{pkg.description}</Text>}
 
-              <View style={styles.pkgFeature}>
+              <View style={[styles.pkgFeature, rowDirection]}>
                 <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
-                <Text style={[styles.pkgFeatureText, { color: mutedColor }, RTL_TEXT]}>
-                  حتى {RLM}{pkg.maxListings}{RLM} إعلانات نشطة
+                <Text style={[styles.pkgFeatureText, { color: mutedColor }, dirText]}>
+                  {t('subscriptions.activeListingsUpTo', { count: pkg.maxListings })}
                 </Text>
               </View>
 
-              <View style={styles.pkgFeature}>
+              <View style={[styles.pkgFeature, rowDirection]}>
                 <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
-                <Text style={[styles.pkgFeatureText, { color: mutedColor }, RTL_TEXT]}>
-                  مدة {RLM}{pkg.durationDays}{RLM} يوم
+                <Text style={[styles.pkgFeatureText, { color: mutedColor }, dirText]}>
+                  {t('subscriptions.durationDays', { count: pkg.durationDays })}
                 </Text>
               </View>
 
@@ -379,7 +377,7 @@ export default function SubscriptionsScreen() {
                         style={[
                           styles.durationBtnText,
                           { color: selectedDuration === opt.key ? '#0A0B14' : textColor },
-                          RTL_TEXT,
+                          dirText,
                         ]}
                       >
                         {opt.label}
@@ -388,10 +386,10 @@ export default function SubscriptionsScreen() {
                         style={[
                           styles.durationBtnPrice,
                           { color: selectedDuration === opt.key ? '#0A0B14' : mutedColor },
-                          RTL_TEXT,
+                          dirText,
                         ]}
                       >
-                        {opt.price.toFixed(3)} د.ب
+                        {opt.price.toFixed(3)} {t('common.bhd')}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -413,8 +411,8 @@ export default function SubscriptionsScreen() {
               {subscribing ? (
                 <ActivityIndicator color="#0A0B14" />
               ) : (
-                <Text style={[styles.subscribeBtnText, RTL_TEXT]}>
-                  {isActive ? 'تجديد / تغيير الباقة عبر Benefit' : 'الدفع عبر Benefit'}
+                <Text style={[styles.subscribeBtnText, dirText]}>
+                  {isActive ? t('subscriptions.renewOrChangeBenefit') : t('subscriptions.payBenefit')}
                 </Text>
               )}
             </LinearGradient>
@@ -422,8 +420,8 @@ export default function SubscriptionsScreen() {
         )}
 
         {isActive && !selectedPkg && (
-          <Text style={[styles.renewNote, { color: mutedColor }, RTL_TEXT]}>
-            يمكنك تجديد أو تغيير باقتك بعد انتهاء الاشتراك الحالي.
+          <Text style={[styles.renewNote, { color: mutedColor }, dirText]}>
+            {t('subscriptions.renewNote')}
           </Text>
         )}
       </ScrollView>
@@ -431,11 +429,12 @@ export default function SubscriptionsScreen() {
   );
 }
 
-function StatBox({ label, value, color }: { label: string; value: string; color: string }) {
+function StatBox({ label, value, color, isRTL }: { label: string; value: string; color: string; isRTL: boolean }) {
+  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
   return (
     <View style={statStyles.box}>
-      <Text style={[statStyles.value, { color }, RTL_TEXT]}>{value}</Text>
-      <Text style={[statStyles.label, RTL_TEXT]}>{label}</Text>
+      <Text style={[statStyles.value, { color }, dirText]}>{value}</Text>
+      <Text style={[statStyles.label, dirText]}>{label}</Text>
     </View>
   );
 }
@@ -454,27 +453,8 @@ const statStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, writingDirection: 'rtl' },
+  container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    paddingTop: 12,
-    writingDirection: 'rtl',
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
 
   scrollContent: { padding: 16, paddingBottom: 48 },
 

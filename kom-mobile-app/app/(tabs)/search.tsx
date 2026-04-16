@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '@/services/api';
 import { useTheme } from '@/context/ThemeContext';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 import { Colors } from '@/constants/Colors';
 import { CarBrands, MotorcycleBrands, VehicleColors } from '@/constants/CarData';
 
@@ -57,11 +58,33 @@ type SafeModelItem = {
   valueAr: string;
 };
 
-function buildSafeModelItems(brand: { models?: unknown[] } | null | undefined): SafeModelItem[] {
+type VehicleBrand = (typeof CarBrands)[number];
+
+const SEARCH_CAR_BRANDS = CarBrands.filter((brand) => brand.id !== 'all');
+const SEARCH_MOTORCYCLE_BRANDS = MotorcycleBrands.filter((brand) => brand.id !== 'all');
+
+function getListingVehicleSpecs(item: any) {
+  const car = item?.carDetails || item?.details?.car || item?.car || null;
+  const motorcycle = item?.motorcycleDetails || item?.details?.motorcycle || item?.motorcycle || null;
+  const specs = car || motorcycle || item || {};
+
+  return {
+    make: safeString(specs?.make || item?.make),
+    model: safeString(specs?.model || item?.model),
+    year: safeString(specs?.year || item?.year),
+    color: safeString(specs?.color || item?.color),
+  };
+}
+
+function buildSafeModelItems(
+  brand: { models?: unknown[] } | null | undefined,
+  language: 'ar' | 'en',
+  t: (key: string, options?: Record<string, unknown>) => string,
+): SafeModelItem[] {
   const result: SafeModelItem[] = [];
   result.push({
     key: 'safe-model-all',
-    label: 'الكل',
+    label: t('search.categoryAll'),
     valueEn: '__ALL__',
     valueAr: '__ALL__',
   });
@@ -78,11 +101,12 @@ function buildSafeModelItems(brand: { models?: unknown[] } | null | undefined): 
       const modelObj = model as Record<string, unknown>;
       enStr = typeof modelObj.en === 'string' ? modelObj.en : '';
       arStr = typeof modelObj.ar === 'string' ? modelObj.ar : '';
-      labelStr = arStr || enStr || `موديل ${i + 1}`;
+      labelStr = language === 'ar' ? (arStr || enStr) : (enStr || arStr);
+      labelStr = labelStr || t('search.modelFallback', { index: i + 1 });
       if (!enStr) enStr = arStr || `model_${i}`;
       if (!arStr) arStr = enStr;
     } else {
-      labelStr = `موديل ${i + 1}`; enStr = `unknown_model_${i}`; arStr = labelStr;
+      labelStr = t('search.modelFallback', { index: i + 1 }); enStr = `unknown_model_${i}`; arStr = labelStr;
     }
     
     result.push({
@@ -95,7 +119,7 @@ function buildSafeModelItems(brand: { models?: unknown[] } | null | undefined): 
   
   result.push({
     key: 'safe-model-other',
-    label: 'أخرى',
+    label: t('common.other'),
     valueEn: '__OTHER__',
     valueAr: '__OTHER__',
   });
@@ -113,6 +137,8 @@ const years = Array.from({ length: 30 }, (_, i) => (new Date().getFullYear() - i
 
 export default function SearchScreen() {
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { language, isRTL } = useLanguage();
   
   // Theme Definition
   const theme = {
@@ -135,7 +161,7 @@ export default function SearchScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [tempCategory, setTempCategory] = useState<Category>('ALL'); // For modal logic before apply
   
-  const [selectedBrand, setSelectedBrand] = useState<any>(null);
+  const [selectedBrand, setSelectedBrand] = useState<VehicleBrand | null>(null);
   const [selectedModel, setSelectedModel] = useState<SafeModelItem | null>(null);
   
   const [sortOption, setSortOption] = useState<SortOption>('date_desc');
@@ -144,12 +170,17 @@ export default function SearchScreen() {
 
   const [appliedFilters, setAppliedFilters] = useState({
      category: 'ALL',
-     make: null as any,
-     model: null as any,
+      make: null as VehicleBrand | null,
+      model: null as SafeModelItem | null,
      year: '',
      color: '',
      sort: 'date_desc' as SortOption
   });
+
+    const visibleBrands = useMemo(
+     () => (tempCategory === 'MOTORCYCLE' ? SEARCH_MOTORCYCLE_BRANDS : SEARCH_CAR_BRANDS),
+     [tempCategory]
+    );
 
   const fetchListings = useCallback(async (
     searchQuery: string,
@@ -176,19 +207,19 @@ export default function SearchScreen() {
       }
       if (filters.make) {
         const makeName = (filters.make.nameAr || filters.make.name || '').toLowerCase();
-        data = data.filter(item => safeString(item.make).toLowerCase() === makeName);
+        data = data.filter(item => getListingVehicleSpecs(item).make.toLowerCase() === makeName);
       }
       if (filters.model) {
         const val = filters.model.valueAr;
         if (val && val !== '__ALL__' && val !== '__OTHER__') {
-          data = data.filter(item => safeString(item.model) === val);
+          data = data.filter(item => getListingVehicleSpecs(item).model === val);
         }
       }
       if (filters.year) {
-        data = data.filter(item => String(item.year) === filters.year);
+        data = data.filter(item => getListingVehicleSpecs(item).year === filters.year);
       }
       if (filters.color) {
-        data = data.filter(item => safeString(item.color).trim() === filters.color.trim());
+        data = data.filter(item => getListingVehicleSpecs(item).color.trim() === filters.color.trim());
       }
 
       setListings(data);
@@ -249,8 +280,14 @@ export default function SearchScreen() {
   };
 
   const getListingTitle = (item: any) => safeString(item?.title, '');
-  const getListingCity = (item: any) => safeString(item?.city, 'البحرين');
+  const getListingCity = (item: any) => safeString(item?.city, t('common.bahrain'));
   const toText = safeString;
+  const getBrandLabel = (brand: any) => language === 'ar' ? (brand?.nameAr || brand?.name || '') : (brand?.name || brand?.nameAr || '');
+  const getTypeLabel = (type: string) => (
+    type === 'PLATE' ? t('listing.types.plate') :
+    type === 'MOTORCYCLE' ? t('listing.types.motorcycle') :
+    type === 'PART' ? t('listing.types.part') : t('listing.types.car')
+  );
 
   const getImageUri = (item: any) => {
     const media = item?.media;
@@ -275,10 +312,7 @@ export default function SearchScreen() {
       item.type === 'PLATE'      ? '#059669' :
       item.type === 'PART'       ? '#F59E0B' :
       '#3B82F6';
-    const typeLabel =
-      item.type === 'PLATE' ? 'لوحة' :
-      item.type === 'MOTORCYCLE' ? 'دراجة' :
-      item.type === 'PART' ? 'قطعة' : 'سيارة';
+    const typeLabel = getTypeLabel(item.type);
 
     return (
       <TouchableOpacity
@@ -294,7 +328,7 @@ export default function SearchScreen() {
             {/* Price overlay */}
             <LinearGradient colors={['transparent','rgba(0,0,0,0.72)']} start={{x:0,y:0}} end={{x:0,y:1}} style={styles.priceOverlay}>
               <Text style={styles.priceText}>
-                {toText(typeof item.price === 'number' ? item.price.toLocaleString() : Number(item.price||0).toLocaleString())} د.ب
+                {toText(typeof item.price === 'number' ? item.price.toLocaleString() : Number(item.price||0).toLocaleString())} {t('common.bhd')}
               </Text>
             </LinearGradient>
             {/* Type badge */}
@@ -341,10 +375,10 @@ export default function SearchScreen() {
              if (value !== 'CAR' && value !== 'MOTORCYCLE') {
                  setSelectedBrand(null);
                  setSelectedModel(null);
-             } else if (value === 'CAR' && selectedBrand && !CarBrands.find(b => b.id === selectedBrand.id)) {
+             } else if (value === 'CAR' && selectedBrand && !SEARCH_CAR_BRANDS.find(b => b.id === selectedBrand.id)) {
                  setSelectedBrand(null);
                  setSelectedModel(null);
-             } else if (value === 'MOTORCYCLE' && selectedBrand && !MotorcycleBrands.find(b => b.id === selectedBrand.id)) {
+             } else if (value === 'MOTORCYCLE' && selectedBrand && !SEARCH_MOTORCYCLE_BRANDS.find(b => b.id === selectedBrand.id)) {
                  setSelectedBrand(null);
                  setSelectedModel(null);
              }
@@ -365,17 +399,18 @@ export default function SearchScreen() {
       {/* Header — navy gradient */}
       <LinearGradient colors={['#0E1830','#162444']} start={{x:0,y:0}} end={{x:1,y:1}} style={styles.header}>
         <TouchableOpacity onPress={() => router.replace('/')} style={styles.navBtn}>
-          <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+          <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color="#FFFFFF" />
         </TouchableOpacity>
-        <View style={styles.searchBar}>
+        <View style={[styles.searchBar, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
           <Ionicons name="search" size={17} color="#D4AF37" />
           <TextInput
             style={[styles.input, { color: '#FFFFFF' }]}
-            placeholder="ابحث عن سيارة..."
+            placeholder={t('search.placeholder')}
             placeholderTextColor="rgba(255,255,255,0.45)"
             value={query}
             onChangeText={setQuery}
-            textAlign="right"
+            textAlign={isRTL ? 'right' : 'left'}
+            writingDirection={isRTL ? 'rtl' : 'ltr'}
           />
           {query.length > 0 && (
             <TouchableOpacity onPress={() => setQuery('')}>
@@ -405,7 +440,7 @@ export default function SearchScreen() {
           keyboardShouldPersistTaps="handled" 
           ListEmptyComponent={
              <View style={styles.centered}>
-                <Text style={{ color: theme.muted }}>لا توجد نتائج</Text>
+               <Text style={{ color: theme.muted }}>{t('search.noResults')}</Text>
              </View>
           }
         />
@@ -421,41 +456,41 @@ export default function SearchScreen() {
         presentationStyle="pageSheet"
       >
         <SafeAreaView edges={['top']} style={[styles.modalContainer, { backgroundColor: theme.surface }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+            <View style={[styles.modalHeader, { flexDirection: isRTL ? 'row' : 'row-reverse', borderBottomColor: theme.border }]}>
                 <TouchableOpacity onPress={() => setModalVisible(false)}>
                     <Ionicons name="close" size={24} color={theme.text} />
                 </TouchableOpacity>
-                <Text style={[styles.modalTitle, { color: theme.text }]}>تصفية النتائج</Text>
+              <Text style={[styles.modalTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('search.filterTitle')}</Text>
                 <View style={{ width: 24 }} />
             </View>
 
             <ScrollView contentContainerStyle={styles.modalContent}>
                 
                 {/* Categories */}
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>الفئة</Text>
-                <View style={styles.tabsContainer}>
-                    {renderCategoryTab('الكل', 'ALL')}
-                    {renderCategoryTab('سيارات', 'CAR')}
-                    {renderCategoryTab('دراجات', 'MOTORCYCLE')}
-                    {renderCategoryTab('لوحات', 'PLATE')}
-                    {renderCategoryTab('قطع غيار', 'PART')}
+                <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.category')}</Text>
+                <View style={[styles.tabsContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                  {renderCategoryTab(t('search.categoryAll'), 'ALL')}
+                  {renderCategoryTab(t('search.categoryCars'), 'CAR')}
+                  {renderCategoryTab(t('search.categoryMotorcycles'), 'MOTORCYCLE')}
+                  {renderCategoryTab(t('search.categoryPlates'), 'PLATE')}
+                  {renderCategoryTab(t('search.categoryParts'), 'PART')}
                 </View>
 
                 {/* Sort By */}
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>الترتيب</Text>
-                <View style={styles.radioGroup}>
-                    {renderSortOption('التاريخ: الأحدث', 'date_desc')}
-                    {renderSortOption('التاريخ: الأقدم', 'date_asc')}
-                    {renderSortOption('السعر: الأقل', 'price_asc')}
-                    {renderSortOption('السعر: الأعلى', 'price_desc')}
+                <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.sort')}</Text>
+                <View style={[styles.radioGroup, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                  {renderSortOption(t('search.sortDateNewest'), 'date_desc')}
+                  {renderSortOption(t('search.sortDateOldest'), 'date_asc')}
+                  {renderSortOption(t('search.sortPriceLowest'), 'price_asc')}
+                  {renderSortOption(t('search.sortPriceHighest'), 'price_desc')}
                 </View>
 
                 {/* Make & Model (Only for Car/Moto) */}
                 {(tempCategory === 'CAR' || tempCategory === 'MOTORCYCLE') && (
                     <>
-                        <Text style={[styles.sectionTitle, { color: theme.text }]}>الشركة المصنعة</Text>
+                        <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.make')}</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-                            {(tempCategory === 'CAR' ? CarBrands : MotorcycleBrands).map((brand) => (
+                          {visibleBrands.map((brand) => (
                                 <TouchableOpacity
                                     key={brand.id}
                                     style={[
@@ -469,8 +504,8 @@ export default function SearchScreen() {
                                     }}
                                 >
                                     <Image source={{ uri: brand.logo }} style={styles.brandLogo} contentFit="contain" />
-                                    <Text style={[styles.brandName, { color: selectedBrand?.id === brand.id ? '#fff' : theme.text }]}>
-                                        {brand.nameAr}
+                                    <Text style={[styles.brandName, { color: selectedBrand?.id === brand.id ? '#fff' : theme.text, textAlign: isRTL ? 'right' : 'left' }]}>
+                                      {getBrandLabel(brand)}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
@@ -479,9 +514,9 @@ export default function SearchScreen() {
                         {/* Models */}
                         {selectedBrand && (
                            <>
-                             <Text style={[styles.sectionTitle, { color: theme.text }]}>الموديل</Text>
+                              <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.model')}</Text>
                              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-                                {buildSafeModelItems(selectedBrand).map((model) => (
+                                {buildSafeModelItems(selectedBrand, language, t as any).map((model) => (
                                     <TouchableOpacity
                                         key={model.key}
                                         style={[
@@ -491,7 +526,7 @@ export default function SearchScreen() {
                                         ]}
                                         onPress={() => setSelectedModel(model)}
                                     >
-                                        <Text style={[styles.chipText, { color: selectedModel?.key === model.key ? '#fff' : theme.text }]}>
+                                        <Text style={[styles.chipText, { color: selectedModel?.key === model.key ? '#fff' : theme.text, textAlign: isRTL ? 'right' : 'left' }]}>
                                             {model.label}
                                         </Text>
                                     </TouchableOpacity>
@@ -501,13 +536,13 @@ export default function SearchScreen() {
                         )}
                         
                         {/* Year */}
-                        <Text style={[styles.sectionTitle, { color: theme.text }]}>سنة الصنع</Text>
+                        <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.year')}</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
                             <TouchableOpacity
                                 style={[styles.chip, { borderColor: theme.border }, selectedYear === '' && styles.chipSelected]}
                                 onPress={() => setSelectedYear('')}
                             >
-                                <Text style={[styles.chipText, { color: selectedYear === '' ? '#fff' : theme.text }]}>الكل</Text>
+                                <Text style={[styles.chipText, { color: selectedYear === '' ? '#fff' : theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.categoryAll')}</Text>
                             </TouchableOpacity>
                             {years.map(year => (
                                 <TouchableOpacity
@@ -525,13 +560,13 @@ export default function SearchScreen() {
                         </ScrollView>
 
                         {/* Color */}
-                        <Text style={[styles.sectionTitle, { color: theme.text }]}>اللون</Text>
+                        <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.color')}</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
                              <TouchableOpacity
                                 style={[styles.chip, { borderColor: theme.border }, selectedColor === '' && styles.chipSelected]}
                                 onPress={() => setSelectedColor('')}
                             >
-                                <Text style={[styles.chipText, { color: selectedColor === '' ? '#fff' : theme.text }]}>الكل</Text>
+                                <Text style={[styles.chipText, { color: selectedColor === '' ? '#fff' : theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.categoryAll')}</Text>
                             </TouchableOpacity>
                             {VehicleColors.map(color => (
                                  <TouchableOpacity
@@ -555,10 +590,10 @@ export default function SearchScreen() {
 
             <View style={[styles.modalFooter, { borderTopColor: theme.border }]}>
                 <TouchableOpacity style={styles.resetButton} onPress={resetFilters}>
-                    <Text style={[styles.resetButtonText, { color: theme.text }]}>إعادة تعيين</Text>
+                <Text style={[styles.resetButtonText, { color: theme.text }]}>{t('search.reset')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
-                    <Text style={styles.applyButtonText}>تطبيق الفلتر</Text>
+                <Text style={styles.applyButtonText}>{t('search.apply')}</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
@@ -584,7 +619,6 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     height: 44,
     borderRadius: 22,
@@ -597,7 +631,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: '100%',
-    textAlign: 'right',
     fontSize: 15,
   },
   listContainer: { padding: 16, paddingBottom: 150 },
@@ -617,7 +650,7 @@ const styles = StyleSheet.create({
   noImage: { justifyContent: 'center', alignItems: 'center' },
   noImageText: { fontSize: 12 },
   cardContent: { padding: 10 },
-  cardTitle: { fontSize: 13, fontWeight: '700', textAlign: 'right', marginBottom: 5, writingDirection: 'rtl' },
+  cardTitle: { fontSize: 13, fontWeight: '700', marginBottom: 5 },
   cardFooterRow: { flexDirection: 'row', marginTop: 4 },
   cardMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   cardMetaText: { fontSize: 10, fontWeight: '500' },
@@ -628,20 +661,20 @@ const styles = StyleSheet.create({
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, paddingEnd: 0, borderBottomWidth: 1 },
   modalTitle: { fontSize: 18, fontWeight: 'bold' },
   modalContent: { padding: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 12, marginTop: 16, textAlign: 'right', width: '100%' },
+  sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 12, marginTop: 16, width: '100%' },
   
-  tabsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  tabsContainer: { flexWrap: 'wrap', gap: 8 },
   tabItem: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, backgroundColor: '#f3f4f6' },
   tabItemSelected: { backgroundColor: '#0E1830' },
   tabText: { fontSize: 14, color: '#0A0B14' },
   tabTextSelected: { color: '#D4AF37', fontWeight: '700' },
 
-  radioGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  radioGroup: { flexWrap: 'wrap', gap: 8 },
   radioButton: { borderWidth: 1, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 12 },
   radioButtonSelected: { backgroundColor: '#0E1830', borderColor: '#D4AF37' },
   radioText: { fontSize: 13 },
 
-  horizontalScroll: { marginBottom: 8, writingDirection: 'rtl' },
+  horizontalScroll: { marginBottom: 8 },
   brandChip: { flexDirection: 'row', alignItems: 'center', padding: 8, borderWidth: 1, borderRadius: 12, marginStart: 8, minWidth: 100, gap: 8 },
   brandChipSelected: { backgroundColor: '#0E1830', borderColor: '#D4AF37' },
   brandLogo: { width: 24, height: 24 },

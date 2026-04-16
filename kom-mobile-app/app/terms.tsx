@@ -1,12 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
+import { PageHeader } from '@/components/ui/page-header';
 
 export default function TermsScreen() {
   const router = useRouter();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
   const { isDark } = useTheme();
 
   const theme = {
@@ -14,74 +17,62 @@ export default function TermsScreen() {
     border: isDark ? '#334155' : '#e2e8f0',
     text: isDark ? '#e5e7eb' : '#0f172a',
     body: isDark ? '#cbd5e1' : '#334155',
-    muted: isDark ? '#94a3b8' : '#94a3b8',
   };
+  const textDirection = isRTL ? 'rtl' : 'ltr';
+  const textAlign = isRTL ? 'right' : 'left';
 
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View style={[styles.headerBar, { borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-forward" size={24} color={theme.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>الشروط والأحكام</Text>
-        <View style={styles.backButton} />
-      </View>
+      <PageHeader
+        title={t('terms.pageTitle')}
+        backgroundColor={theme.background}
+        borderColor={theme.border}
+        textColor={theme.text}
+        variant="light"
+        onBack={() => router.replace('/settings')}
+      />
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.contentWrapper}>
-          <Text style={[styles.title, { color: theme.text }]}>شروط وأحكام تطبيق ملك السوق (KOM)</Text>
+          <Text style={[styles.title, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.heading')}</Text>
 
-          <Text style={[styles.paragraph, { color: theme.body }]}>
-            باستخدامك لتطبيق ملك السوق (KOM)، فإنك توافق على الشروط والأحكام التالية. يرجى قراءتها بعناية قبل استخدام التطبيق.
-          </Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.intro')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>1. قبول الشروط</Text>
-          <Text style={[styles.paragraph, { color: theme.body }]}>
-            باستخدام التطبيق، تؤكد أنك قد قرأت وفهمت ووافقت على هذه الشروط. إذا كنت لا توافق على أي من هذه الشروط، يرجى عدم استخدام التطبيق.
-          </Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.acceptTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.acceptBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>2. وصف الخدمة</Text>
-          <Text style={[styles.paragraph, { color: theme.body }]}>
-            تطبيق ملك السوق (KOM) هو منصة إلكترونية لإعلانات بيع وشراء السيارات في البحرين. يتيح التطبيق للأفراد والمعارض نشر إعلاناتهم والتواصل مع المشترين المحتملين.
-          </Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.serviceTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.serviceBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>3. التسجيل والحساب</Text>
-          <Text style={[styles.bullet, { color: theme.body }]}>• يجب أن تكون بياناتك صحيحة ومحدثة عند التسجيل.</Text>
-          <Text style={[styles.bullet, { color: theme.body }]}>• أنت مسؤول عن الحفاظ على سرية كلمة المرور الخاصة بك.</Text>
-          <Text style={[styles.bullet, { color: theme.body }]}>• يحق للإدارة رفض أو إيقاف أي حساب يخالف هذه الشروط.</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.accountTitle')}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.accountBullet1')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.accountBullet2')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.accountBullet3')}`}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>4. قواعد نشر الإعلانات</Text>
-          <Text style={[styles.bullet, { color: theme.body }]}>• يجب أن تكون جميع المعلومات الواردة في الإعلان صحيحة ودقيقة.</Text>
-          <Text style={[styles.bullet, { color: theme.body }]}>• يُحظر نشر إعلانات مضللة أو احتيالية.</Text>
-          <Text style={[styles.bullet, { color: theme.body }]}>• يُحظر نشر محتوى مسيء أو غير لائق.</Text>
-          <Text style={[styles.bullet, { color: theme.body }]}>• يحق للإدارة رفض أو حذف أي إعلان يخالف هذه القواعد.</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.listingsTitle')}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.listingsBullet1')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.listingsBullet2')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.listingsBullet3')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.listingsBullet4')}`}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>5. المسؤولية</Text>
-          <Text style={[styles.paragraph, { color: theme.body }]}>
-            تطبيق ملك السوق هو منصة وسيطة فقط، ولا يتحمل مسؤولية أي صفقة تتم بين البائع والمشتري. جميع المعاملات هي على مسؤولية الأطراف المعنية.
-          </Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.liabilityTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.liabilityBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>6. الملكية الفكرية</Text>
-          <Text style={[styles.paragraph, { color: theme.body }]}>
-            جميع حقوق الملكية الفكرية المتعلقة بالتطبيق محفوظة لشركة ملك السوق. لا يجوز نسخ أو توزيع أي محتوى من التطبيق دون إذن مسبق.
-          </Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.ipTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.ipBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>7. إنهاء الخدمة</Text>
-          <Text style={[styles.paragraph, { color: theme.body }]}>
-            يحق لنا إنهاء أو تعليق حسابك في أي وقت في حال مخالفة هذه الشروط، دون الحاجة إلى إشعار مسبق.
-          </Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.terminationTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.terminationBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>8. التعديلات</Text>
-          <Text style={[styles.paragraph, { color: theme.body }]}>
-            نحتفظ بالحق في تعديل هذه الشروط في أي وقت. سيتم إخطارك بأي تغييرات جوهرية عبر التطبيق.
-          </Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.changesTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.changesBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>9. التواصل معنا</Text>
-          <Text style={[styles.paragraph, { color: theme.body }]}>لأي استفسارات، تواصل معنا عبر:</Text>
-          <Text style={[styles.bullet, { color: theme.body }]}>• البريد الإلكتروني: support@kotm.app</Text>
-          <Text style={[styles.bullet, { color: theme.body }]}>• الموقع: https://kotm.app</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.contactTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.contactIntro')}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.email')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.website')}`}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -93,45 +84,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  headerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#0f172a',
-    textAlign: 'center',
-    flex: 1,
-  },
   content: {
     padding: 20,
     paddingBottom: 40,
-    alignItems: 'flex-end',
+    alignItems: 'stretch',
     width: '100%',
   },
   contentWrapper: {
     width: '100%',
-    alignItems: 'flex-end',
+    alignItems: 'stretch',
     alignSelf: 'stretch',
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
-    textAlign: 'right',
-    writingDirection: 'rtl',
     width: '100%',
     alignSelf: 'stretch',
   },
@@ -140,16 +107,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 12,
     marginBottom: 6,
-    textAlign: 'right',
-    writingDirection: 'rtl',
     width: '100%',
     alignSelf: 'stretch',
   },
   paragraph: {
     fontSize: 14,
     lineHeight: 22,
-    textAlign: 'right',
-    writingDirection: 'rtl',
     marginBottom: 6,
     width: '100%',
     alignSelf: 'stretch',
@@ -157,8 +120,6 @@ const styles = StyleSheet.create({
   bullet: {
     fontSize: 14,
     lineHeight: 22,
-    textAlign: 'right',
-    writingDirection: 'rtl',
     width: '100%',
     alignSelf: 'stretch',
   },

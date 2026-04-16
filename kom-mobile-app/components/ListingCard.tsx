@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -17,16 +18,18 @@ interface ListingCardProps {
   viewsCount?: number;
 }
 
-const typeLabel = (t: string) =>
-  t === 'CAR' ? 'سيارة' : t === 'MOTORCYCLE' ? 'دراجة' : t === 'PLATE' ? 'لوحة' : 'قطعة';
+const typeLabelKey = (t: string) =>
+  t === 'CAR' ? 'listing.types.car' : t === 'MOTORCYCLE' ? 'listing.types.motorcycle' : t === 'PLATE' ? 'listing.types.plate' : 'listing.types.part';
 
 const typeColor = (t: string) =>
   t === 'CAR' ? '#3B82F6' : t === 'MOTORCYCLE' ? '#8B5CF6' : t === 'PLATE' ? '#059669' : '#F59E0B';
 
 export default function ListingCard({ id, title, price, image, location, type, viewsCount }: ListingCardProps) {
+  const { isRTL } = useLanguage();
+  const { t } = useAppTranslation();
   const accent = typeColor(type);
   return (
-    <Link href={`/listing/${id}`} asChild>
+    <Link href={{ pathname: '/listing/[id]', params: { id } }} asChild>
       <TouchableOpacity style={styles.card} activeOpacity={0.92}>
         {/* ── Image Section ── */}
         <View style={styles.imageWrap}>
@@ -52,36 +55,34 @@ export default function ListingCard({ id, title, price, image, location, type, v
           </View>
 
           {/* Type badge - colored accent */}
-          <View style={[styles.typeBadge, { backgroundColor: accent }]}>
-            <Text style={styles.typeText}>{typeLabel(type)}</Text>
+          <View style={[styles.typeBadge, isRTL ? styles.typeBadgeRtl : styles.typeBadgeLtr, { backgroundColor: accent }]}>
+            <Text style={[styles.typeText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t(typeLabelKey(type))}</Text>
           </View>
 
-          {/* Price inside the image - bottom left */}
-          <View style={styles.priceWrap}>
+          <View style={[styles.priceWrap, isRTL ? styles.priceWrapRtl : styles.priceWrapLtr, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
             <Text style={styles.priceValue}>{Number(price).toLocaleString()}</Text>
-            <Text style={styles.priceCur}>د.ب</Text>
+            <Text style={styles.priceCur}>{t('common.bhd')}</Text>
           </View>
         </View>
 
         {/* ── Content Section ── */}
-        <View style={styles.content}>
-          <Text style={styles.title} numberOfLines={2}>{title}</Text>
+        <View style={[styles.content, isRTL ? styles.contentRtl : styles.contentLtr]}>
+          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]} numberOfLines={2}>{title}</Text>
 
-          <View style={styles.metaRow}>
-            <View style={styles.metaItem}>
+          <View style={[styles.metaRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <View style={[styles.metaItem, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
               <Ionicons name="location-sharp" size={13} color="#9BA3B2" />
-              <Text style={styles.metaText}>{location || 'البحرين'}</Text>
+              <Text style={[styles.metaText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{location || t('common.bahrain')}</Text>
             </View>
 
-            <View style={styles.metaItem}>
+            <View style={[styles.metaItem, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
               <Ionicons name="eye-outline" size={13} color="#9BA3B2" />
-              <Text style={styles.metaText}>{viewsCount || 0}</Text>
+              <Text style={[styles.metaText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{viewsCount || 0}</Text>
             </View>
           </View>
         </View>
 
-        {/* Left accent stripe */}
-        <View style={[styles.accentStripe, { backgroundColor: accent }]} />
+        <View style={[styles.accentStripe, isRTL ? styles.accentStripeRtl : styles.accentStripeLtr, { backgroundColor: accent }]} />
       </TouchableOpacity>
     </Link>
   );
@@ -133,11 +134,16 @@ const styles = StyleSheet.create({
   typeBadge: {
     position: 'absolute',
     top: 12,
-    right: 12,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 10,
     zIndex: 2,
+  },
+  typeBadgeRtl: {
+    right: 12,
+  },
+  typeBadgeLtr: {
+    left: 12,
   },
   typeText: {
     color: '#FFFFFF',
@@ -148,11 +154,15 @@ const styles = StyleSheet.create({
   priceWrap: {
     position: 'absolute',
     bottom: 12,
-    right: 14,
-    flexDirection: 'row',
     alignItems: 'baseline',
     gap: 4,
     zIndex: 2,
+  },
+  priceWrapRtl: {
+    right: 14,
+  },
+  priceWrapLtr: {
+    left: 14,
   },
   priceValue: {
     color: '#D4AF37',
@@ -170,24 +180,25 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingVertical: 14,
+  },
+  contentRtl: {
     paddingStart: 22,
+  },
+  contentLtr: {
+    paddingEnd: 22,
   },
   title: {
     fontSize: 15,
     fontWeight: '700',
     color: '#0A0B14',
-    textAlign: 'right',
-    writingDirection: 'rtl',
     lineHeight: 22,
     marginBottom: 10,
   },
   metaRow: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   metaItem: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
@@ -198,11 +209,18 @@ const styles = StyleSheet.create({
   },
   accentStripe: {
     position: 'absolute',
-    left: 0,
     top: 0,
     bottom: 0,
     width: 4,
+  },
+  accentStripeRtl: {
+    left: 0,
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
+  },
+  accentStripeLtr: {
+    right: 0,
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
   },
 });

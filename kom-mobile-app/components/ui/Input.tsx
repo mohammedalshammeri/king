@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
+import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
@@ -32,6 +33,7 @@ export function Input({
   ...props
 }: InputProps) {
   const { isDark } = useTheme();
+  const { isRTL } = useLanguage();
 
   const theme = {
     label: isDark ? '#e5e7eb' : Colors.text,
@@ -49,6 +51,7 @@ export function Input({
       <View
         style={[
           styles.inputWrapper,
+          { flexDirection: isRTL ? 'row-reverse' : 'row' },
           { backgroundColor: theme.background, borderColor: theme.border },
           error && styles.inputWrapperError,
         ]}
@@ -70,12 +73,11 @@ export function Input({
             rightIcon && styles.inputWithTrailingIcon,
             { color: theme.text },
             style,
-            { textAlign: 'right', writingDirection: 'rtl' },
+            { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' },
           ]}
           placeholderTextColor={theme.placeholder}
 
-          /* ✅ RTL FIX — الطريقة الصحيحة */
-          textAlign="right"
+          textAlign={isRTL ? 'right' : 'left'}
           textAlignVertical="center"
 
           /* Android stability */
@@ -101,15 +103,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 8,
     fontWeight: '500',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
 
   inputWrapper: {
     height: 50,
     borderRadius: 25,
     borderWidth: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
   },
@@ -134,10 +133,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 0,
     paddingHorizontal: 0,
-
-    /* RTL هنا فقط */
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
 
   inputWithLeadingIcon: {},
@@ -147,7 +142,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.error,
     marginTop: 4,
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
 });

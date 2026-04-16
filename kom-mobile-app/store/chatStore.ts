@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import api from '../services/api';
 
+const CHAT_FETCH_DEBOUNCE_MS = 1000;
+let inFlightFetchChats: Promise<void> | null = null;
+let lastSuccessfulFetchAt = 0;
+
 interface Chat {
   id: string;
   listingId: string;
@@ -31,8 +35,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isLoading: false,
 
   fetchChats: async () => {
+    if (inFlightFetchChats) {
+      return inFlightFetchChats;
+    }
+
+    if (Date.now() - lastSuccessfulFetchAt < CHAT_FETCH_DEBOUNCE_MS && get().chats.length > 0) {
+      return;
+    }
+
     set({ isLoading: true });
-    try {
+    inFlightFetchChats = (async () => {
       const response = await api.get('/chats');
       const data = response.data?.data || response.data;
       const chats = Array.isArray(data) ? data : [];
@@ -41,10 +53,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const unreadConversationsCount = chats.filter((chat: Chat) => chat.unreadCount > 0).length;
 
       set({ chats, totalUnreadCount, unreadConversationsCount });
+      lastSuccessfulFetchAt = Date.now();
+    })();
+
+    try {
+      await inFlightFetchChats;
     } catch (error) {
       console.error('Failed to fetch chats:', error);
-      set({ chats: [] });
     } finally {
+      inFlightFetchChats = null;
       set({ isLoading: false });
     }
   },

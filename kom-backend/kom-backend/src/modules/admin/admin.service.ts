@@ -374,7 +374,7 @@ export class AdminService {
     return { message: 'User approved successfully' };
   }
 
-  async rejectUser(adminId: string, userId: string) {
+  async rejectUser(adminId: string, userId: string, dto: { reason: string }) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -392,7 +392,7 @@ export class AdminService {
     this.emailService.sendAccountRejected(user.email, displayName).catch(() => {});
 
     // Capture data for log before delete
-    const userData = { email: user.email, role: user.role };
+    const userData = { email: user.email, role: user.role, reason: dto.reason };
 
     await this.prisma.user.delete({
       where: { id: userId },
@@ -410,7 +410,7 @@ export class AdminService {
       },
     });
 
-    return { message: 'User rejected and deleted' };
+    return { message: 'User rejected and deleted', reason: dto.reason };
   }
 
   async banUser(adminId: string, userId: string, dto: BanUserDto) {

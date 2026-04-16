@@ -1,10 +1,10 @@
 import axios from "axios";
 import { clearAccessToken, getAccessToken } from "./token";
 
-const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-const fallbackBaseUrl = "http://localhost:3002/api/v1";
+const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+const fallbackBaseUrl = "http://localhost:3000/api/v1";
 
-const baseURL = configuredBaseUrl ?? fallbackBaseUrl;
+const baseURL = configuredBaseUrl || fallbackBaseUrl;
 
 if (!configuredBaseUrl && typeof window !== "undefined") {
   // eslint-disable-next-line no-console

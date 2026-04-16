@@ -12,6 +12,7 @@ import {
 } from "../lib/token";
 import type { AuthUser } from "../lib/types";
 import { useToast } from "../components/ui/toast";
+import { useAdminI18n } from "./i18n-context";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -28,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { pushToast } = useToast();
+  const { t } = useAdminI18n();
 
   const refreshUser = async () => {
     try {
@@ -64,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const me = await getMe();
     setUser({ id: me.id, email: me.email, role: me.role });
 
-    pushToast({ type: "success", message: "تم تسجيل الدخول بنجاح" });
+    pushToast({ type: "success", message: t("auth.loginSuccess") });
     router.replace("/dashboard");
   };
 
@@ -77,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       clearAccessToken();
       setUser(null);
-      pushToast({ type: "success", message: "تم تسجيل الخروج" });
+      pushToast({ type: "success", message: t("auth.logoutSuccess") });
       router.replace("/login");
     }
   };

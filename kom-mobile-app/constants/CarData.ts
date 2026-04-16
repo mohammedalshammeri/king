@@ -1,312 +1,738 @@
-export const CarBrands = [
+type BrandModel = {
+  en: string;
+  ar: string;
+};
+
+type VehicleBrand = {
+  id: string;
+  name: string;
+  nameAr: string;
+  logo: string;
+  models: BrandModel[];
+};
+
+const DEFAULT_CAR_LOGO = 'https://cdn-icons-png.flaticon.com/512/741/741407.png';
+const DEFAULT_BIKE_LOGO = 'https://cdn-icons-png.flaticon.com/512/2921/2921222.png';
+
+const carBrand = (
+  id: string,
+  name: string,
+  nameAr: string,
+  models: Array<string | BrandModel>,
+  logo: string = DEFAULT_CAR_LOGO
+): VehicleBrand => ({
+  id,
+  name,
+  nameAr,
+  logo,
+  models: models.map((model) =>
+    typeof model === 'string'
+      ? { en: model, ar: model }
+      : model
+  ),
+});
+
+const bikeBrand = (
+  id: string,
+  name: string,
+  nameAr: string,
+  models: Array<string | BrandModel>,
+  logo: string = DEFAULT_BIKE_LOGO
+): VehicleBrand => ({
+  id,
+  name,
+  nameAr,
+  logo,
+  models: models.map((model) =>
+    typeof model === 'string'
+      ? { en: model, ar: model }
+      : model
+  ),
+});
+
+export const CarBrands: VehicleBrand[] = [
   {
     id: 'all',
     name: 'All',
     nameAr: 'الكل',
-    logo: 'https://cdn-icons-png.flaticon.com/512/741/741407.png',
-    models: []
+    logo: DEFAULT_CAR_LOGO,
+    models: [],
   },
-  {
-    id: 'toyota',
-    name: 'Toyota',
-    nameAr: 'تويوتا',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Toyota.svg/1200px-Toyota.svg.png',
-    models: [
-        { en: 'Camry', ar: 'كامري' },
-        { en: 'Corolla', ar: 'كورولا' },
-        { en: 'Land Cruiser', ar: 'لاند كروزر' },
-        { en: 'Hilux', ar: 'هايلكس' },
-        { en: 'Yaris', ar: 'يارس' },
-        { en: 'Avalon', ar: 'أفالون' },
-        { en: 'RAV4', ar: 'راف فور' },
-        { en: 'Prado', ar: 'برادو' },
-        { en: 'Fortuner', ar: 'فورتشنر' },
-        { en: 'Supra', ar: 'سوبرا' },
-        { en: 'Sequoia', ar: 'سيكويا' },
-        { en: 'Highlander', ar: 'هايلاندر' },
-        { en: 'Innova', ar: 'إنوفا' },
-        { en: 'FJ Cruiser', ar: 'إف جي' }
-    ]
-  },
-  {
-    id: 'nissan',
-    name: 'Nissan',
-    nameAr: 'نيسان',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/nissan.png',
-    models: [
-        { en: 'Patrol', ar: 'باترول' },
-        { en: 'Altima', ar: 'ألتيما' },
-        { en: 'Sunny', ar: 'صني' },
-        { en: 'Maxima', ar: 'ماكسيما' },
-        { en: 'X-Trail', ar: 'إكس تريل' },
-        { en: 'Kicks', ar: 'كيكس' },
-        { en: 'Pathfinder', ar: 'باثفندر' },
-        { en: 'GT-R', ar: 'جي تي آر' },
-        { en: 'Z', ar: 'زد' },
-        { en: 'Juke', ar: 'جوك' },
-        { en: 'Sentra', ar: 'سنترا' },
-        { en: 'Armada', ar: 'أرمادا' },
-        { en: 'Urvan', ar: 'أورفان' }
-    ]
-  },
-  {
-    id: 'honda',
-    name: 'Honda',
-    nameAr: 'هوندا',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/1200px-Honda.svg.png',
-    models: [
-        { en: 'Accord', ar: 'أكورد' },
-        { en: 'Civic', ar: 'سيفيك' },
-        { en: 'CR-V', ar: 'سي آر في' },
-        { en: 'Pilot', ar: 'بايلوت' },
-        { en: 'City', ar: 'سيتي' },
-        { en: 'Odyssey', ar: 'أوديسي' },
-        { en: 'HR-V', ar: 'إتش آر في' },
-        { en: 'Jazz', ar: 'جاز' },
-        { en: 'ZR-V', ar: 'زد آر في' }
-    ]
-  },
-  {
-    id: 'ford',
-    name: 'Ford',
-    nameAr: 'فورد',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Ford_logo_flat.svg/1200px-Ford_logo_flat.svg.png',
-    models: ['Mustang', 'F-150', 'Explorer', 'Expedition', 'Taurus', 'Edge', 'Ranger', 'Bronco', 'Territory', 'Everest', 'Focus']
-  },
-  {
-    id: 'chevrolet',
-    name: 'Chevrolet',
-    nameAr: 'شيفروليه',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/chevrolet.png',
-    models: ['Tahoe', 'Suburban', 'Camaro', 'Corvette', 'Silverado', 'Malibu', 'Traverse', 'Captiva', 'Groove', 'Blazer']
-  },
-  {
-    id: 'gmc',
-    name: 'GMC',
-    nameAr: 'جي إم سي',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/gmc.png',
-    models: ['Yukon', 'Sierra', 'Terrain', 'Acadia', 'Savana']
-  },
-  {
-    id: 'mercedes',
-    name: 'Mercedes-Benz',
-    nameAr: 'مرسيدس',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Mercedes-Benz_Star_2022.svg/2048px-Mercedes-Benz_Star_2022.svg.png',
-    models: ['S-Class', 'E-Class', 'C-Class', 'G-Class', 'GLE', 'GLC', 'A-Class', 'CLA', 'CLS', 'GLS', 'G-Wagon', 'AMG GT']
-  },
-  {
-    id: 'bmw',
-    name: 'BMW',
-    nameAr: 'بي إم دبليو',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/2048px-BMW.svg.png',
-    models: ['7 Series', '5 Series', '3 Series', 'X5', 'X6', 'X7', 'X3', 'M4', 'M3', 'M5', 'X1', 'X2', 'Z4']
-  },
-  {
-    id: 'lexus',
-    name: 'Lexus',
-    nameAr: 'لكزس',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/lexus.png',
-    models: ['LX', 'ES', 'LS', 'IS', 'RX', 'GX', 'NX', 'UX', 'RC', 'LC']
-  },
-  {
-    id: 'hyundai',
-    name: 'Hyundai',
-    nameAr: 'هيونداي',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Hyundai_Motor_Company_logo.svg/1200px-Hyundai_Motor_Company_logo.svg.png',
-    models: ['Sonata', 'Elantra', 'Tucson', 'Santa Fe', 'Accent', 'Azera', 'Creta', 'Palisade', 'Kona', 'Veloster', 'Staria']
-  },
-  {
-    id: 'kia',
-    name: 'Kia',
-    nameAr: 'كيا',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/kia.png',
-    models: ['K5', 'Sportage', 'Sorento', 'Telluride', 'Rio', 'Cerato', 'Pegas', 'Seltos', 'Carnival', 'Stinger', 'Sonet']
-  },
-  {
-    id: 'mazda',
-    name: 'Mazda',
-    nameAr: 'مازدا',
-    logo: 'https://www.carlogos.org/car-logos/mazda-logo-2018.png',
-    models: ['Mazda 6', 'Mazda 3', 'CX-9', 'CX-5', 'CX-30', 'MX-5']
-  },
-  {
-    id: 'mitsubishi',
-    name: 'Mitsubishi',
-    nameAr: 'ميتسوبيشي',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Mitsubishi_logo.svg/2048px-Mitsubishi_logo.svg.png',
-    models: ['Pajero', 'Lancer', 'Outlander', 'ASX', 'Eclipse Cross', 'L200', 'Attrage', 'Mirage', 'Montero Sport']
-  },
-  {
-    id: 'landrover',
-    name: 'Land Rover',
-    nameAr: 'لاند روفر',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/land-rover.png',
-    models: ['Range Rover', 'Defender', 'Range Rover Sport', 'Evoque', 'Velar', 'Discovery']
-  },
-  {
-    id: 'porsche',
-    name: 'Porsche',
-    nameAr: 'بورش',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/porsche.png',
-    models: ['911', 'Cayenne', 'Panamera', 'Macan', 'Taycan', '718 Boxster', '718 Cayman']
-  },
-  {
-    id: 'audi',
-    name: 'Audi',
-    nameAr: 'أودي',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Audi_logo_detail.svg/2560px-Audi_logo_detail.svg.png',
-    models: ['A8', 'A6', 'A4', 'Q7', 'Q8', 'Q5', 'Q3', 'RS Q8', 'R8', 'e-tron']
-  },
-  {
-    id: 'volkswagen',
-    name: 'Volkswagen',
-    nameAr: 'فولكس واجن',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Volkswagen_Logo_till_1995.svg/2048px-Volkswagen_Logo_till_1995.svg.png',
-    models: ['Touareg', 'Tiguan', 'Teramont', 'Passat', 'Golf', 'Jetta', 'T-Roc']
-  },
-  {
-    id: 'dodge',
-    name: 'Dodge',
-    nameAr: 'دودج',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/dodge.png',
-    models: ['Charger', 'Challenger', 'Durango', 'Ram']
-  },
-  {
-    id: 'jeep',
-    name: 'Jeep',
-    nameAr: 'جيب',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/jeep.png',
-    models: ['Wrangler', 'Grand Cherokee', 'Cherokee', 'Compass', 'Gladiator', 'Renegade']
-  },
-  {
-    id: 'cadillac',
-    name: 'Cadillac',
-    nameAr: 'كاديلاك',
-    logo: 'https://www.carlogos.org/car-logos/cadillac-logo-2014.png',
-    models: ['Escalade', 'CT5', 'CT4', 'XT6', 'XT5', 'XT4']
-  },
-  {
-    id: 'genesis',
-    name: 'Genesis',
-    nameAr: 'جينيسيس',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/genesis.png',
-    models: ['G90', 'G80', 'G70', 'GV80', 'GV70']
-  },
-  {
-    id: 'mg',
-    name: 'MG',
-    nameAr: 'إم جي',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/mg.png',
-    models: ['MG HS', 'MG RX5', 'MG ZS', 'MG 6', 'MG 5', 'MG GT', 'MG One']
-  },
-  {
-    id: 'geely',
-    name: 'Geely',
-    nameAr: 'جيلي',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/geely.png',
-    models: ['Coolray', 'Tugella', 'Monjaro', 'Azkarra', 'Emgrand']
-  },
-  {
-    id: 'changan',
-    name: 'Changan',
-    nameAr: 'شانجان',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/changan.png',
-    models: ['CS95', 'CS85', 'CS75', 'CS35', 'Eado Plus', 'UNI-K', 'UNI-V', 'UNI-T']
-  },
-  {
-    id: 'haval',
-    name: 'Haval',
-    nameAr: 'هافال',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/haval.png',
-    models: ['H6', 'Jolion', 'H9', 'Dargo']
-  },
-  {
-    id: 'chery',
-    name: 'Chery',
-    nameAr: 'شيري',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/chery.png',
-    models: ['Tiggo 8 Pro', 'Tiggo 7 Pro', 'Tiggo 4 Pro', 'Arrizo 6']
-  },
-  {
-    id: 'suzuki',
-    name: 'Suzuki',
-    nameAr: 'سوزوكي',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/suzuki.png',
-    models: ['Jimny', 'Swift', 'Vitara', 'Dzire', 'Baleno', 'Ertiga']
-  },
-  {
-    id: 'infiniti',
-    name: 'Infiniti',
-    nameAr: 'إنفينيتي',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/infiniti.png',
-    models: ['QX80', 'QX60', 'QX50', 'QX55', 'Q50']
-  },
-  {
-    id: 'tesla',
-    name: 'Tesla',
-    nameAr: 'تسلا',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Tesla_Motors.svg/1200px-Tesla_Motors.svg.png',
-    models: ['Model S', 'Model 3', 'Model X', 'Model Y']
-  }
+  carBrand('toyota', 'Toyota', 'تويوتا', [
+    { en: 'Camry', ar: 'كامري' },
+    { en: 'Corolla', ar: 'كورولا' },
+    { en: 'Yaris', ar: 'يارس' },
+    { en: 'Avalon', ar: 'أفالون' },
+    { en: 'Crown', ar: 'كراون' },
+    { en: 'Land Cruiser', ar: 'لاند كروزر' },
+    { en: 'Land Cruiser 70', ar: 'لاند كروزر 70' },
+    { en: 'Prado', ar: 'برادو' },
+    { en: 'Hilux', ar: 'هايلكس' },
+    { en: 'Fortuner', ar: 'فورتشنر' },
+    { en: 'RAV4', ar: 'راف فور' },
+    { en: 'Highlander', ar: 'هايلاندر' },
+    { en: 'Innova', ar: 'إنوفا' },
+    { en: 'Raize', ar: 'رايز' },
+    { en: 'Urban Cruiser', ar: 'أوربان كروزر' },
+    { en: 'Sequoia', ar: 'سيكويا' },
+    { en: 'Tacoma', ar: 'تاكوما' },
+    { en: 'Tundra', ar: 'تندرا' },
+    { en: 'Supra', ar: 'سوبرا' },
+    { en: 'FJ Cruiser', ar: 'إف جي كروزر' },
+    { en: 'bZ4X', ar: 'بي زد فور إكس' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Toyota.svg/1200px-Toyota.svg.png'),
+  carBrand('nissan', 'Nissan', 'نيسان', [
+    { en: 'Patrol', ar: 'باترول' },
+    { en: 'Patrol Safari', ar: 'باترول سفاري' },
+    { en: 'Altima', ar: 'ألتيما' },
+    { en: 'Maxima', ar: 'ماكسيما' },
+    { en: 'Sunny', ar: 'صني' },
+    { en: 'Sentra', ar: 'سنترا' },
+    { en: 'Kicks', ar: 'كيكس' },
+    { en: 'X-Trail', ar: 'إكس تريل' },
+    { en: 'Pathfinder', ar: 'باثفايندر' },
+    { en: 'Armada', ar: 'أرمادا' },
+    { en: 'Murano', ar: 'مورانو' },
+    { en: 'Z', ar: 'زد' },
+    { en: 'GT-R', ar: 'جي تي آر' },
+    { en: 'Navara', ar: 'نافارا' },
+    { en: 'Urvan', ar: 'أورفان' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/nissan.png'),
+  carBrand('honda', 'Honda', 'هوندا', [
+    { en: 'Accord', ar: 'أكورد' },
+    { en: 'Civic', ar: 'سيفيك' },
+    { en: 'City', ar: 'سيتي' },
+    { en: 'CR-V', ar: 'سي آر في' },
+    { en: 'HR-V', ar: 'إتش آر في' },
+    { en: 'ZR-V', ar: 'زد آر في' },
+    { en: 'Pilot', ar: 'بايلوت' },
+    { en: 'Odyssey', ar: 'أوديسي' },
+    { en: 'Jazz', ar: 'جاز' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/1200px-Honda.svg.png'),
+  carBrand('ford', 'Ford', 'فورد', [
+    { en: 'Taurus', ar: 'توروس' },
+    { en: 'Territory', ar: 'تريتوري' },
+    { en: 'Explorer', ar: 'إكسبلورر' },
+    { en: 'Expedition', ar: 'إكسبيديشن' },
+    { en: 'Edge', ar: 'إيدج' },
+    { en: 'Escape', ar: 'إسكيب' },
+    { en: 'Ranger', ar: 'رينجر' },
+    { en: 'F-150', ar: 'إف 150' },
+    { en: 'Bronco', ar: 'برونكو' },
+    { en: 'Everest', ar: 'إيفرست' },
+    { en: 'Mustang', ar: 'موستنج' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Ford_logo_flat.svg/1200px-Ford_logo_flat.svg.png'),
+  carBrand('chevrolet', 'Chevrolet', 'شيفروليه', [
+    { en: 'Tahoe', ar: 'تاهو' },
+    { en: 'Suburban', ar: 'سوبربان' },
+    { en: 'Silverado', ar: 'سيلفرادو' },
+    { en: 'Traverse', ar: 'ترافيرس' },
+    { en: 'Blazer', ar: 'بليزر' },
+    { en: 'Captiva', ar: 'كابتيفا' },
+    { en: 'Malibu', ar: 'ماليبو' },
+    { en: 'Groove', ar: 'جروف' },
+    { en: 'Camaro', ar: 'كامارو' },
+    { en: 'Corvette', ar: 'كورفيت' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/chevrolet.png'),
+  carBrand('gmc', 'GMC', 'جي إم سي', [
+    { en: 'Yukon', ar: 'يوكن' },
+    { en: 'Sierra', ar: 'سييرا' },
+    { en: 'Acadia', ar: 'أكاديا' },
+    { en: 'Terrain', ar: 'تيرين' },
+    { en: 'Canyon', ar: 'كانيون' },
+    { en: 'Savana', ar: 'سافانا' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/gmc.png'),
+  carBrand('lexus', 'Lexus', 'لكزس', [
+    { en: 'LX', ar: 'إل إكس' },
+    { en: 'GX', ar: 'جي إكس' },
+    { en: 'RX', ar: 'آر إكس' },
+    { en: 'NX', ar: 'إن إكس' },
+    { en: 'UX', ar: 'يو إكس' },
+    { en: 'ES', ar: 'إي إس' },
+    { en: 'LS', ar: 'إل إس' },
+    { en: 'IS', ar: 'آي إس' },
+    { en: 'LC', ar: 'إل سي' },
+    { en: 'RC', ar: 'آر سي' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/lexus.png'),
+  carBrand('mercedes', 'Mercedes-Benz', 'مرسيدس', [
+    { en: 'A-Class', ar: 'الفئة A' },
+    { en: 'C-Class', ar: 'الفئة C' },
+    { en: 'E-Class', ar: 'الفئة E' },
+    { en: 'S-Class', ar: 'الفئة S' },
+    { en: 'CLA', ar: 'سي إل إيه' },
+    { en: 'CLS', ar: 'سي إل إس' },
+    { en: 'GLA', ar: 'جي إل إيه' },
+    { en: 'GLB', ar: 'جي إل بي' },
+    { en: 'GLC', ar: 'جي إل سي' },
+    { en: 'GLE', ar: 'جي إل إي' },
+    { en: 'GLS', ar: 'جي إل إس' },
+    { en: 'G-Class', ar: 'جي كلاس' },
+    { en: 'AMG GT', ar: 'إيه إم جي جي تي' },
+    { en: 'EQE', ar: 'إي كيو إي' },
+    { en: 'EQS', ar: 'إي كيو إس' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Mercedes-Benz_Star_2022.svg/2048px-Mercedes-Benz_Star_2022.svg.png'),
+  carBrand('bmw', 'BMW', 'بي إم دبليو', [
+    { en: '1 Series', ar: 'الفئة 1' },
+    { en: '2 Series', ar: 'الفئة 2' },
+    { en: '3 Series', ar: 'الفئة 3' },
+    { en: '4 Series', ar: 'الفئة 4' },
+    { en: '5 Series', ar: 'الفئة 5' },
+    { en: '7 Series', ar: 'الفئة 7' },
+    { en: 'X1', ar: 'إكس 1' },
+    { en: 'X2', ar: 'إكس 2' },
+    { en: 'X3', ar: 'إكس 3' },
+    { en: 'X4', ar: 'إكس 4' },
+    { en: 'X5', ar: 'إكس 5' },
+    { en: 'X6', ar: 'إكس 6' },
+    { en: 'X7', ar: 'إكس 7' },
+    { en: 'i4', ar: 'آي 4' },
+    { en: 'i7', ar: 'آي 7' },
+    { en: 'XM', ar: 'إكس إم' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/2048px-BMW.svg.png'),
+  carBrand('audi', 'Audi', 'أودي', [
+    { en: 'A3', ar: 'إيه 3' },
+    { en: 'A4', ar: 'إيه 4' },
+    { en: 'A5', ar: 'إيه 5' },
+    { en: 'A6', ar: 'إيه 6' },
+    { en: 'A7', ar: 'إيه 7' },
+    { en: 'A8', ar: 'إيه 8' },
+    { en: 'Q3', ar: 'كيو 3' },
+    { en: 'Q5', ar: 'كيو 5' },
+    { en: 'Q7', ar: 'كيو 7' },
+    { en: 'Q8', ar: 'كيو 8' },
+    { en: 'e-tron', ar: 'إي ترون' },
+    { en: 'RS Q8', ar: 'آر إس كيو 8' },
+    { en: 'R8', ar: 'آر 8' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Audi_logo_detail.svg/2560px-Audi_logo_detail.svg.png'),
+  carBrand('porsche', 'Porsche', 'بورش', [
+    { en: '911', ar: '911' },
+    { en: '718 Cayman', ar: '718 كايمان' },
+    { en: '718 Boxster', ar: '718 بوكستر' },
+    { en: 'Cayenne', ar: 'كايين' },
+    { en: 'Macan', ar: 'ماكان' },
+    { en: 'Panamera', ar: 'باناميرا' },
+    { en: 'Taycan', ar: 'تايكان' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/porsche.png'),
+  carBrand('landrover', 'Land Rover', 'لاند روفر', [
+    { en: 'Range Rover', ar: 'رينج روفر' },
+    { en: 'Range Rover Sport', ar: 'رينج روفر سبورت' },
+    { en: 'Range Rover Velar', ar: 'رينج روفر فيلار' },
+    { en: 'Range Rover Evoque', ar: 'رينج روفر إيفوك' },
+    { en: 'Defender', ar: 'ديفندر' },
+    { en: 'Discovery', ar: 'ديسكفري' },
+    { en: 'Discovery Sport', ar: 'ديسكفري سبورت' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/land-rover.png'),
+  carBrand('hyundai', 'Hyundai', 'هيونداي', [
+    { en: 'Accent', ar: 'أكسنت' },
+    { en: 'Elantra', ar: 'إلنترا' },
+    { en: 'Sonata', ar: 'سوناتا' },
+    { en: 'Azera', ar: 'أزيرا' },
+    { en: 'Tucson', ar: 'توكسون' },
+    { en: 'Santa Fe', ar: 'سانتا في' },
+    { en: 'Palisade', ar: 'باليسيد' },
+    { en: 'Creta', ar: 'كريتا' },
+    { en: 'Kona', ar: 'كونا' },
+    { en: 'Venue', ar: 'فينيُو' },
+    { en: 'Staria', ar: 'ستاريا' },
+    { en: 'Ioniq 5', ar: 'أيونيك 5' },
+    { en: 'Ioniq 6', ar: 'أيونيك 6' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Hyundai_Motor_Company_logo.svg/1200px-Hyundai_Motor_Company_logo.svg.png'),
+  carBrand('kia', 'Kia', 'كيا', [
+    { en: 'Pegas', ar: 'بيجاس' },
+    { en: 'Rio', ar: 'ريو' },
+    { en: 'Cerato', ar: 'سيراتو' },
+    { en: 'K3', ar: 'كي 3' },
+    { en: 'K5', ar: 'كي 5' },
+    { en: 'K8', ar: 'كي 8' },
+    { en: 'Sportage', ar: 'سبورتاج' },
+    { en: 'Seltos', ar: 'سيلتوس' },
+    { en: 'Sorento', ar: 'سورينتو' },
+    { en: 'Telluride', ar: 'تيلورايد' },
+    { en: 'Carnival', ar: 'كارنفال' },
+    { en: 'Sonet', ar: 'سونيت' },
+    { en: 'EV6', ar: 'إي في 6' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/kia.png'),
+  carBrand('mazda', 'Mazda', 'مازدا', [
+    { en: 'Mazda 2', ar: 'مازدا 2' },
+    { en: 'Mazda 3', ar: 'مازدا 3' },
+    { en: 'Mazda 6', ar: 'مازدا 6' },
+    { en: 'CX-3', ar: 'سي إكس 3' },
+    { en: 'CX-30', ar: 'سي إكس 30' },
+    { en: 'CX-5', ar: 'سي إكس 5' },
+    { en: 'CX-9', ar: 'سي إكس 9' },
+    { en: 'CX-90', ar: 'سي إكس 90' },
+    { en: 'MX-5', ar: 'إم إكس 5' },
+  ], 'https://www.carlogos.org/car-logos/mazda-logo-2018.png'),
+  carBrand('mitsubishi', 'Mitsubishi', 'ميتسوبيشي', [
+    { en: 'Lancer', ar: 'لانسر' },
+    { en: 'Attrage', ar: 'أتراج' },
+    { en: 'Mirage', ar: 'ميراج' },
+    { en: 'ASX', ar: 'إيه إس إكس' },
+    { en: 'Outlander', ar: 'أوتلاندر' },
+    { en: 'Montero Sport', ar: 'مونتيرو سبورت' },
+    { en: 'Pajero', ar: 'باجيرو' },
+    { en: 'L200', ar: 'إل 200' },
+    { en: 'Eclipse Cross', ar: 'إكليبس كروس' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Mitsubishi_logo.svg/2048px-Mitsubishi_logo.svg.png'),
+  carBrand('volkswagen', 'Volkswagen', 'فولكس واجن', [
+    { en: 'Golf', ar: 'جولف' },
+    { en: 'Jetta', ar: 'جيتا' },
+    { en: 'Passat', ar: 'باسات' },
+    { en: 'Tiguan', ar: 'تيجوان' },
+    { en: 'Touareg', ar: 'طوارق' },
+    { en: 'Teramont', ar: 'تيرامونت' },
+    { en: 'T-Roc', ar: 'تي روك' },
+    { en: 'ID.4', ar: 'آي دي 4' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Volkswagen_Logo_till_1995.svg/2048px-Volkswagen_Logo_till_1995.svg.png'),
+  carBrand('dodge', 'Dodge', 'دودج', [
+    { en: 'Charger', ar: 'تشارجر' },
+    { en: 'Challenger', ar: 'تشالنجر' },
+    { en: 'Durango', ar: 'دورانجو' },
+    { en: 'Hornet', ar: 'هورنت' },
+    { en: 'Ram 1500', ar: 'رام 1500' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/dodge.png'),
+  carBrand('jeep', 'Jeep', 'جيب', [
+    { en: 'Wrangler', ar: 'رانجلر' },
+    { en: 'Grand Cherokee', ar: 'جراند شيروكي' },
+    { en: 'Cherokee', ar: 'شيروكي' },
+    { en: 'Compass', ar: 'كومباس' },
+    { en: 'Renegade', ar: 'رينيجيد' },
+    { en: 'Gladiator', ar: 'جلاديتور' },
+    { en: 'Wagoneer', ar: 'واجونير' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/jeep.png'),
+  carBrand('cadillac', 'Cadillac', 'كاديلاك', [
+    { en: 'Escalade', ar: 'إسكاليد' },
+    { en: 'XT4', ar: 'إكس تي 4' },
+    { en: 'XT5', ar: 'إكس تي 5' },
+    { en: 'XT6', ar: 'إكس تي 6' },
+    { en: 'CT4', ar: 'سي تي 4' },
+    { en: 'CT5', ar: 'سي تي 5' },
+    { en: 'Lyriq', ar: 'ليريك' },
+  ], 'https://www.carlogos.org/car-logos/cadillac-logo-2014.png'),
+  carBrand('genesis', 'Genesis', 'جينيسيس', [
+    { en: 'G70', ar: 'جي 70' },
+    { en: 'G80', ar: 'جي 80' },
+    { en: 'G90', ar: 'جي 90' },
+    { en: 'GV60', ar: 'جي في 60' },
+    { en: 'GV70', ar: 'جي في 70' },
+    { en: 'GV80', ar: 'جي في 80' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/genesis.png'),
+  carBrand('mg', 'MG', 'إم جي', [
+    { en: 'MG 5', ar: 'إم جي 5' },
+    { en: 'MG 6', ar: 'إم جي 6' },
+    { en: 'MG 7', ar: 'إم جي 7' },
+    { en: 'MG GT', ar: 'إم جي جي تي' },
+    { en: 'MG One', ar: 'إم جي ون' },
+    { en: 'MG ZS', ar: 'إم جي زد إس' },
+    { en: 'MG HS', ar: 'إم جي إتش إس' },
+    { en: 'MG RX5', ar: 'إم جي آر إكس 5' },
+    { en: 'MG RX8', ar: 'إم جي آر إكس 8' },
+    { en: 'MG Whale', ar: 'إم جي ويل' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/mg.png'),
+  carBrand('geely', 'Geely', 'جيلي', [
+    { en: 'Emgrand', ar: 'إمجراند' },
+    { en: 'Coolray', ar: 'كول راي' },
+    { en: 'Tugella', ar: 'توجيلا' },
+    { en: 'Monjaro', ar: 'مونجارو' },
+    { en: 'Azkarra', ar: 'أزكارا' },
+    { en: 'Preface', ar: 'بريفيس' },
+    { en: 'Okavango', ar: 'أوكافانجو' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/geely.png'),
+  carBrand('changan', 'Changan', 'شانجان', [
+    { en: 'Alsvin', ar: 'ألسفن' },
+    { en: 'Eado Plus', ar: 'إيدو بلس' },
+    { en: 'CS35 Plus', ar: 'سي إس 35 بلس' },
+    { en: 'CS55 Plus', ar: 'سي إس 55 بلس' },
+    { en: 'CS75 Plus', ar: 'سي إس 75 بلس' },
+    { en: 'CS85', ar: 'سي إس 85' },
+    { en: 'CS95', ar: 'سي إس 95' },
+    { en: 'UNI-T', ar: 'يوني تي' },
+    { en: 'UNI-V', ar: 'يوني في' },
+    { en: 'UNI-K', ar: 'يوني كيه' },
+    { en: 'Hunter', ar: 'هنتر' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/changan.png'),
+  carBrand('haval', 'Haval', 'هافال', [
+    { en: 'Jolion', ar: 'جوليون' },
+    { en: 'H6', ar: 'إتش 6' },
+    { en: 'H9', ar: 'إتش 9' },
+    { en: 'Dargo', ar: 'دارجو' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/haval.png'),
+  carBrand('chery', 'Chery', 'شيري', [
+    { en: 'Arrizo 5', ar: 'أريزو 5' },
+    { en: 'Arrizo 6', ar: 'أريزو 6' },
+    { en: 'Tiggo 2', ar: 'تيجو 2' },
+    { en: 'Tiggo 4 Pro', ar: 'تيجو 4 برو' },
+    { en: 'Tiggo 7 Pro', ar: 'تيجو 7 برو' },
+    { en: 'Tiggo 8 Pro', ar: 'تيجو 8 برو' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/chery.png'),
+  carBrand('suzuki', 'Suzuki', 'سوزوكي', [
+    { en: 'Dzire', ar: 'ديزاير' },
+    { en: 'Swift', ar: 'سويفت' },
+    { en: 'Baleno', ar: 'بالينو' },
+    { en: 'Ciaz', ar: 'سياز' },
+    { en: 'Ertiga', ar: 'إرتيجا' },
+    { en: 'Jimny', ar: 'جيمني' },
+    { en: 'Vitara', ar: 'فيتارا' },
+    { en: 'Grand Vitara', ar: 'جراند فيتارا' },
+    { en: 'XL7', ar: 'إكس إل 7' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/suzuki.png'),
+  carBrand('infiniti', 'Infiniti', 'إنفينيتي', [
+    { en: 'Q50', ar: 'كيو 50' },
+    { en: 'Q60', ar: 'كيو 60' },
+    { en: 'QX50', ar: 'كيو إكس 50' },
+    { en: 'QX55', ar: 'كيو إكس 55' },
+    { en: 'QX60', ar: 'كيو إكس 60' },
+    { en: 'QX80', ar: 'كيو إكس 80' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/infiniti.png'),
+  carBrand('tesla', 'Tesla', 'تسلا', [
+    { en: 'Model 3', ar: 'موديل 3' },
+    { en: 'Model S', ar: 'موديل إس' },
+    { en: 'Model X', ar: 'موديل إكس' },
+    { en: 'Model Y', ar: 'موديل واي' },
+    { en: 'Cybertruck', ar: 'سايبر ترك' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Tesla_Motors.svg/1200px-Tesla_Motors.svg.png'),
+  carBrand('isuzu', 'Isuzu', 'إيسوزو', [
+    { en: 'D-Max', ar: 'دي ماكس' },
+    { en: 'MU-X', ar: 'إم يو إكس' },
+    { en: 'N-Series', ar: 'إن سيريز' },
+  ]),
+  carBrand('renault', 'Renault', 'رينو', [
+    { en: 'Koleos', ar: 'كوليوس' },
+    { en: 'Megane', ar: 'ميجان' },
+    { en: 'Duster', ar: 'داستر' },
+    { en: 'Arkana', ar: 'أركانا' },
+    { en: 'Taliant', ar: 'تاليانت' },
+  ]),
+  carBrand('peugeot', 'Peugeot', 'بيجو', [
+    { en: '208', ar: '208' },
+    { en: '2008', ar: '2008' },
+    { en: '3008', ar: '3008' },
+    { en: '408', ar: '408' },
+    { en: '5008', ar: '5008' },
+    { en: 'Landtrek', ar: 'لاندتريك' },
+  ]),
+  carBrand('volvo', 'Volvo', 'فولفو', [
+    { en: 'S60', ar: 'إس 60' },
+    { en: 'S90', ar: 'إس 90' },
+    { en: 'XC40', ar: 'إكس سي 40' },
+    { en: 'XC60', ar: 'إكس سي 60' },
+    { en: 'XC90', ar: 'إكس سي 90' },
+    { en: 'C40', ar: 'سي 40' },
+  ]),
+  carBrand('lincoln', 'Lincoln', 'لينكون', [
+    { en: 'Corsair', ar: 'كورسير' },
+    { en: 'Nautilus', ar: 'نوتيلوس' },
+    { en: 'Aviator', ar: 'أفياتور' },
+    { en: 'Navigator', ar: 'نافيجيتور' },
+  ]),
+  carBrand('maserati', 'Maserati', 'مازيراتي', [
+    { en: 'Ghibli', ar: 'جيبلي' },
+    { en: 'Levante', ar: 'ليفانتي' },
+    { en: 'Quattroporte', ar: 'كواتروبورتي' },
+    { en: 'Grecale', ar: 'جريكالي' },
+    { en: 'MC20', ar: 'إم سي 20' },
+  ]),
+  carBrand('ferrari', 'Ferrari', 'فيراري', [
+    { en: '296 GTB', ar: '296 جي تي بي' },
+    { en: 'Roma', ar: 'روما' },
+    { en: 'SF90', ar: 'إس إف 90' },
+    { en: 'Purosangue', ar: 'بوروسانجوي' },
+    { en: '812 Superfast', ar: '812 سوبرفاست' },
+  ]),
+  carBrand('lamborghini', 'Lamborghini', 'لامبورغيني', [
+    { en: 'Huracan', ar: 'هوراكان' },
+    { en: 'Aventador', ar: 'أفينتادور' },
+    { en: 'Urus', ar: 'أوروس' },
+    { en: 'Revuelto', ar: 'ريفويلتو' },
+  ]),
+  carBrand('bentley', 'Bentley', 'بنتلي', [
+    { en: 'Bentayga', ar: 'بنتايجا' },
+    { en: 'Flying Spur', ar: 'فلاينج سبير' },
+    { en: 'Continental GT', ar: 'كونتيننتال جي تي' },
+  ]),
+  carBrand('rollsroyce', 'Rolls-Royce', 'رولز رويس', [
+    { en: 'Ghost', ar: 'جوست' },
+    { en: 'Phantom', ar: 'فانتوم' },
+    { en: 'Cullinan', ar: 'كولينان' },
+    { en: 'Spectre', ar: 'سبيكتر' },
+  ]),
+  carBrand('mclaren', 'McLaren', 'مكلارين', [
+    { en: '570S', ar: '570 إس' },
+    { en: '720S', ar: '720 إس' },
+    { en: '750S', ar: '750 إس' },
+    { en: 'Artura', ar: 'أرتورا' },
+    { en: 'GT', ar: 'جي تي' },
+  ]),
+  carBrand('astonmartin', 'Aston Martin', 'أستون مارتن', [
+    { en: 'DBX', ar: 'دي بي إكس' },
+    { en: 'DB11', ar: 'دي بي 11' },
+    { en: 'DB12', ar: 'دي بي 12' },
+    { en: 'Vantage', ar: 'فانتاج' },
+    { en: 'Valhalla', ar: 'فالهالا' },
+  ]),
+  carBrand('alfaromeo', 'Alfa Romeo', 'ألفا روميو', [
+    { en: 'Giulia', ar: 'جوليا' },
+    { en: 'Stelvio', ar: 'ستيلفيو' },
+    { en: 'Tonale', ar: 'تونالي' },
+  ]),
+  carBrand('fiat', 'Fiat', 'فيات', [
+    { en: '500', ar: '500' },
+    { en: 'Tipo', ar: 'تيبو' },
+    { en: 'Doblo', ar: 'دوبلو' },
+    { en: 'Panda', ar: 'باندا' },
+  ]),
+  carBrand('skoda', 'Skoda', 'سكودا', [
+    { en: 'Fabia', ar: 'فابيا' },
+    { en: 'Octavia', ar: 'أوكتافيا' },
+    { en: 'Superb', ar: 'سوبيرب' },
+    { en: 'Kodiaq', ar: 'كودياك' },
+    { en: 'Karoq', ar: 'كاروك' },
+    { en: 'Kamiq', ar: 'كاميك' },
+  ]),
+  carBrand('seat', 'SEAT', 'سيات', [
+    { en: 'Ibiza', ar: 'إيبيزا' },
+    { en: 'Leon', ar: 'ليون' },
+    { en: 'Ateca', ar: 'أتيكا' },
+    { en: 'Arona', ar: 'أرونا' },
+    { en: 'Tarraco', ar: 'تاراكو' },
+  ]),
+  carBrand('cupra', 'Cupra', 'كوبرا', [
+    { en: 'Formentor', ar: 'فورمينتور' },
+    { en: 'Leon', ar: 'ليون' },
+    { en: 'Ateca', ar: 'أتيكا' },
+    { en: 'Born', ar: 'بورن' },
+  ]),
+  carBrand('mini', 'MINI', 'ميني', [
+    { en: 'Cooper', ar: 'كوبر' },
+    { en: 'Clubman', ar: 'كلوبمان' },
+    { en: 'Countryman', ar: 'كانتريمان' },
+    { en: 'Aceman', ar: 'أيسمان' },
+  ]),
+  carBrand('jaguar', 'Jaguar', 'جاكوار', [
+    { en: 'XE', ar: 'إكس إي' },
+    { en: 'XF', ar: 'إكس إف' },
+    { en: 'F-Pace', ar: 'إف بيس' },
+    { en: 'E-Pace', ar: 'إي بيس' },
+    { en: 'I-Pace', ar: 'آي بيس' },
+  ]),
+  carBrand('buick', 'Buick', 'بويك', [
+    { en: 'Enclave', ar: 'إنكليف' },
+    { en: 'Encore', ar: 'إنكور' },
+    { en: 'Envista', ar: 'إنفيستا' },
+    { en: 'LaCrosse', ar: 'لاكروس' },
+  ]),
+  carBrand('chrysler', 'Chrysler', 'كرايسلر', [
+    { en: '300', ar: '300' },
+    { en: 'Pacifica', ar: 'باسيفيكا' },
+    { en: 'Voyager', ar: 'فوييجر' },
+  ]),
+  carBrand('opel', 'Opel', 'أوبل', [
+    { en: 'Corsa', ar: 'كورسا' },
+    { en: 'Astra', ar: 'أسترا' },
+    { en: 'Grandland', ar: 'جراندلاند' },
+    { en: 'Crossland', ar: 'كروسلاند' },
+    { en: 'Mokka', ar: 'موكا' },
+  ]),
+  carBrand('subaru', 'Subaru', 'سوبارو', [
+    { en: 'Forester', ar: 'فورستر' },
+    { en: 'Outback', ar: 'أوتباك' },
+    { en: 'XV', ar: 'إكس في' },
+    { en: 'WRX', ar: 'دبليو آر إكس' },
+    { en: 'BRZ', ar: 'بي آر زد' },
+  ]),
+  carBrand('ram', 'RAM', 'رام', [
+    { en: '1500', ar: '1500' },
+    { en: '2500', ar: '2500' },
+    { en: 'TRX', ar: 'تي آر إكس' },
+  ]),
+  carBrand('greatwall', 'Great Wall', 'جريت وول', [
+    { en: 'Poer', ar: 'بوير' },
+    { en: 'Wingle 7', ar: 'وينجل 7' },
+  ]),
+  carBrand('tank', 'Tank', 'تانك', [
+    { en: '300', ar: '300' },
+    { en: '500', ar: '500' },
+  ]),
+  carBrand('gac', 'GAC', 'جي إيه سي', [
+    { en: 'Empow', ar: 'إمباو' },
+    { en: 'Emkoo', ar: 'إمكو' },
+    { en: 'GS3', ar: 'جي إس 3' },
+    { en: 'GS4', ar: 'جي إس 4' },
+    { en: 'GS8', ar: 'جي إس 8' },
+    { en: 'M8', ar: 'إم 8' },
+  ]),
+  carBrand('jac', 'JAC', 'جاك', [
+    { en: 'J7', ar: 'جي 7' },
+    { en: 'JS4', ar: 'جي إس 4' },
+    { en: 'JS6', ar: 'جي إس 6' },
+    { en: 'T8', ar: 'تي 8' },
+  ]),
+  carBrand('jetour', 'Jetour', 'جيتور', [
+    { en: 'X50', ar: 'إكس 50' },
+    { en: 'X70', ar: 'إكس 70' },
+    { en: 'X70 Plus', ar: 'إكس 70 بلس' },
+    { en: 'X90 Plus', ar: 'إكس 90 بلس' },
+    { en: 'T2', ar: 'تي 2' },
+    { en: 'Dashing', ar: 'داشينج' },
+  ]),
+  carBrand('baic', 'BAIC', 'بايك', [
+    { en: 'BJ40', ar: 'بي جي 40' },
+    { en: 'X35', ar: 'إكس 35' },
+    { en: 'X55', ar: 'إكس 55' },
+    { en: 'U5 Plus', ar: 'يو 5 بلس' },
+  ]),
+  carBrand('byd', 'BYD', 'بي واي دي', [
+    { en: 'Qin Plus', ar: 'تشين بلس' },
+    { en: 'Han', ar: 'هان' },
+    { en: 'Song Plus', ar: 'سونج بلس' },
+    { en: 'Tang', ar: 'تانج' },
+    { en: 'Seal', ar: 'سيل' },
+    { en: 'Dolphin', ar: 'دولفين' },
+    { en: 'Atto 3', ar: 'أتو 3' },
+  ]),
+  carBrand('hongqi', 'Hongqi', 'هونغتشي', [
+    { en: 'H5', ar: 'إتش 5' },
+    { en: 'H9', ar: 'إتش 9' },
+    { en: 'HS3', ar: 'إتش إس 3' },
+    { en: 'HS5', ar: 'إتش إس 5' },
+    { en: 'E-QM5', ar: 'إي كيو إم 5' },
+  ]),
+  carBrand('faw', 'FAW', 'فاو', [
+    { en: 'Bestune B70', ar: 'بيستون بي 70' },
+    { en: 'Bestune T77', ar: 'بيستون تي 77' },
+    { en: 'Bestune T99', ar: 'بيستون تي 99' },
+  ]),
+  carBrand('omoda', 'Omoda', 'أومودا', [
+    { en: 'C5', ar: 'سي 5' },
+    { en: 'E5', ar: 'إي 5' },
+  ]),
+  carBrand('jaecoo', 'Jaecoo', 'جايكو', [
+    { en: 'J7', ar: 'جي 7' },
+    { en: 'J8', ar: 'جي 8' },
+  ]),
+  carBrand('bestune', 'Bestune', 'بيستون', [
+    { en: 'B70', ar: 'بي 70' },
+    { en: 'T77', ar: 'تي 77' },
+    { en: 'T90', ar: 'تي 90' },
+    { en: 'T99', ar: 'تي 99' },
+  ]),
 ];
 
-export const MotorcycleBrands = [
+export const MotorcycleBrands: VehicleBrand[] = [
   {
     id: 'all',
     name: 'All',
     nameAr: 'الكل',
-    logo: 'https://cdn-icons-png.flaticon.com/512/2921/2921222.png',
-    models: []
+    logo: DEFAULT_BIKE_LOGO,
+    models: [],
   },
-  {
-    id: 'honda',
-    name: 'Honda',
-    nameAr: 'هوندا',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/1200px-Honda.svg.png',
-    models: ['CBR', 'Gold Wing', 'Africa Twin', 'Forza', 'PCX', 'Rebel', 'Grom']
-  },
-  {
-    id: 'yamaha',
-    name: 'Yamaha',
-    nameAr: 'ياماها',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Yamaha_Motor_Logo_%28full%29.svg/1280px-Yamaha_Motor_Logo_%28full%29.svg.png',
-    models: ['R1', 'R6', 'R7', 'MT-09', 'MT-07', 'TMAX', 'NMAX', 'R3']
-  },
-  {
-    id: 'kawasaki',
-    name: 'Kawasaki',
-    nameAr: 'كاواساكي',
-    logo: 'https://www.carlogos.org/car-logos/kawasaki-logo-2015-black.png',
-    models: ['Ninja ZX-10R', 'Ninja H2', 'Z900', 'Z650', 'Versys', 'KLR 650']
-  },
-  {
-    id: 'suzuki',
-    name: 'Suzuki',
-    nameAr: 'سوزوكي',
-    logo: 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/suzuki.png',
-    models: ['Hayabusa', 'GSX-R1000', 'V-Strom', 'Boulevard', 'Gixxer']
-  },
-  {
-    id: 'harley',
-    name: 'Harley-Davidson',
-    nameAr: 'هارلي ديفيدسون',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Harley-Davidson_logo.svg/2560px-Harley-Davidson_logo.svg.png',
-    models: ['Sportster', 'Softail', 'Touring', 'Street Glide', 'Road King', 'Fat Boy']
-  },
-  {
-    id: 'bmw',
-    name: 'BMW',
-    nameAr: 'بي إم دبليو',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/2048px-BMW.svg.png',
-    models: ['S1000RR', 'R1250GS', 'K1600', 'F850GS', 'R18']
-  },
-  {
-    id: 'ducati',
-    name: 'Ducati',
-    nameAr: 'دوكاتي',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Ducati_red_logo.svg/500px-Ducati_red_logo.svg.png',
-    models: ['Panigale V4', 'Monster', 'Multistrada', 'Diavel', 'Scrambler']
-  }
+  bikeBrand('honda', 'Honda', 'هوندا', [
+    { en: 'CBR', ar: 'سي بي آر' },
+    { en: 'Africa Twin', ar: 'أفريكا توين' },
+    { en: 'Gold Wing', ar: 'جولد وينج' },
+    { en: 'Forza', ar: 'فورزا' },
+    { en: 'PCX', ar: 'بي سي إكس' },
+    { en: 'Rebel', ar: 'ريبل' },
+    { en: 'Grom', ar: 'جروم' },
+    { en: 'CB650R', ar: 'سي بي 650 آر' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Honda.svg/1200px-Honda.svg.png'),
+  bikeBrand('yamaha', 'Yamaha', 'ياماها', [
+    { en: 'R1', ar: 'آر 1' },
+    { en: 'R3', ar: 'آر 3' },
+    { en: 'R6', ar: 'آر 6' },
+    { en: 'R7', ar: 'آر 7' },
+    { en: 'MT-03', ar: 'إم تي 03' },
+    { en: 'MT-07', ar: 'إم تي 07' },
+    { en: 'MT-09', ar: 'إم تي 09' },
+    { en: 'TMAX', ar: 'تي ماكس' },
+    { en: 'NMAX', ar: 'إن ماكس' },
+    { en: 'XMAX', ar: 'إكس ماكس' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Yamaha_Motor_Logo_%28full%29.svg/1280px-Yamaha_Motor_Logo_%28full%29.svg.png'),
+  bikeBrand('kawasaki', 'Kawasaki', 'كاواساكي', [
+    { en: 'Ninja 400', ar: 'نينجا 400' },
+    { en: 'Ninja ZX-6R', ar: 'نينجا زد إكس 6 آر' },
+    { en: 'Ninja ZX-10R', ar: 'نينجا زد إكس 10 آر' },
+    { en: 'Ninja H2', ar: 'نينجا إتش 2' },
+    { en: 'Z650', ar: 'زد 650' },
+    { en: 'Z900', ar: 'زد 900' },
+    { en: 'Versys 650', ar: 'فيرسيس 650' },
+    { en: 'KLR 650', ar: 'كي إل آر 650' },
+  ], 'https://www.carlogos.org/car-logos/kawasaki-logo-2015-black.png'),
+  bikeBrand('suzuki', 'Suzuki', 'سوزوكي', [
+    { en: 'Hayabusa', ar: 'هايابوسا' },
+    { en: 'GSX-R600', ar: 'جي إس إكس آر 600' },
+    { en: 'GSX-R1000', ar: 'جي إس إكس آر 1000' },
+    { en: 'V-Strom', ar: 'في ستروم' },
+    { en: 'Boulevard', ar: 'بوليفارد' },
+    { en: 'Gixxer', ar: 'جيكسر' },
+    { en: 'Burgman', ar: 'برغمان' },
+  ], 'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/optimized/suzuki.png'),
+  bikeBrand('harley', 'Harley-Davidson', 'هارلي ديفيدسون', [
+    { en: 'Sportster', ar: 'سبورتستر' },
+    { en: 'Street Glide', ar: 'ستريت جلايد' },
+    { en: 'Road Glide', ar: 'رود جلايد' },
+    { en: 'Road King', ar: 'رود كينج' },
+    { en: 'Fat Boy', ar: 'فات بوي' },
+    { en: 'Pan America', ar: 'بان أمريكا' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Harley-Davidson_logo.svg/2560px-Harley-Davidson_logo.svg.png'),
+  bikeBrand('bmw', 'BMW', 'بي إم دبليو', [
+    { en: 'S1000RR', ar: 'إس 1000 آر آر' },
+    { en: 'R1250GS', ar: 'آر 1250 جي إس' },
+    { en: 'F850GS', ar: 'إف 850 جي إس' },
+    { en: 'K1600', ar: 'كي 1600' },
+    { en: 'R18', ar: 'آر 18' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/BMW.svg/2048px-BMW.svg.png'),
+  bikeBrand('ducati', 'Ducati', 'دوكاتي', [
+    { en: 'Panigale V4', ar: 'بانيجالي في 4' },
+    { en: 'Monster', ar: 'مونستر' },
+    { en: 'Multistrada', ar: 'مولتيسترادا' },
+    { en: 'Diavel', ar: 'ديافيل' },
+    { en: 'Scrambler', ar: 'سكرامبلر' },
+  ], 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Ducati_red_logo.svg/500px-Ducati_red_logo.svg.png'),
+  bikeBrand('ktm', 'KTM', 'كيه تي إم', [
+    { en: 'Duke 390', ar: 'ديوك 390' },
+    { en: 'Duke 790', ar: 'ديوك 790' },
+    { en: '1290 Super Duke', ar: '1290 سوبر ديوك' },
+    { en: 'RC 390', ar: 'آر سي 390' },
+    { en: 'Adventure 890', ar: 'أدفنشر 890' },
+  ]),
+  bikeBrand('aprilia', 'Aprilia', 'أبريليا', [
+    { en: 'RS 660', ar: 'آر إس 660' },
+    { en: 'Tuono 660', ar: 'تونو 660' },
+    { en: 'Tuareg 660', ar: 'توارج 660' },
+    { en: 'SR GT', ar: 'إس آر جي تي' },
+  ]),
+  bikeBrand('triumph', 'Triumph', 'ترايمف', [
+    { en: 'Street Triple', ar: 'ستريت تريبل' },
+    { en: 'Speed Triple', ar: 'سبيد تريبل' },
+    { en: 'Tiger 900', ar: 'تايجر 900' },
+    { en: 'Bonneville', ar: 'بونفيل' },
+    { en: 'Scrambler 1200', ar: 'سكرامبلر 1200' },
+  ]),
+  bikeBrand('indian', 'Indian', 'إنديان', [
+    { en: 'Scout', ar: 'سكاوت' },
+    { en: 'Chief', ar: 'تشيف' },
+    { en: 'Challenger', ar: 'تشالنجر' },
+    { en: 'Pursuit', ar: 'بيرسوت' },
+  ]),
+  bikeBrand('benelli', 'Benelli', 'بينيلي', [
+    { en: '302R', ar: '302 آر' },
+    { en: 'TRK 502', ar: 'تي آر كيه 502' },
+    { en: 'Leoncino', ar: 'ليونشينو' },
+    { en: '752S', ar: '752 إس' },
+  ]),
+  bikeBrand('cfmoto', 'CFMOTO', 'سي إف موتو', [
+    { en: '300NK', ar: '300 إن كيه' },
+    { en: '450SR', ar: '450 إس آر' },
+    { en: '650MT', ar: '650 إم تي' },
+    { en: '800MT', ar: '800 إم تي' },
+  ]),
+  bikeBrand('royalenfield', 'Royal Enfield', 'رويال إنفيلد', [
+    { en: 'Classic 350', ar: 'كلاسيك 350' },
+    { en: 'Meteor 350', ar: 'ميتور 350' },
+    { en: 'Himalayan', ar: 'هيمالاين' },
+    { en: 'Interceptor 650', ar: 'إنترسبتور 650' },
+  ]),
 ];
 
 export const VehicleColors = [
@@ -332,6 +758,122 @@ export const VehicleColors = [
   'لؤلؤي',
   'ماروني',
   'تيتانيوم',
-  'أخرى'
+  'أخرى',
 ];
 
+export const CarBodyTypes = [
+  'سيدان',
+  'هاتشباك',
+  'كوبيه',
+  'كشف',
+  'دفع رباعي',
+  'كروس أوفر',
+  'بيك أب',
+  'فان',
+  'واجن',
+  'ميني فان',
+  'أخرى',
+];
+
+export const MotorcycleBodyTypes = [
+  'رياضية',
+  'سكوتر',
+  'كروزر',
+  'تجوال',
+  'ديرت بايك',
+  'نيكد',
+  'أدفنشر',
+  'أخرى',
+];
+
+export const GenericCarTrimOptions = [
+  'ستاندر',
+  'نص فل',
+  'فل كامل',
+  'سبورت',
+  'لِمتد',
+  'أخرى',
+];
+
+export const CarTrimOptions: Record<string, Record<string, string[]>> = {
+  'تويوتا': {
+    'كامري': ['E', 'LE', 'GLE', 'SE', 'XLE', 'Grande', 'نص فل', 'فل كامل', 'أخرى'],
+    'كورولا': ['XLI', 'GLI', 'Executive', 'Sport', 'نص فل', 'فل كامل', 'أخرى'],
+    'يارس': ['Y', 'Mid', 'Full', 'نص فل', 'فل كامل', 'أخرى'],
+    'لاند كروزر': ['GXR', 'VXR', 'VX', 'EXR', 'GX', 'GR Sport', 'فل كامل', 'أخرى'],
+    'برادو': ['TX', 'TXL', 'VX', 'VXR', 'Adventure', 'فل كامل', 'أخرى'],
+    'هايلكس': ['GL', 'GLX', 'Adventure', 'S', 'GR Sport', 'فل كامل', 'أخرى'],
+    'راف فور': ['LE', 'XLE', 'Adventure', 'Limited', 'Hybrid', 'فل كامل', 'أخرى'],
+    'فورتشنر': ['GX2', 'GX2+', 'VX1', 'VX3', 'Sigma', 'فل كامل', 'أخرى'],
+  },
+  'نيسان': {
+    'باترول': ['XE', 'SE', 'LE', 'Titanium', 'Platinum', 'Nismo', 'Super Safari', 'فل كامل', 'أخرى'],
+    'ألتيما': ['S', 'SV', 'SL', 'SR', 'فل كامل', 'أخرى'],
+    'صني': ['S', 'SV', 'SL', 'فل كامل', 'أخرى'],
+    'باثفايندر': ['S', 'SV', 'SL', 'Platinum', 'فل كامل', 'أخرى'],
+    'أرمادا': ['SE', 'LE', 'Titanium', 'Platinum', 'فل كامل', 'أخرى'],
+  },
+  'فورد': {
+    'توروس': ['Ambiente', 'Trend', 'Titanium', 'فل كامل', 'أخرى'],
+    'إكسبلورر': ['Base', 'XLT', 'Limited', 'ST', 'Platinum', 'فل كامل', 'أخرى'],
+    'إكسبيديشن': ['XLT', 'Limited', 'Timberline', 'King Ranch', 'Platinum', 'فل كامل', 'أخرى'],
+    'إف 150': ['XL', 'XLT', 'Lariat', 'Tremor', 'Raptor', 'Platinum', 'أخرى'],
+    'موستنج': ['EcoBoost', 'GT', 'Dark Horse', 'Mach 1', 'أخرى'],
+  },
+  'شيفروليه': {
+    'تاهو': ['LS', 'LT', 'RST', 'Z71', 'Premier', 'High Country', 'فل كامل', 'أخرى'],
+    'سوبربان': ['LS', 'LT', 'RST', 'Premier', 'High Country', 'فل كامل', 'أخرى'],
+    'سيلفرادو': ['WT', 'LT', 'RST', 'Trail Boss', 'LTZ', 'High Country', 'أخرى'],
+    'ماليبو': ['LS', 'LT', 'Premier', 'فل كامل', 'أخرى'],
+  },
+  'جي إم سي': {
+    'يوكن': ['SLE', 'SLT', 'AT4', 'Denali', 'Denali Ultimate', 'فل كامل', 'أخرى'],
+    'سييرا': ['Elevation', 'SLT', 'AT4', 'Denali', 'Denali Ultimate', 'أخرى'],
+    'أكاديا': ['SLE', 'SLT', 'AT4', 'Denali', 'أخرى'],
+  },
+  'لكزس': {
+    'إل إكس': ['LX 570', 'LX 600 Urban', 'F Sport', 'VIP', 'فل كامل', 'أخرى'],
+    'آر إكس': ['Comfort', 'Executive', 'F Sport', 'Luxury', 'Hybrid', 'أخرى'],
+    'إن إكس': ['NX 250', 'NX 350', 'NX 350h', 'F Sport', 'Luxury', 'أخرى'],
+    'إي إس': ['ES 250', 'ES 300h', 'F Sport', 'Luxury', 'أخرى'],
+  },
+  'هيونداي': {
+    'إلنترا': ['Smart', 'Comfort', 'Premium', 'N Line', 'فل كامل', 'أخرى'],
+    'سوناتا': ['Base', 'Smart', 'Comfort', 'Premium', 'N Line', 'أخرى'],
+    'توكسون': ['Smart', 'Comfort', 'Premium', 'N Line', 'Hybrid', 'أخرى'],
+    'سانتا في': ['Smart', 'Comfort', 'Premium', 'Calligraphy', 'Hybrid', 'أخرى'],
+  },
+  'كيا': {
+    'كي 5': ['LXS', 'EX', 'GT-Line', 'GT', 'فل كامل', 'أخرى'],
+    'سبورتاج': ['LX', 'EX', 'GT-Line', 'Top', 'Hybrid', 'أخرى'],
+    'سورينتو': ['LX', 'EX', 'SX', 'SX Prestige', 'فل كامل', 'أخرى'],
+    'سيلتوس': ['LX', 'EX', 'GT-Line', 'Top', 'أخرى'],
+  },
+  'مرسيدس': {
+    'الفئة C': ['C 200', 'C 300', 'AMG Line', 'Night Package', 'فل كامل', 'أخرى'],
+    'الفئة E': ['E 200', 'E 300', 'AMG Line', 'Exclusive', 'فل كامل', 'أخرى'],
+    'جي إل سي': ['GLC 200', 'GLC 300', 'AMG Line', 'Coupe', 'فل كامل', 'أخرى'],
+    'جي كلاس': ['G 500', 'AMG G63', 'Professional', 'فل كامل', 'أخرى'],
+  },
+  'بي إم دبليو': {
+    'الفئة 3': ['318i', '320i', '330i', 'M Sport', 'Luxury', 'فل كامل', 'أخرى'],
+    'الفئة 5': ['520i', '530i', '540i', 'M Sport', 'Luxury', 'أخرى'],
+    'إكس 5': ['xDrive40i', 'xDrive50e', 'M Sport', 'M60i', 'أخرى'],
+    'إكس 7': ['xDrive40i', 'M60i', 'Luxury', 'فل كامل', 'أخرى'],
+  },
+  'أودي': {
+    'إيه 6': ['Advanced', 'S Line', 'Black Edition', 'فل كامل', 'أخرى'],
+    'كيو 5': ['Advanced', 'S Line', 'Black Edition', 'فل كامل', 'أخرى'],
+    'كيو 7': ['Advanced', 'S Line', 'Black Edition', 'فل كامل', 'أخرى'],
+  },
+  'بورش': {
+    'كايين': ['Base', 'S', 'GTS', 'Turbo', 'Coupe', 'أخرى'],
+    'ماكان': ['Base', 'T', 'S', 'GTS', 'أخرى'],
+    'باناميرا': ['Base', '4', '4S', 'GTS', 'Turbo', 'أخرى'],
+  },
+  'لاند روفر': {
+    'رينج روفر': ['SE', 'HSE', 'Autobiography', 'SV', 'فل كامل', 'أخرى'],
+    'ديفندر': ['S', 'SE', 'HSE', 'X-Dynamic', 'V8', 'أخرى'],
+    'ديسكفري': ['S', 'SE', 'HSE', 'R-Dynamic', 'أخرى'],
+  },
+};

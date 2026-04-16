@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 interface LuckWinnerBannerProps {
   winner: {
@@ -13,6 +14,8 @@ interface LuckWinnerBannerProps {
 
 export default function LuckWinnerBanner({ winner }: LuckWinnerBannerProps) {
   const [dismissed, setDismissed] = useState(false);
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
   if (dismissed) return null;
 
@@ -23,16 +26,16 @@ export default function LuckWinnerBanner({ winner }: LuckWinnerBannerProps) {
       end={{ x: 1, y: 0 }}
       style={styles.container}
     >
-      <TouchableOpacity style={styles.dismiss} onPress={() => setDismissed(true)}>
+      <TouchableOpacity style={[styles.dismiss, isRTL ? styles.dismissRtl : styles.dismissLtr]} onPress={() => setDismissed(true)}>
         <Ionicons name="close" size={16} color="rgba(255,255,255,0.8)" />
       </TouchableOpacity>
 
-      <View style={styles.content}>
+      <View style={[styles.content, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
         <Text style={styles.trophy}>🏆</Text>
-        <View style={styles.textBlock}>
-          <Text style={styles.title}>الكود الفائز في السحب</Text>
+        <View style={[styles.textBlock, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('luck.winnerTitle')}</Text>
           <Text style={styles.code}>{winner.code}</Text>
-          <Text style={styles.name}>الفائز: {winner.userName}</Text>
+          <Text style={[styles.name, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('luck.winnerName', { name: winner.userName })}</Text>
         </View>
       </View>
     </LinearGradient>
@@ -51,9 +54,14 @@ const styles = StyleSheet.create({
   dismiss: {
     position: 'absolute',
     top: 8,
-    left: 10,
     padding: 4,
     zIndex: 1,
+  },
+  dismissRtl: {
+    left: 10,
+  },
+  dismissLtr: {
+    right: 10,
   },
   content: {
     flexDirection: 'row',

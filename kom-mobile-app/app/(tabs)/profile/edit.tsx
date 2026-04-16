@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuthStore } from '../../../store/authStore';
+import { useAppTranslation, useLanguage } from '../../../context/LanguageContext';
 import { useTheme } from '../../../context/ThemeContext';
 import { PageHeader } from '@/components/ui/page-header';
 
@@ -22,6 +23,8 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const { user, updateProfile, uploadAvatar } = useAuthStore();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
   const theme = {
     background: isDark ? '#0f172a' : '#fff',
@@ -56,7 +59,7 @@ export default function EditProfileScreen() {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('تنبيه', 'يرجى السماح بالوصول إلى الصور');
+        Alert.alert(t('common.warning'), t('profile.photoPermission'));
         return;
       }
 
@@ -78,10 +81,15 @@ export default function EditProfileScreen() {
         mimeType: (asset as any).mimeType,
         file: (asset as any).file,
       });
-      Alert.alert('تم', 'تم تحديث الصورة بنجاح');
+      Alert.alert(t('common.success'), t('profile.updatePhotoSuccess'));
     } catch (error) {
       console.error('Upload avatar failed', error);
-      Alert.alert('خطأ', 'فشل تحديث الصورة');
+      const message =
+        (error as any)?.response?.data?.error?.message ||
+        (error as any)?.response?.data?.message ||
+        (error as any)?.message ||
+        t('profile.updatePhotoFailed');
+      Alert.alert(t('common.error'), message);
     } finally {
       setIsUploading(false);
     }
@@ -92,7 +100,7 @@ export default function EditProfileScreen() {
     const trimmedPhone = phone.trim();
 
     if (!trimmedName) {
-      Alert.alert('تنبيه', 'يرجى إدخال الاسم');
+      Alert.alert(t('common.warning'), t('profile.enterName'));
       return;
     }
 
@@ -107,15 +115,15 @@ export default function EditProfileScreen() {
     try {
       setIsSaving(true);
       await updateProfile(payload);
-      Alert.alert('تم', 'تم تحديث البيانات بنجاح');
+      Alert.alert(t('common.success'), t('profile.updateSuccess'));
       router.back();
     } catch (error: any) {
       console.error('Update profile failed', error);
       const message =
         error?.response?.data?.error?.message ||
         error?.response?.data?.message ||
-        'فشل تحديث البيانات';
-      Alert.alert('خطأ', message);
+        t('profile.updateFailed');
+      Alert.alert(t('common.error'), message);
     } finally {
       setIsSaving(false);
     }
@@ -127,7 +135,7 @@ export default function EditProfileScreen() {
       edges={['left', 'right', 'bottom']}
     >
       <PageHeader
-        title="تعديل الملف الشخصي"
+        title={t('profile.editTitle')}
         variant="gradient"
         onBack={() => router.replace('/profile')}
       />
@@ -145,32 +153,34 @@ export default function EditProfileScreen() {
             {isUploading ? (
               <ActivityIndicator color={theme.primary} />
             ) : (
-              <Text style={[styles.changePhotoText, { color: theme.primary }]}>تغيير الصورة</Text>
+              <Text style={[styles.changePhotoText, { color: theme.primary }]}>{t('profile.changePhoto')}</Text>
             )}
           </TouchableOpacity>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: theme.textMuted }]}>{isShowroom ? 'اسم الصالة' : 'الاسم الكامل'}</Text>
+          <Text style={[styles.label, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{isShowroom ? t('auth.showroomLabel') : t('auth.fullName')}</Text>
           <TextInput
             style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
             value={name}
             onChangeText={setName}
-            placeholder={isShowroom ? 'اسم الصالة' : 'الاسم الكامل'}
-            textAlign="right"
+            placeholder={isShowroom ? t('auth.showroomLabel') : t('auth.fullName')}
+            textAlign={isRTL ? 'right' : 'left'}
+            writingDirection={isRTL ? 'rtl' : 'ltr'}
             placeholderTextColor={theme.textMuted}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: theme.textMuted }]}>رقم الهاتف</Text>
+          <Text style={[styles.label, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.phone')}</Text>
           <TextInput
             style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
             value={phone}
             onChangeText={setPhone}
-            placeholder="+97339001001"
+            placeholder={t('auth.phonePlaceholder')}
             keyboardType="phone-pad"
-            textAlign="right"
+            textAlign={isRTL ? 'right' : 'left'}
+            writingDirection={isRTL ? 'rtl' : 'ltr'}
             placeholderTextColor={theme.textMuted}
           />
         </View>
@@ -179,7 +189,7 @@ export default function EditProfileScreen() {
           {isSaving ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveButtonText}>حفظ التغييرات</Text>
+            <Text style={styles.saveButtonText}>{t('profile.saveChanges')}</Text>
           )}
         </TouchableOpacity>
         <AdsBanner />
@@ -215,6 +225,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+    alignItems: 'stretch',
   },
   avatarWrap: {
     alignItems: 'center',
@@ -256,6 +267,7 @@ const styles = StyleSheet.create({
   inputGroup: {
     marginBottom: 16,
     width: '100%',
+    alignSelf: 'stretch',
   },
   label: {
     fontSize: 13,
@@ -263,7 +275,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     textAlign: 'right',
     writingDirection: 'rtl',
-    alignSelf: 'stretch',
+    alignSelf: 'flex-end',
+    width: '100%',
   },
   input: {
     backgroundColor: '#fff',
@@ -274,6 +287,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 15,
     color: '#0f172a',
+    textAlign: 'right',
+    writingDirection: 'rtl',
+    width: '100%',
+    alignSelf: 'stretch',
   },
   saveButton: {
     backgroundColor: '#D4AF37',
@@ -281,6 +298,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 8,
+    alignSelf: 'stretch',
   },
   saveButtonText: {
     color: '#fff',

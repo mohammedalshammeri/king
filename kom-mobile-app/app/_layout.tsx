@@ -6,7 +6,7 @@ import {
   Cairo_700Bold,
   Cairo_800ExtraBold,
 } from '@expo-google-fonts/cairo';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -28,43 +28,72 @@ import * as Updates from 'expo-updates';
 import { StatusBar } from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AppErrorBoundary } from '../components/AppErrorBoundary';
 import { useAuthStore } from '../store/authStore';
+import { useChatStore } from '../store/chatStore';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
+import { LanguageProvider, useLanguage } from '../context/LanguageContext';
 import { registerForPushNotificationsAsync, savePushTokenToServer, saveGuestPushToken } from '../lib/notifications';
 import * as Notifications from 'expo-notifications';
+import { getApiBaseUrl } from '../services/api-url';
+import { io, Socket } from 'socket.io-client';
+import { AppLanguage } from '../lib/i18n';
 import 'react-native-reanimated';
 
 if (Platform.OS === 'web') {
   require('../global.css');
 }
 
-/* =======================
-   ✅ RTL – ROOT FIX (synchronous at module level)
-   ======================= */
-// يجب أن يُنفَّذ هذا قبل أي رسم
-I18nManager.allowRTL(true);
-I18nManager.forceRTL(true);
+const DIRECTION_RELOAD_KEY = 'app.direction.reload-target';
 
-const enforceRTL = async () => {
+type TextComponentWithDefaults = typeof Text & {
+  defaultProps?: {
+    style?: any;
+  };
+};
+
+type TextInputComponentWithDefaults = typeof TextInput & {
+  defaultProps?: {
+    style?: any;
+  };
+};
+
+const syncAppDirection = async (language: AppLanguage) => {
+  const shouldBeRTL = language === 'ar';
+
+  if (Platform.OS === 'web') {
+    return true;
+  }
+
   I18nManager.allowRTL(true);
-  I18nManager.forceRTL(true);
 
-  if (Platform.OS === 'web') return;
+  if (I18nManager.isRTL === shouldBeRTL) {
+    await AsyncStorage.removeItem(DIRECTION_RELOAD_KEY);
+    return true;
+  }
 
-  // إذا RTL مو شغال، أعد تحميل التطبيق مرة واحدة
-  if (!I18nManager.isRTL) {
-    const RELOAD_KEY = 'rtl_reload_v10';
-    const alreadyReloaded = await AsyncStorage.getItem(RELOAD_KEY);
-    if (alreadyReloaded === '1') return; // منع حلقة لا نهائية
-    await AsyncStorage.setItem(RELOAD_KEY, '1');
+  I18nManager.forceRTL(shouldBeRTL);
+
+  const nextTarget = shouldBeRTL ? 'rtl' : 'ltr';
+  const reloadedTarget = await AsyncStorage.getItem(DIRECTION_RELOAD_KEY);
+
+  if (reloadedTarget !== nextTarget) {
+    await AsyncStorage.setItem(DIRECTION_RELOAD_KEY, nextTarget);
     try {
       await Updates.reloadAsync();
-    } catch {}
-  } else {
-    // RTL شغال، امسح علامة إعادة التحميل
-    await AsyncStorage.removeItem('rtl_reload_v10');
+      return false;
+    } catch {
+      return true;
+    }
   }
+
+  return true;
 };
+
+const TextWithDefaults = Text as TextComponentWithDefaults;
+const TextInputWithDefaults = TextInput as TextInputComponentWithDefaults;
+const initialTextDefaultStyle = TextWithDefaults.defaultProps?.style;
+const initialTextInputDefaultStyle = TextInputWithDefaults.defaultProps?.style;
 
 SplashScreen.preventAutoHideAsync();
 
@@ -84,9 +113,40 @@ function RootLayoutContent({
   sloganFadeAnim: Animated.Value;
 }) {
   const { isDark } = useTheme();
+  const { ready: languageReady, language, isRTL } = useLanguage();
   const insets = useSafeAreaInsets();
+  const [directionReady, setDirectionReady] = useState(Platform.OS === 'web');
 
   const contentBackground = isDark ? '#0f172a' : '#ffffff';
+
+  useEffect(() => {
+    if (!languageReady) return;
+
+    let mounted = true;
+
+    const applyDirection = async () => {
+      const ready = await syncAppDirection(language);
+      if (mounted) setDirectionReady(ready);
+    };
+
+    void applyDirection();
+
+    return () => {
+      mounted = false;
+    };
+  }, [languageReady, language]);
+
+  useEffect(() => {
+    if (!languageReady) return;
+
+    const directionalStyle = [{ writingDirection: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }];
+
+    TextWithDefaults.defaultProps = TextWithDefaults.defaultProps || {};
+    TextWithDefaults.defaultProps.style = [...directionalStyle, initialTextDefaultStyle];
+
+    TextInputWithDefaults.defaultProps = TextInputWithDefaults.defaultProps || {};
+    TextInputWithDefaults.defaultProps.style = [...directionalStyle, initialTextInputDefaultStyle];
+  }, [languageReady, isRTL]);
 
   useEffect(() => {
     if (Platform.OS !== 'android') return;
@@ -113,11 +173,13 @@ function RootLayoutContent({
     };
   }, [isDark]);
 
+  if (!languageReady || !directionReady) return null;
+
   return (
     <NavigationThemeProvider value={DefaultTheme}>
-      <View style={{ flex: 1, backgroundColor: contentBackground }}>
+      <View style={{ flex: 1, backgroundColor: contentBackground, direction: isRTL ? 'rtl' : 'ltr' }}>
         {/* SafeArea top padding */}
-        <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: contentBackground }}>
+        <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: contentBackground, direction: isRTL ? 'rtl' : 'ltr' }}>
           <Stack
             screenOptions={{
               headerShown: false,
@@ -217,7 +279,6 @@ function RootLayoutContent({
 }
 
 export default function RootLayout() {
-  const [rtlReady, setRtlReady] = useState(Platform.OS === 'web'); // web ما يحتاج reload
   const [fontsLoaded] = useFonts({
     Cairo_400Regular,
     Cairo_500Medium,
@@ -226,7 +287,8 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  const { checkAuth, isAuthLoading } = useAuthStore();
+  const { checkAuth, isAuthLoading, isAuthenticated, user } = useAuthStore();
+  const chatSocketRef = useRef<Socket | null>(null);
 
   const [isVideoComplete, setIsVideoComplete] = useState(false);
   const [isSplashAnimationComplete, setIsSplashAnimationComplete] = useState(false);
@@ -247,11 +309,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     (async () => {
-      try {
-        await enforceRTL();
-      } finally {
-        setRtlReady(true);
-      }
+      // Direction is now synchronized from the active app language inside RootLayoutContent.
     })();
 
     checkAuth();
@@ -277,9 +335,18 @@ export default function RootLayout() {
       console.log('👆 Notification tapped:', response);
       // Handle navigation based on notification data
       const data = response.notification.request.content.data;
+      if (typeof data?.threadId === 'string' && data.threadId) {
+        router.push({
+          pathname: '/chat/[id]',
+          params: {
+            id: data.threadId,
+          },
+        });
+        return;
+      }
+
       if (data?.screen) {
-        // Navigate to specific screen based on notification data
-        // Example: router.push(data.screen);
+        router.push(data.screen as any);
       }
     });
 
@@ -318,20 +385,51 @@ export default function RootLayout() {
     };
   }, []);
 
-  // ✅ اجبار النصوص والحقول RTL عالميًا — تطبيق عربي فقط
   useEffect(() => {
-    if (!rtlReady) return;
+    if (!isAuthenticated || !user?.id) return;
 
-    // @ts-ignore
-    Text.defaultProps = Text.defaultProps || {};
-    // @ts-ignore
-    Text.defaultProps.style = [{ writingDirection: 'rtl', textAlign: 'right' }, Text.defaultProps.style];
+    registerForPushNotificationsAsync().then((token) => {
+      if (token) {
+        savePushTokenToServer(token);
+      }
+    });
+  }, [isAuthenticated, user?.id]);
 
-    // @ts-ignore
-    TextInput.defaultProps = TextInput.defaultProps || {};
-    // @ts-ignore
-    TextInput.defaultProps.style = [{ writingDirection: 'rtl', textAlign: 'right' }, TextInput.defaultProps.style];
-  }, [rtlReady]);
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) {
+      chatSocketRef.current?.disconnect();
+      chatSocketRef.current = null;
+      return;
+    }
+
+    const socketUrl = getApiBaseUrl().replace(/\/api\/v1\/?$/, '');
+    const socket = io(socketUrl, {
+      transports: ['websocket'],
+      reconnection: true,
+    });
+
+    chatSocketRef.current = socket;
+
+    const refreshChats = () => {
+      void useChatStore.getState().fetchChats();
+    };
+
+    socket.on('connect', () => {
+      socket.emit('joinUserRoom', { userId: user.id });
+      refreshChats();
+    });
+
+    socket.on('chat:refresh', refreshChats);
+
+    return () => {
+      socket.emit('leaveUserRoom', { userId: user.id });
+      socket.off('chat:refresh', refreshChats);
+      socket.disconnect();
+      if (chatSocketRef.current === socket) {
+        chatSocketRef.current = null;
+      }
+    };
+  }, [isAuthenticated, user?.id]);
 
   useEffect(() => {
     if (fontsLoaded && !isAuthLoading && isVideoComplete) {
@@ -348,21 +446,25 @@ export default function RootLayout() {
   }, [fontsLoaded, isAuthLoading, isVideoComplete]);
 
   // ✅ لا ترسم التطبيق إلا بعد RTL + الخطوط + auth
-  if (!fontsLoaded || isAuthLoading || !rtlReady) return null;
+  if (!fontsLoaded || isAuthLoading) return null;
 
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
-        <ThemeProvider>
-          <RootLayoutContent
-            isVideoComplete={isVideoComplete}
-            setIsVideoComplete={setIsVideoComplete}
-            isSplashAnimationComplete={isSplashAnimationComplete}
-            fadeAnim={fadeAnim}
-            scaleAnim={scaleAnim}
-            sloganFadeAnim={sloganFadeAnim}
-          />
-        </ThemeProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            <AppErrorBoundary>
+              <RootLayoutContent
+                isVideoComplete={isVideoComplete}
+                setIsVideoComplete={setIsVideoComplete}
+                isSplashAnimationComplete={isSplashAnimationComplete}
+                fadeAnim={fadeAnim}
+                scaleAnim={scaleAnim}
+                sloganFadeAnim={sloganFadeAnim}
+              />
+            </AppErrorBoundary>
+          </ThemeProvider>
+        </LanguageProvider>
       </SafeAreaProvider>
     </QueryClientProvider>
   );

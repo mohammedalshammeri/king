@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import AdsBanner from '@/components/ads/AdsBanner';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { Image } from 'expo-image';
@@ -9,45 +9,48 @@ import { useAuthStore } from '../../../store/authStore';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../context/ThemeContext';
+import { useAppTranslation, useLanguage } from '../../../context/LanguageContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../../../services/api';
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────
 // Menu config
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const BASE_MENU = [
-  { icon: 'person',        label: 'تعديل الملف الشخصي ', route: '/profile/edit',          bg: '#EFF6FF', color: '#3B82F6' },
-  { icon: 'list',          label: 'إعلاناتي',            route: '/(tabs)/my-listings',    bg: '#FEF9E7', color: '#D4AF37' },
-  { icon: 'heart',         label: 'المفضلة',             route: '/favorites',             bg: '#FEF2F2', color: '#EF4444' },
-  { icon: 'alert-circle',  label: 'الشكاوى',             route: '/complaints',            bg: '#FFFBEB', color: '#F59E0B' },
-  { icon: 'settings',      label: 'الإعدادات',           route: '/settings',              bg: '#F3F4F6', color: '#6B7280' },
-];
+// ─────────────────────────────────────────
+function getMenuItems(role: string | undefined, t: (key: string) => string) {
+  const baseMenu = [
+    { icon: 'person', label: t('settings.editProfile'), route: '/profile/edit', bg: '#EFF6FF', color: '#3B82F6' },
+    { icon: 'list', label: t('tabs.myListings'), route: '/(tabs)/my-listings', bg: '#FEF9E7', color: '#D4AF37' },
+    { icon: 'heart', label: t('favorites.title'), route: '/favorites', bg: '#FEF2F2', color: '#EF4444' },
+    { icon: 'alert-circle', label: t('complaints.title'), route: '/complaints', bg: '#FFFBEB', color: '#F59E0B' },
+    { icon: 'settings', label: t('settings.title'), route: '/settings', bg: '#F3F4F6', color: '#6B7280' },
+  ];
 
-function getMenuItems(role?: string) {
-  const items = [...BASE_MENU];
+  const items = [...baseMenu];
   if (role === 'USER_SHOWROOM') {
     items.splice(2, 0,
-      { icon: 'ribbon', label: 'اشتراكاتي', route: '/profile/subscriptions', bg: '#EFF6FF', color: '#0A0F1E' },
-      { icon: 'cash',   label: 'مدفوعاتي',  route: '/profile/payments',      bg: '#F0FDF4', color: '#16A34A' },
+      { icon: 'ribbon', label: t('profile.subscriptions'), route: '/profile/subscriptions', bg: '#EFF6FF', color: '#0A0F1E' },
+      { icon: 'cash', label: t('profile.payments'), route: '/profile/payments', bg: '#F0FDF4', color: '#16A34A' },
     );
   } else if (role === 'USER_INDIVIDUAL') {
     items.splice(2, 0,
-      { icon: 'pricetag',  label: 'باقاتي',     route: '/profile/individual-packages', bg: '#FFFBEB', color: '#D4AF37' },
-      { icon: 'cash',      label: 'مدفوعاتي',   route: '/profile/payments',            bg: '#F0FDF4', color: '#16A34A' },
+      { icon: 'pricetag', label: t('profile.packages'), route: '/profile/individual-packages', bg: '#FFFBEB', color: '#D4AF37' },
+      { icon: 'cash', label: t('profile.payments'), route: '/profile/payments', bg: '#F0FDF4', color: '#16A34A' },
     );
   }
   return items;
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────
 // Component
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, isAuthenticated, logout, refreshUser } = useAuthStore();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
-  const menuItems = getMenuItems(user?.role);
+  const menuItems = getMenuItems(user?.role, t);
   const [luckEntry, setLuckEntry] = useState<{ myCode: string | null; isWinner: boolean } | null>(null);
 
   useEffect(() => {
@@ -73,13 +76,12 @@ export default function ProfileScreen() {
     }, [isAuthenticated, refreshUser]),
   );
 
-  // Hide bottom tab bar on this screen while focused (try multiple ancestor levels)
+  // Hide bottom tab bar on this screen while focused
   const navigation = useNavigation();
   useFocusEffect(
     useCallback(() => {
       const parents: any[] = [];
       let p = (navigation as any).getParent?.();
-      // collect up to 4 ancestor navigators
       while (p && parents.length < 4) {
         parents.push(p);
         p = p.getParent?.();
@@ -108,7 +110,7 @@ export default function ProfileScreen() {
   const displayName =
     user?.individualProfile?.fullName ||
     user?.showroomProfile?.showroomName ||
-    user?.email || 'مستخدم';
+    user?.email || t('profile.defaultUser');
 
   const displayImage =
     user?.individualProfile?.avatarUrl ||
@@ -125,7 +127,7 @@ export default function ProfileScreen() {
     }
   };
 
-  // â”€â”€ Guest â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Guest ────────────────────────────
   if (!isAuthenticated) {
     return (
       <SafeAreaView style={[s.container, { backgroundColor: '#0E1830' }]} edges={['left', 'right', 'bottom']}>
@@ -134,30 +136,30 @@ export default function ProfileScreen() {
           <View style={s.deco1} />
           <View style={s.deco2} />
           <TouchableOpacity style={s.backBtn} activeOpacity={0.8} onPress={() => router.replace('/(tabs)')}>
-            <Ionicons name="arrow-forward" size={20} color="#D4AF37" />
+            <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color="#D4AF37" />
           </TouchableOpacity>
           <Image source={require('../../../assets/images/logo.png')} style={s.guestLogo} contentFit="contain" />
         </LinearGradient>
 
         <View style={[s.guestBody, { backgroundColor: bg }]}>
-          <Text style={[s.guestTitle, { color: textColor }]}>أهلاً بك في KOM</Text>
-          <Text style={[s.guestSub, { color: mutedColor }]}>سجّل دخولك للاستمتاع بكافة المميزات</Text>
+          <Text style={[s.guestTitle, { color: textColor, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('profile.guestTitle')}</Text>
+          <Text style={[s.guestSub, { color: mutedColor, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('profile.guestSubtitle')}</Text>
 
           <TouchableOpacity style={s.goldBtn} activeOpacity={0.85} onPress={() => router.push('/(auth)/login')}>
             <LinearGradient colors={['#E8C84A', '#D4AF37', '#A8860E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.goldBtnGrad}>
-              <Text style={s.goldBtnText}>تسجيل الدخول</Text>
+              <Text style={s.goldBtnText}>{t('auth.login')}</Text>
             </LinearGradient>
           </TouchableOpacity>
 
           <TouchableOpacity style={[s.outlineBtn, { borderColor: '#D4AF37' }]} activeOpacity={0.8} onPress={() => router.push('/(auth)/register')}>
-            <Text style={[s.outlineBtnText, { color: '#D4AF37' }]}>إنشاء حساب جديد</Text>
+            <Text style={[s.outlineBtnText, { color: '#D4AF37' }]}>{t('profile.createAccount')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
 
-  // â”€â”€ Authenticated â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Authenticated ────────────────────
   return (
     <SafeAreaView style={[s.container, { backgroundColor: '#0E1830' }]} edges={['left', 'right', 'bottom']}>
       <StatusBar style="light" />
@@ -169,12 +171,12 @@ export default function ProfileScreen() {
           <View style={s.deco2} />
 
           <TouchableOpacity
-            accessibilityLabel="رجوع للرئيسية"
+            accessibilityLabel={t('profile.backLabel')}
             style={s.backBtn}
             activeOpacity={0.8}
             onPress={() => router.replace('/(tabs)')}
           >
-            <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+            <Ionicons name={isRTL ? 'chevron-forward' : 'chevron-back'} size={20} color="#FFFFFF" />
           </TouchableOpacity>
 
           {/* Avatar */}
@@ -188,16 +190,16 @@ export default function ProfileScreen() {
             )}
           </View>
 
-          <Text style={s.heroName}>{displayName}</Text>
-          <Text style={s.heroEmail}>{user?.email}</Text>
+          <Text style={[s.heroName, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{displayName}</Text>
+          <Text style={[s.heroEmail, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{user?.email}</Text>
 
           {/* Stats */}
-          <View style={s.statsRow}>
-            <View style={s.statBox}><Text style={s.statNum}>0</Text><Text style={s.statLabel}>إعلاناتي</Text></View>
+          <View style={[s.statsRow, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
+            <View style={s.statBox}><Text style={s.statNum}>0</Text><Text style={s.statLabel}>{t('tabs.myListings')}</Text></View>
             <View style={[s.statDivider, { backgroundColor: 'rgba(255,255,255,0.2)' }]} />
-            <View style={s.statBox}><Text style={s.statNum}>0</Text><Text style={s.statLabel}>المفضلة</Text></View>
+            <View style={s.statBox}><Text style={s.statNum}>0</Text><Text style={s.statLabel}>{t('favorites.title')}</Text></View>
             <View style={[s.statDivider, { backgroundColor: 'rgba(255,255,255,0.2)' }]} />
-            <View style={s.statBox}><Text style={s.statNum}>0</Text><Text style={s.statLabel}>المشاهدات</Text></View>
+            <View style={s.statBox}><Text style={s.statNum}>0</Text><Text style={s.statLabel}>{t('profile.statsMessages')}</Text></View>
           </View>
         </LinearGradient>
 
@@ -210,15 +212,15 @@ export default function ProfileScreen() {
             style={s.luckCard}
           >
             <View style={s.luckLeft}>
-              <Text style={s.luckEmoji}>{luckEntry.isWinner ? '🏆' : '🎰'}</Text>
+              <Text style={s.luckEmoji}>{luckEntry.isWinner ? '🎉' : '🎁'}</Text>
             </View>
-            <View style={s.luckRight}>
-              <Text style={s.luckTitle}>
-                {luckEntry.isWinner ? 'مبروك! أنت الفائز' : 'كود الحظ الخاص بك'}
+            <View style={[s.luckRight, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+              <Text style={[s.luckTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+                {luckEntry.isWinner ? t('profile.luckWinnerTitle') : t('profile.luckCodeTitle')}
               </Text>
-              <Text style={s.luckCode}>{luckEntry.myCode}</Text>
+              <Text style={[s.luckCode, { textAlign: isRTL ? 'right' : 'left' }]}>{luckEntry.myCode}</Text>
               {luckEntry.isWinner && (
-                <Text style={s.luckWinnerNote}>تواصل مع الإدارة للمطالبة بجائزتك</Text>
+                <Text style={[s.luckWinnerNote, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('profile.luckWinnerNote')}</Text>
               )}
             </View>
           </LinearGradient>
@@ -231,15 +233,21 @@ export default function ProfileScreen() {
               key={item.route}
               style={[s.menuRow, idx < menuItems.length - 1 && { borderBottomWidth: 1, borderBottomColor: borderColor }]}
               activeOpacity={0.75}
-              onPress={() => router.push(item.route as any)}
+              onPress={() =>
+                router.push(
+                  item.route === '/favorites'
+                    ? ({ pathname: '/favorites', params: { source: 'profile' } } as any)
+                    : (item.route as any)
+                )
+              }
             >
-              <View style={s.menuLabelRow}>
+              <View style={[s.menuLabelRow, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
                 <View style={[s.iconPill, { backgroundColor: item.bg }]}>
                   <Ionicons name={item.icon as any} size={18} color={item.color} />
                 </View>
-                <Text style={[s.menuText, { color: textColor }]}>{item.label}</Text>
+                <Text style={[s.menuText, { color: textColor, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{item.label}</Text>
               </View>
-              <Ionicons name="chevron-back" size={18} color={mutedColor} />
+              <Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={18} color={mutedColor} />
             </TouchableOpacity>
           ))}
         </View>
@@ -251,7 +259,7 @@ export default function ProfileScreen() {
           onPress={handleLogout}
         >
           <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-          <Text style={s.logoutText}>تسجيل الخروج</Text>
+          <Text style={s.logoutText}>{t('settings.logout')}</Text>
         </TouchableOpacity>
 
         <AdsBanner />
@@ -260,9 +268,9 @@ export default function ProfileScreen() {
   );
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────
 // Styles
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────
 const s = StyleSheet.create({
   container: { flex: 1 },
 
@@ -279,8 +287,8 @@ const s = StyleSheet.create({
   avatarImg: { width: '100%', height: '100%' },
   avatarFallback: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   avatarLetter: { fontSize: 40, fontWeight: '900', color: '#D4AF37' },
-  heroName: { fontSize: 22, fontWeight: '800', color: '#FFFFFF', textAlign: 'center', marginBottom: 4 },
-  heroEmail: { fontSize: 13, color: 'rgba(255,255,255,0.55)', textAlign: 'center', marginBottom: 24 },
+  heroName: { fontSize: 22, fontWeight: '800', color: '#FFFFFF', textAlign: 'right', width: '100%', writingDirection: 'rtl', marginBottom: 4 },
+  heroEmail: { fontSize: 13, color: 'rgba(255,255,255,0.55)', textAlign: 'right', width: '100%', marginBottom: 24 },
 
   // stats
   statsRow: {
@@ -329,7 +337,7 @@ const s = StyleSheet.create({
   backBtn: {
     position: 'absolute',
     top: 12,
-    left: 12,
+    right: 12,
     width: 44,
     height: 44,
     borderRadius: 10,
@@ -339,8 +347,8 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)'
   },
   guestBody: { flex: 1, alignItems: 'center', padding: 32, paddingTop: 36 },
-  guestTitle: { fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 10 },
-  guestSub: { fontSize: 15, textAlign: 'center', marginBottom: 36, lineHeight: 22 },
+  guestTitle: { fontSize: 24, fontWeight: '800', textAlign: 'right', width: '100%', writingDirection: 'rtl', marginBottom: 10 },
+  guestSub: { fontSize: 15, textAlign: 'right', width: '100%', writingDirection: 'rtl', marginBottom: 36, lineHeight: 22 },
   goldBtn: {
     width: '100%', borderRadius: 28, overflow: 'hidden', marginBottom: 14,
     ...Platform.select({ default: { shadowColor: '#C9A227', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 14, elevation: 8 } }),

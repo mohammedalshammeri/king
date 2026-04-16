@@ -20,20 +20,24 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import SocialAuthSection, { SocialAuthProviderPayload } from '@/components/auth/SocialAuthSection';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 
 const MERCHANT_TYPES = [
-  { value: 'CAR_SHOWROOM', label: 'معرض سيارات' },
-  { value: 'SPARE_PARTS',  label: 'قطع الغيار'  },
-  { value: 'PLATES',       label: 'لوحات'        },
-  { value: 'MOTORCYCLES',  label: 'درجات'        },
+  { value: 'CAR_SHOWROOM', labelKey: 'merchantTypes.carShowroom' },
+  { value: 'SPARE_PARTS',  labelKey: 'merchantTypes.spareParts'  },
+  { value: 'PLATES',       labelKey: 'merchantTypes.plates'      },
+  { value: 'MOTORCYCLES',  labelKey: 'merchantTypes.motorcycles' },
 ] as const;
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { register, restoreDeletedAccount, isLoading } = useAuthStore();
+  const { register, restoreDeletedAccount, socialAuth, isLoading } = useAuthStore();
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
   const [userType, setUserType] = useState<'INDIVIDUAL' | 'SHOWROOM'>('INDIVIDUAL');
   const [merchantType, setMerchantType] = useState('CAR_SHOWROOM');
@@ -51,11 +55,11 @@ export default function RegisterScreen() {
 
   const getPasswordIssues = (value: string): string[] => {
     const issues: string[] = [];
-    if (value.length < 8) issues.push('كلمة المرور يجب أن تكون 8 أحرف على الأقل');
-    if (!/[a-z]/.test(value)) issues.push('يجب أن تحتوي على حرف صغير (a-z)');
-    if (!/[A-Z]/.test(value)) issues.push('يجب أن تحتوي على حرف كبير (A-Z)');
-    if (!/\d/.test(value)) issues.push('يجب أن تحتوي على رقم (0-9)');
-    if (!/[@$!%*?&]/.test(value)) issues.push('يجب أن تحتوي على رمز خاص (@ $ ! % * ? &)');
+    if (value.length < 8) issues.push(t('auth.passwordReqLength'));
+    if (!/[a-z]/.test(value)) issues.push(t('auth.passwordReqLower'));
+    if (!/[A-Z]/.test(value)) issues.push(t('auth.passwordReqUpper'));
+    if (!/\d/.test(value)) issues.push(t('auth.passwordReqDigit'));
+    if (!/[@$!%*?&]/.test(value)) issues.push(t('auth.passwordReqSpecial'));
     return issues;
   };
 
@@ -63,23 +67,23 @@ export default function RegisterScreen() {
     const name = userType === 'INDIVIDUAL' ? fullName : showroomName;
 
     if (!name.trim() || !email.trim() || !password.trim()) {
-      Alert.alert('تنبيه', 'يرجى ملء جميع الحقول');
+      Alert.alert(t('common.warning'), t('auth.fillAllFields'));
       return;
     }
 
     if (userType === 'SHOWROOM' && !crNumber.trim()) {
-      Alert.alert('تنبيه', 'يرجى إدخال رقم السجل التجاري');
+      Alert.alert(t('common.warning'), t('auth.enterCrNumber'));
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('تنبيه', 'كلمة المرور غير متطابقة');
+      Alert.alert(t('common.warning'), t('auth.passwordsMismatch'));
       return;
     }
 
     const passwordIssues = getPasswordIssues(password);
     if (passwordIssues.length) {
-      Alert.alert('كلمة مرور غير قوية', passwordIssues.join('\n'));
+      Alert.alert(t('auth.weakPasswordTitle'), passwordIssues.join('\n'));
       return;
     }
 
@@ -91,31 +95,31 @@ export default function RegisterScreen() {
           setLuckCode(code);
           setShowLuckModal(true);
         } else {
-          Alert.alert('تم استلام الطلب', 'تم إنشاء الحساب وهو قيد المراجعة.', [
-            { text: 'فهمت', onPress: () => router.replace('/(tabs)') },
+          Alert.alert(t('auth.registrationPendingTitle'), t('auth.registrationPendingMessage'), [
+            { text: t('common.understood'), onPress: () => router.replace('/(tabs)') },
           ]);
         }
       } else {
-        Alert.alert('تم التسجيل بنجاح', 'تم إنشاء حسابك بنجاح', [
-          { text: 'موافق', onPress: () => router.replace('/(tabs)') },
+        Alert.alert(t('auth.registerSuccessTitle'), t('auth.registerSuccessMessage'), [
+          { text: t('common.ok'), onPress: () => router.replace('/(tabs)') },
         ]);
       }
     } catch (error: any) {
       const errorData = error.response?.data?.error;
       if (errorData?.code === 'ACCOUNT_RECOVERY_REQUIRED') {
-        Alert.alert('استرجاع الحساب', errorData.message || 'يوجد حساب محذوف مؤقتاً بهذا البريد.', [
-          { text: 'إلغاء', style: 'cancel' },
+        Alert.alert(t('auth.accountRecoveryTitle'), errorData.message || t('auth.accountDeletedTemporary'), [
+          { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'استرجاع الحساب',
+            text: t('auth.restoreAccount'),
             onPress: async () => {
               try {
                 await restoreDeletedAccount(email.trim(), password.trim());
-                Alert.alert('تم الاسترجاع', 'تم استرجاع حسابك بنجاح.', [
-                  { text: 'موافق', onPress: () => router.replace('/(tabs)') },
+                Alert.alert(t('auth.restoreAccountSuccess'), t('auth.restoreAccountSuccessMessage'), [
+                  { text: t('common.ok'), onPress: () => router.replace('/(tabs)') },
                 ]);
               } catch (restoreError: any) {
                 const restoreMsg = restoreError.response?.data?.error?.message;
-                Alert.alert('خطأ', restoreMsg || 'فشل استرجاع الحساب.');
+                Alert.alert(t('common.error'), restoreMsg || t('auth.restoreAccountFailed'));
               }
             },
           },
@@ -126,25 +130,61 @@ export default function RegisterScreen() {
       if (errorData?.details && Array.isArray(errorData.details)) {
         const asStrings = errorData.details.filter((d: any) => typeof d === 'string');
         if (asStrings.length) {
-          Alert.alert('خطأ في التحقق من البيانات', asStrings.join('\n'));
+          Alert.alert(t('auth.validationErrorTitle'), asStrings.join('\n'));
           return;
         }
         const errorMessages = errorData.details
           .map((detail: any) => {
-            const field = detail.field || detail.property || 'حقل';
-            const message = detail.message || detail.constraints || 'قيمة غير صحيحة';
+            const field = detail.field || detail.property || t('common.requiredField');
+            const message = detail.message || detail.constraints || t('auth.validationInvalidData');
             return `${field}: ${message}`;
           })
           .join('\n');
-        Alert.alert('خطأ في التحقق من البيانات', errorMessages || 'بيانات غير صحيحة');
+        Alert.alert(t('auth.validationErrorTitle'), errorMessages || t('auth.validationInvalidData'));
       } else if (errorData?.message) {
-        Alert.alert('خطأ', errorData.message);
+        Alert.alert(t('common.error'), errorData.message);
       } else if (error.response?.data?.message) {
-        Alert.alert('خطأ', error.response.data.message);
+        Alert.alert(t('common.error'), error.response.data.message);
       } else {
-        Alert.alert('خطأ', 'فشل إنشاء الحساب. قد يكون البريد الإلكتروني مستخدماً مسبقاً.');
+        Alert.alert(t('common.error'), t('auth.registerFailed'));
       }
     }
+  };
+
+  const handleSocialRegister = async ({ provider, idToken, fullName: providerFullName }: SocialAuthProviderPayload) => {
+    if (userType === 'SHOWROOM') {
+      if (!showroomName.trim()) {
+        Alert.alert(t('common.warning'), t('auth.fillAllFields'));
+        return;
+      }
+
+      if (!crNumber.trim()) {
+        Alert.alert(t('common.warning'), t('auth.enterCrNumber'));
+        return;
+      }
+    }
+
+    const result = await socialAuth({
+      provider,
+      idToken,
+      userType,
+      ...(userType === 'INDIVIDUAL'
+        ? { fullName: fullName.trim() || providerFullName }
+        : {
+            showroomName: showroomName.trim(),
+            crNumber: crNumber.trim(),
+            merchantType,
+          }),
+      ...(phone.trim() ? { phone: phone.trim() } : {}),
+    });
+
+    if (result.user?.luckCode) {
+      setLuckCode(result.user.luckCode);
+      setShowLuckModal(true);
+      return;
+    }
+
+    router.replace('/(tabs)');
   };
 
   const inputBg     = isDark ? '#1E2A40' : '#F8FAFC';
@@ -172,16 +212,16 @@ export default function RegisterScreen() {
         <View style={s.blob2} />
 
         <TouchableOpacity
-          style={[s.backBtn, { top: insets.top + 12 }]}
+          style={[s.backBtn, isRTL ? s.backBtnRtl : s.backBtnLtr, { top: insets.top + 12 }]}
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
         >
-          <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+          <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color="#FFFFFF" />
         </TouchableOpacity>
 
-        <View style={s.heroContent}>
+        <View style={[s.heroContent, isRTL ? s.heroContentRtl : s.heroContentLtr]}>
           <Image source={require('../../assets/images/logo.png')} style={s.logo} contentFit="contain" />
-          <Text style={s.heroTitle}>حساب جديد</Text>
-          <Text style={s.heroSub}>انضم إلينا وابدأ البيع والشراء اليوم</Text>
+          <Text style={[s.heroTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.registerTitle')}</Text>
+          <Text style={[s.heroSub, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.registerSubtitle')}</Text>
         </View>
       </LinearGradient>
 
@@ -195,8 +235,8 @@ export default function RegisterScreen() {
 
           {/* User type selector */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor }]}>نوع الحساب</Text>
-            <View style={s.segmentRow}>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.userType')}</Text>
+            <View style={[s.segmentRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
               {(['INDIVIDUAL', 'SHOWROOM'] as const).map((type) => (
                 <TouchableOpacity
                   key={type}
@@ -205,7 +245,7 @@ export default function RegisterScreen() {
                   activeOpacity={0.8}
                 >
                   <Text style={[s.segmentText, userType === type && s.segmentTextActive]}>
-                    {type === 'INDIVIDUAL' ? 'فرد' : 'تاجر'}
+                    {type === 'INDIVIDUAL' ? t('auth.individual') : t('auth.merchant')}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -215,8 +255,8 @@ export default function RegisterScreen() {
           {/* Merchant type picker */}
           {userType === 'SHOWROOM' && (
             <View style={s.inputGroup}>
-              <Text style={[s.label, { color: labelColor }]}>نوع التاجر</Text>
-              <View style={s.merchantGrid}>
+              <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.merchantType')}</Text>
+              <View style={[s.merchantGrid, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                 {MERCHANT_TYPES.map((mt) => (
                   <TouchableOpacity
                     key={mt.value}
@@ -225,7 +265,7 @@ export default function RegisterScreen() {
                     activeOpacity={0.8}
                   >
                     <Text style={[s.merchantText, merchantType === mt.value && s.merchantTextActive]}>
-                      {mt.label}
+                      {t(mt.labelKey as any)}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -236,17 +276,18 @@ export default function RegisterScreen() {
           {/* Name */}
           <View style={s.inputGroup}>
             <Text style={[s.label, { color: labelColor }]}>
-              {userType === 'INDIVIDUAL' ? 'الاسم الكامل' : 'اسم المعرض / المتجر'}
+              {userType === 'INDIVIDUAL' ? t('auth.fullName') : t('auth.showroomName')}
             </Text>
-            <View style={[s.inputWrap, { backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="person" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
-                placeholder={userType === 'INDIVIDUAL' ? 'محمد علي' : 'معرض الخليج'}
+                placeholder={userType === 'INDIVIDUAL' ? t('auth.fullNamePlaceholder') : t('auth.showroomNamePlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={userType === 'INDIVIDUAL' ? fullName : showroomName}
                 onChangeText={userType === 'INDIVIDUAL' ? setFullName : setShowroomName}
-                textAlign="right"
+                textAlign={isRTL ? 'right' : 'left'}
+                writingDirection={isRTL ? 'rtl' : 'ltr'}
               />
             </View>
           </View>
@@ -254,16 +295,17 @@ export default function RegisterScreen() {
           {/* CR Number */}
           {userType === 'SHOWROOM' && (
             <View style={s.inputGroup}>
-              <Text style={[s.label, { color: labelColor }]}>رقم السجل التجاري</Text>
-              <View style={[s.inputWrap, { backgroundColor: inputBg, borderColor: inputBorder }]}>
+              <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.crNumber')}</Text>
+              <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
                 <Ionicons name="document-text" size={18} color="#94A3B8" style={s.icon} />
                 <TextInput
                   style={[s.input, { color: inputColor }]}
-                  placeholder="12-3456"
+                  placeholder={t('auth.crNumberPlaceholder')}
                   placeholderTextColor="#94A3B8"
                   value={crNumber}
                   onChangeText={setCrNumber}
-                  textAlign="right"
+                  textAlign={isRTL ? 'right' : 'left'}
+                  writingDirection={isRTL ? 'rtl' : 'ltr'}
                 />
               </View>
             </View>
@@ -271,83 +313,87 @@ export default function RegisterScreen() {
 
           {/* Email */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor }]}>البريد الإلكتروني</Text>
-            <View style={[s.inputWrap, { backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.email')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="mail" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
-                placeholder="name@example.com"
+                placeholder={t('auth.emailPlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
-                textAlign="right"
+                textAlign={isRTL ? 'right' : 'left'}
+                writingDirection={isRTL ? 'rtl' : 'ltr'}
               />
             </View>
           </View>
 
           {/* Phone */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor }]}>رقم الهاتف (اختياري)</Text>
-            <View style={[s.inputWrap, { backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.phoneOptional')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="call" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
-                placeholder="+97339001001"
+                placeholder={t('auth.phonePlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
-                textAlign="right"
+                textAlign={isRTL ? 'right' : 'left'}
+                writingDirection={isRTL ? 'rtl' : 'ltr'}
               />
             </View>
           </View>
 
           {/* Password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor }]}>كلمة المرور</Text>
-            <View style={[s.inputWrap, { backgroundColor: inputBg, borderColor: inputBorder }]}>
-              <TouchableOpacity onPress={() => setShowPass((v) => !v)} style={s.icon}>
-                <Ionicons name={showPass ? 'eye' : 'eye-off'} size={18} color="#94A3B8" />
-              </TouchableOpacity>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.password')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+              <Ionicons name="lock-closed" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
-                placeholder="••••••••"
+                placeholder={t('auth.passwordPlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPass}
                 autoCapitalize="none"
                 selectionColor={inputColor}
-                textAlign="right"
+                textAlign={isRTL ? 'right' : 'left'}
+                writingDirection={isRTL ? 'rtl' : 'ltr'}
               />
-              <Ionicons name="lock-closed" size={18} color="#94A3B8" style={{ marginEnd: 4 }} />
+              <TouchableOpacity onPress={() => setShowPass((v) => !v)} style={{ paddingHorizontal: 8 }}>
+                <Ionicons name={showPass ? 'eye' : 'eye-off'} size={18} color="#94A3B8" />
+              </TouchableOpacity>
             </View>
-            <Text style={s.hint}>
-              8 أحرف+ • حرف كبير • حرف صغير • رقم • رمز (@$!%*?&)
+            <Text style={[s.hint, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              {t('auth.passwordHint')}
             </Text>
           </View>
 
           {/* Confirm password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor }]}>تأكيد كلمة المرور</Text>
-            <View style={[s.inputWrap, { backgroundColor: inputBg, borderColor: inputBorder }]}>
-              <TouchableOpacity onPress={() => setShowConfirmPass((v) => !v)} style={s.icon}>
-                <Ionicons name={showConfirmPass ? 'eye' : 'eye-off'} size={18} color="#94A3B8" />
-              </TouchableOpacity>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.confirmPassword')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+              <Ionicons name="lock-closed" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
-                placeholder="••••••••"
+                placeholder={t('auth.passwordPlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPass}
                 autoCapitalize="none"
                 selectionColor={inputColor}
-                textAlign="right"
+                textAlign={isRTL ? 'right' : 'left'}
+                writingDirection={isRTL ? 'rtl' : 'ltr'}
               />
-              <Ionicons name="lock-closed" size={18} color="#94A3B8" style={{ marginEnd: 4 }} />
+              <TouchableOpacity onPress={() => setShowConfirmPass((v) => !v)} style={{ paddingHorizontal: 8 }}>
+                <Ionicons name={showConfirmPass ? 'eye' : 'eye-off'} size={18} color="#94A3B8" />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -362,17 +408,19 @@ export default function RegisterScreen() {
               {isLoading ? (
                 <ActivityIndicator color="#0A0B14" />
               ) : (
-                <Text style={s.submitText}>إنشاء حساب</Text>
+                <Text style={s.submitText}>{t('auth.createAccountButton')}</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>
 
+          <SocialAuthSection mode="register" disabled={isLoading} onAuthenticate={handleSocialRegister} />
+
           {/* Login link */}
-          <View style={s.footer}>
-            <Text style={s.footerNote}>لديك حساب بالفعل؟ </Text>
+          <View style={[s.footer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <Text style={s.footerNote}>{t('auth.haveAccount')}</Text>
             <Link href="/(auth)/login" asChild>
               <TouchableOpacity>
-                <Text style={s.loginLink}>تسجيل الدخول</Text>
+                <Text style={s.loginLink}>{t('auth.login')}</Text>
               </TouchableOpacity>
             </Link>
           </View>
@@ -414,15 +462,19 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(212,175,55,0.05)', bottom: -20, left: -50,
   },
   backBtn: {
-    position: 'absolute', left: 20, zIndex: 20,
+    position: 'absolute', zIndex: 20,
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center', alignItems: 'center',
   },
-  heroContent: { alignItems: 'center', paddingTop: 70 },
+  backBtnRtl: { right: 20 },
+  backBtnLtr: { left: 20 },
+  heroContent: { paddingTop: 70, width: '100%' },
+  heroContentRtl: { alignItems: 'flex-end' },
+  heroContentLtr: { alignItems: 'flex-start' },
   logo: { width: 110, height: 42, marginBottom: 20 },
-  heroTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', marginBottom: 6, textAlign: 'center' },
-  heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.6)', textAlign: 'center' },
+  heroTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', marginBottom: 6, width: '100%' },
+  heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.6)', width: '100%' },
 
   // scroll + card
   scrollContent: { flexGrow: 1, paddingHorizontal: 16, marginTop: 24 },
@@ -443,9 +495,8 @@ const s = StyleSheet.create({
 
   // inputs
   inputGroup: { marginBottom: 20 },
-  label: { fontSize: 13, fontWeight: '700', marginBottom: 8, textAlign: 'right' },
+  label: { fontSize: 13, fontWeight: '700', marginBottom: 8 },
   inputWrap: {
-    flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
     borderRadius: 16,
@@ -453,11 +504,11 @@ const s = StyleSheet.create({
     paddingVertical: 2,
   },
   icon: { marginStart: 8 },
-  input: { flex: 1, paddingVertical: 13, fontSize: 15, textAlign: 'right' },
-  hint: { marginTop: 6, fontSize: 11, color: '#94A3B8', textAlign: 'right', lineHeight: 16 },
+  input: { flex: 1, paddingVertical: 13, fontSize: 15 },
+  hint: { marginTop: 6, fontSize: 11, color: '#94A3B8', lineHeight: 16 },
 
   // user type segment
-  segmentRow: { flexDirection: 'row', gap: 12 },
+  segmentRow: { gap: 12 },
   segmentBtn: {
     flex: 1,
     backgroundColor: '#F8FAFC',
@@ -472,7 +523,7 @@ const s = StyleSheet.create({
   segmentTextActive: { color: '#FFFFFF' },
 
   // merchant type grid (2×2)
-  merchantGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  merchantGrid: { flexWrap: 'wrap', gap: 10 },
   merchantBtn: {
     width: '47%',
     backgroundColor: '#F8FAFC',

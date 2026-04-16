@@ -15,6 +15,7 @@ import api from '@/services/api';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuthStore } from '@/store/authStore';
 import { PageHeader } from '@/components/ui/page-header';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 interface Notification {
   id: string;
@@ -33,6 +34,8 @@ interface Notification {
 export default function NotificationsScreen() {
   const router = useRouter();
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { language, isRTL } = useLanguage();
   const { isAuthenticated } = useAuthStore();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,6 +106,11 @@ export default function NotificationsScreen() {
       router.push(`/listing/${notification.data.listingId}`);
     } else if (notification.data?.chatId) {
       router.push(`/chat/${notification.data.chatId}`);
+    } else if (notification.data?.storyId) {
+      router.push({
+        pathname: '/(tabs)/feed',
+        params: { storyId: notification.data.storyId },
+      });
     }
   };
 
@@ -144,24 +152,25 @@ export default function NotificationsScreen() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'الآن';
-    if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
-    if (diffHours < 24) return `منذ ${diffHours} ساعة`;
-    if (diffDays < 7) return `منذ ${diffDays} يوم`;
-    return date.toLocaleDateString('ar-SA');
+    if (diffMins < 1) return t('notifications.justNow');
+    if (diffMins < 60) return t('notifications.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('notifications.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('notifications.daysAgo', { count: diffDays });
+    return date.toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US');
   };
 
   const renderNotification = ({ item }: { item: Notification }) => (
     <TouchableOpacity
       style={[
         styles.notificationItem,
+        { flexDirection: isRTL ? 'row-reverse' : 'row' },
         {
           backgroundColor: item.isRead ? theme.card : theme.unread,
         },
       ]}
       onPress={() => handleNotificationPress(item)}
     >
-      {!item.isRead && <View style={styles.unreadBar} />}
+      {!item.isRead && <View style={[styles.unreadBar, isRTL ? styles.unreadBarRtl : styles.unreadBarLtr]} />}
 
       <View
         style={[
@@ -175,12 +184,12 @@ export default function NotificationsScreen() {
           color={getIconColor(item.type)}
         />
       </View>
-      <View style={styles.contentContainer}>
-        <Text style={[styles.title, { color: theme.text }]}>{item.title}</Text>
-        <Text style={[styles.message, { color: theme.textSecondary }]}>
+      <View style={[styles.contentContainer, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
+        <Text style={[styles.title, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{item.title}</Text>
+        <Text style={[styles.message, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
           {item.message}
         </Text>
-        <Text style={[styles.time, { color: theme.textSecondary }]}>
+        <Text style={[styles.time, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
           {formatDate(item.createdAt)}
         </Text>
       </View>
@@ -199,7 +208,7 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: theme.background }]}>
       <PageHeader
-        title="الإشعارات"
+        title={t('notifications.title')}
         backgroundColor={theme.card}
         borderColor={theme.border}
         textColor={theme.text}
@@ -208,19 +217,22 @@ export default function NotificationsScreen() {
       {!isAuthenticated ? (
         <View style={[styles.centered]}>
           <Ionicons name="lock-closed-outline" size={64} color={theme.textSecondary} />
-          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>تسجيل الدخول مطلوب</Text>
+          <Text style={[styles.emptyText, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('notifications.loginRequired')}</Text>
+          <Text style={[styles.loginHint, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+            {t('notifications.loginRequiredMessage')}
+          </Text>
           <TouchableOpacity 
             style={[styles.loginButton, { backgroundColor: theme.primary }]} 
             onPress={() => router.push('/(auth)/login')}
           >
-            <Text style={styles.loginButtonText}>تسجيل الدخول</Text>
+            <Text style={styles.loginButtonText}>{t('auth.login')}</Text>
           </TouchableOpacity>
         </View>
       ) : notifications.length === 0 ? (
         <View style={[styles.centered]}>
           <Ionicons name="notifications-off-outline" size={64} color={theme.textSecondary} />
-          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-            لا توجد إشعارات
+          <Text style={[styles.emptyText, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+            {t('notifications.noNotifications')}
           </Text>
         </View>
       ) : (
@@ -272,13 +284,20 @@ const styles = StyleSheet.create({
   },
   unreadBar: {
     position: 'absolute',
-    right: 0,
     top: 0,
     bottom: 0,
     width: 4,
+    backgroundColor: '#D4AF37',
+  },
+  unreadBarRtl: {
+    right: 0,
     borderTopRightRadius: 18,
     borderBottomRightRadius: 18,
-    backgroundColor: '#D4AF37',
+  },
+  unreadBarLtr: {
+    left: 0,
+    borderTopLeftRadius: 18,
+    borderBottomLeftRadius: 18,
   },
   iconContainer: {
     width: 52,
@@ -286,7 +305,7 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
-    marginStart: 14,
+    marginEnd: 14,
     flexShrink: 0,
   },
   contentContainer: {
@@ -324,6 +343,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 16,
     fontWeight: '500',
+    textAlign: 'center',
+  },
+  loginHint: {
+    fontSize: 14,
+    marginTop: 8,
+    lineHeight: 22,
     textAlign: 'center',
   },
   loginButton: {

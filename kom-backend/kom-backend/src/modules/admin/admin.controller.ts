@@ -9,6 +9,7 @@ import {
   CreateAdminDto,
   UpdateAdminPermissionsDto,
   BanUserDto,
+  RejectUserDto,
   AdminQueryDto,
   UserQueryDto,
   UpdateSystemSettingDto,
@@ -123,8 +124,12 @@ export class AdminController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({ summary: 'Reject a showroom user (deletes account)' })
   @ApiResponse({ status: 200, description: 'User rejected and deleted' })
-  async rejectUser(@CurrentUser('id') adminId: string, @Param('id') userId: string) {
-    return this.adminService.rejectUser(adminId, userId);
+  async rejectUser(
+    @CurrentUser('id') adminId: string,
+    @Param('id') userId: string,
+    @Body() dto: RejectUserDto,
+  ) {
+    return this.adminService.rejectUser(adminId, userId, dto);
   }
 
   // System settings (Super Admin only)

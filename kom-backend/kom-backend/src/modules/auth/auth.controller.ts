@@ -7,6 +7,7 @@ import { CurrentUser, Public } from '../../common/decorators';
 import {
   RegisterDto,
   LoginDto,
+  SocialAuthDto,
   RestoreAccountDto,
   RefreshTokenDto,
   LogoutDto,
@@ -24,6 +25,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
+  @Throttle({ default: { ttl: 3600000, limit: 5 } })
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully', type: AuthResponseDto })
   @ApiResponse({ status: 409, description: 'User already exists' })
@@ -41,6 +43,17 @@ export class AuthController {
   @ApiResponse({ status: 403, description: 'Account banned or inactive' })
   async login(@Body() dto: LoginDto): Promise<AuthResponseDto> {
     return this.authService.login(dto);
+  }
+
+  @Public()
+  @Post('social')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login or register with Google or Apple' })
+  @ApiResponse({ status: 200, description: 'Social authentication successful', type: AuthResponseDto })
+  @ApiResponse({ status: 401, description: 'Invalid identity token' })
+  async socialAuth(@Body() dto: SocialAuthDto): Promise<AuthResponseDto> {
+    return this.authService.socialAuth(dto);
   }
 
   @Public()

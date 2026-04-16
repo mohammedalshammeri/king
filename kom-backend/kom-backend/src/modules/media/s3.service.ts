@@ -16,6 +16,11 @@ export interface PresignedUrlResponse {
   expiresIn: number;
 }
 
+export interface UploadedObjectResponse {
+  objectKey: string;
+  publicUrl: string;
+}
+
 @Injectable()
 export class S3Service {
   private readonly logger = new Logger(S3Service.name);
@@ -54,8 +59,7 @@ export class S3Service {
     contentType: string,
     fileSize: number,
   ): Promise<PresignedUrlResponse> {
-    const fileExtension = fileName.split('.').pop() || '';
-    const objectKey = `${folder}/${uuidv4()}.${fileExtension}`;
+    const objectKey = this.buildObjectKey(folder, fileName, contentType);
 
     const expiresIn = this.configService.get<number>('storage.presignUploadExpiration') || 3600;
 
@@ -75,6 +79,29 @@ export class S3Service {
       objectKey,
       publicUrl,
       expiresIn,
+    };
+  }
+
+  async uploadBuffer(
+    folder: string,
+    buffer: Buffer,
+    contentType: string,
+    fileName?: string,
+  ): Promise<UploadedObjectResponse> {
+    const objectKey = this.buildObjectKey(folder, fileName, contentType);
+
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: objectKey,
+      Body: buffer,
+      ContentType: contentType,
+    });
+
+    await this.s3Client.send(command);
+
+    return {
+      objectKey,
+      publicUrl: this.getPublicUrl(objectKey),
     };
   }
 
@@ -143,5 +170,32 @@ export class S3Service {
 
     const maxMb = this.configService.get<number>('media.maxVideoSizeMb') || 100;
     return maxMb * 1024 * 1024;
+  }
+
+  private buildObjectKey(folder: string, fileName: string | undefined, contentType: string): string {
+    const normalizedFolder = folder.replace(/\/+$/, '');
+    const explicitExtension = fileName?.split('.').pop()?.trim();
+    const mimeExtension = this.getExtensionFromContentType(contentType);
+    const extension = explicitExtension || mimeExtension;
+    const suffix = extension ? `.${extension}` : '';
+    return `${normalizedFolder}/${uuidv4()}${suffix}`;
+  }
+
+  private getExtensionFromContentType(contentType: string): string | undefined {
+    const normalizedType = contentType.toLowerCase();
+    const extensionMap: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/heic': 'heic',
+      'image/heif': 'heif',
+      'video/mp4': 'mp4',
+      'video/quicktime': 'mov',
+      'video/x-m4v': 'm4v',
+      'video/webm': 'webm',
+    };
+
+    return extensionMap[normalizedType];
   }
 }

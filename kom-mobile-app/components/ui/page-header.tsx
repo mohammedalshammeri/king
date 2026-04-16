@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ViewStyle, TextStyle } from '
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 
 type PageHeaderProps = {
@@ -33,6 +34,7 @@ export function PageHeader({
 }: PageHeaderProps) {
   const router = useRouter();
   const { isDark } = useTheme();
+  const { isRTL } = useLanguage();
 
   const isLight = variant === 'light';
 
@@ -48,24 +50,26 @@ export function PageHeader({
   const backButton = showBack ? (
     <TouchableOpacity
       onPress={() => (onBack ? onBack() : router.back())}
-      style={styles.backBtn}
+      style={[styles.backBtn, isRTL ? styles.backBtnRtl : styles.backBtnLtr]}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
       <View style={[styles.backCircle, backCircleStyle]}>
-        <Ionicons name="arrow-forward" size={18} color={resolvedTextColor} />
+        <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={18} color={resolvedTextColor} />
       </View>
     </TouchableOpacity>
   ) : (
-    <View style={styles.backBtn} />
+    <View style={[styles.backBtnPlaceholder, isRTL ? styles.backBtnPlaceholderRtl : styles.backBtnPlaceholderLtr]} />
   );
 
   const content = (
     <>
       {backButton}
-      <Text style={[styles.title, { color: resolvedTextColor }, titleStyle]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
-        {title}
-      </Text>
-      <View style={styles.rightSlot}>{rightSlot}</View>
+      <View style={[styles.titleWrap, isRTL ? styles.titleWrapRtl : styles.titleWrapLtr]}>
+        <Text style={[styles.title, { color: resolvedTextColor, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }, titleStyle]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+          {title}
+        </Text>
+      </View>
+      <View style={[styles.rightSlot, isRTL ? styles.rightSlotRtl : styles.rightSlotLtr]}>{rightSlot}</View>
     </>
   );
 
@@ -97,13 +101,14 @@ export function PageHeader({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
+    position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
     paddingTop: 16,
     borderBottomWidth: 0,
+    minHeight: 68,
   },
   gradientContainer: {
     shadowColor: '#000',
@@ -114,13 +119,32 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     position: 'absolute',
-    left: 16,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
+    top: 16,
     width: 44,
+    minWidth: 44,
+    justifyContent: 'center',
     alignItems: 'center',
+    height: 44,
     zIndex: 2,
+  },
+  backBtnRtl: {
+    right: 16,
+  },
+  backBtnLtr: {
+    left: 16,
+  },
+  backBtnPlaceholder: {
+    position: 'absolute',
+    top: 16,
+    width: 44,
+    minWidth: 44,
+    height: 44,
+  },
+  backBtnPlaceholderRtl: {
+    left: 16,
+  },
+  backBtnPlaceholderLtr: {
+    right: 16,
   },
   backCircle: {
     width: 36,
@@ -142,24 +166,39 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(14,24,48,0.3)',
   },
+  titleWrap: {
+    width: '100%',
+    justifyContent: 'center',
+    paddingHorizontal: 56,
+  },
+  titleWrapRtl: {
+    alignItems: 'flex-end',
+  },
+  titleWrapLtr: {
+    alignItems: 'flex-start',
+  },
   title: {
     fontSize: 18,
     fontWeight: '800',
-    textAlign: 'center',
+    width: '100%',
     flexShrink: 1,
-    paddingHorizontal: 56,
-    writingDirection: 'rtl',
     letterSpacing: 0.3,
   },
   rightSlot: {
     position: 'absolute',
-    right: 16,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
+    top: 16,
     minWidth: 44,
-    zIndex: 2,
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+  },
+  rightSlotRtl: {
+    left: 16,
+    alignItems: 'flex-start',
+  },
+  rightSlotLtr: {
+    right: 16,
+    alignItems: 'flex-end',
   },
 });
 

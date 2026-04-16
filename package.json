@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "test:backend": "npm --prefix ./kom-backend/kom-backend test -- --runInBand",
+    "test:backend:phase4": "npm --prefix ./kom-backend/kom-backend test -- --runInBand auth.service.spec.ts payments.service.spec.ts moderation.service.spec.ts chats.service.spec.ts"
+  },
   "dependencies": {
     "@expo-google-fonts/cairo": "^0.4.2",
     "@nestjs/schedule": "^6.1.0",

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,13 +12,14 @@ import {
 } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PageHeader } from '../../components/ui/page-header';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 import api from '../../services/api';
 import VideoFeedItem from '../../components/feed/VideoFeedItem';
 import StoryViewer from '../../components/stories/StoryViewer';
@@ -31,8 +32,8 @@ const GRID_GAP = 3;
 const THUMB_WIDTH = (SCREEN_WIDTH - GRID_GAP * (GRID_COLS + 1)) / GRID_COLS;
 const THUMB_HEIGHT = THUMB_WIDTH * 1.6;
 
-// ─── Story Circle ────────────────────────────────────────────────
-function StoryCircle({ user, onPress }: { user: StoryUser; onPress: () => void }) {
+// ??? Story Circle ????????????????????????????????????????????????
+function StoryCircle({ user, onPress, fallbackName }: { user: StoryUser; onPress: () => void; fallbackName: string }) {
   const avatar = user.stories?.[0]?.mediaUrl ?? null;
   return (
     <TouchableOpacity style={sc.storyItem} onPress={onPress} activeOpacity={0.8}>
@@ -48,7 +49,7 @@ function StoryCircle({ user, onPress }: { user: StoryUser; onPress: () => void }
         </View>
       </LinearGradient>
       <Text style={sc.storyName} numberOfLines={1}>
-        {user.userName ?? 'مستخدم'}
+        {user.userName ?? fallbackName}
       </Text>
     </TouchableOpacity>
   );
@@ -62,7 +63,7 @@ const sc = StyleSheet.create({
   storyName: { color: '#D4AF37', fontSize: 10, marginTop: 4, textAlign: 'center', maxWidth: 68 },
 });
 
-// ─── Fullscreen Reels Modal ───────────────────────────────────────
+// ??? Fullscreen Reels Modal ???????????????????????????????????????
 function ReelsModal({
   visible,
   videos,
@@ -139,7 +140,7 @@ function ReelsModal({
   );
 }
 
-// ─── Video Thumbnail Card ─────────────────────────────────────────
+// ??? Video Thumbnail Card ?????????????????????????????????????????
 function VideoThumb({ item, onPress }: { item: any; onPress: () => void }) {
   const thumb = item.thumbnailUrl ?? item.thumbnail ?? null;
   return (
@@ -162,12 +163,15 @@ function VideoThumb({ item, onPress }: { item: any; onPress: () => void }) {
   );
 }
 
-// ─── Main Component ──────────────────────────────────────────────
+// ??? Main Component ??????????????????????????????????????????????
 export default function Feed() {
   const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
+  const { storyId } = useLocalSearchParams<{ storyId?: string }>();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
   useLayoutEffect(() => {
     navigation.getParent()?.setOptions({ tabBarStyle: { display: 'none' } });
@@ -179,6 +183,8 @@ export default function Feed() {
   const [loading, setLoading] = useState(false);
   const [storyViewerVisible, setStoryViewerVisible] = useState(false);
   const [storyInitialIndex, setStoryInitialIndex] = useState(0);
+  const [initialStoryId, setInitialStoryId] = useState<string | undefined>(undefined);
+  const [handledStoryId, setHandledStoryId] = useState<string | null>(null);
   const [reelsVisible, setReelsVisible] = useState(false);
   const [reelsStartIndex, setReelsStartIndex] = useState(0);
 
@@ -202,6 +208,26 @@ export default function Feed() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  useEffect(() => {
+    if (!storyId || handledStoryId === storyId || stories.length === 0) {
+      return;
+    }
+
+    const matchingUserIndex = stories.findIndex((storyUser) =>
+      Array.isArray(storyUser.stories) && storyUser.stories.some((story) => story?.id === storyId)
+    );
+
+    setHandledStoryId(storyId);
+
+    if (matchingUserIndex === -1) {
+      return;
+    }
+
+    setStoryInitialIndex(matchingUserIndex);
+    setInitialStoryId(storyId);
+    setStoryViewerVisible(true);
+  }, [storyId, handledStoryId, stories]);
+
   const openReels = (index: number) => {
     setReelsStartIndex(index);
     setReelsVisible(true);
@@ -220,7 +246,12 @@ export default function Feed() {
           renderItem={({ item, index }) => (
             <StoryCircle
               user={item}
-              onPress={() => { setStoryInitialIndex(index); setStoryViewerVisible(true); }}
+              fallbackName={t('feed.defaultStoryUser')}
+              onPress={() => {
+                setInitialStoryId(undefined);
+                setStoryInitialIndex(index);
+                setStoryViewerVisible(true);
+              }}
             />
           )}
         />
@@ -233,7 +264,7 @@ export default function Feed() {
       <StatusBar style="light" />
 
       <PageHeader
-        title="فيديوهات & ستوريز"
+        title={t('feed.title')}
         showBack={true}
         onBack={() => router.replace('/(tabs)')}
         variant="gradient"
@@ -258,7 +289,7 @@ export default function Feed() {
           ListEmptyComponent={() => (
             <View style={s.centered}>
               <Ionicons name="videocam-outline" size={52} color="rgba(255,255,255,0.3)" />
-              <Text style={s.emptyText}>لا توجد فيديوهات حالياً</Text>
+              <Text style={[s.emptyText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('feed.empty')}</Text>
             </View>
           )}
         />
@@ -277,7 +308,11 @@ export default function Feed() {
         visible={storyViewerVisible}
         storyUsers={stories}
         initialUserIndex={storyInitialIndex}
-        onClose={() => setStoryViewerVisible(false)}
+        initialStoryId={initialStoryId}
+        onClose={() => {
+          setStoryViewerVisible(false);
+          setInitialStoryId(undefined);
+        }}
       />
     </View>
   );
@@ -327,7 +362,7 @@ const s = StyleSheet.create({
     color: '#fff',
     fontSize: 11,
     fontWeight: '600',
-    textAlign: 'right',
+    textAlign: 'center',
   },
   closeBtn: {
     position: 'absolute',

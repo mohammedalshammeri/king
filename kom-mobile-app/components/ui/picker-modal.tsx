@@ -1,11 +1,12 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 
 interface PickerModalProps {
   visible: boolean;
   title: string;
-  items: string[];
+  items: Array<string | { value: string; label: string }>;
   selectedValue: string;
   onSelect: (value: string) => void;
   onClose: () => void;
@@ -14,13 +15,17 @@ interface PickerModalProps {
 
 export const PickerModal = ({ visible, title, items, selectedValue, onSelect, onClose, hasOther = true }: PickerModalProps) => {
   const { isDark } = useTheme();
+  const { isRTL } = useLanguage();
+  const { t } = useAppTranslation();
   
   // Ensure "أخرى" (Other) is in the list if hasOther is true
-  const displayItems = [...items];
-  const otherText = 'أخرى';
+  const displayItems = items.map((item) => typeof item === 'string' ? { value: item, label: item } : item);
+  const otherText = t('common.other');
+  const canonicalOtherValue = 'أخرى';
+  const isOtherOption = (value: string) => value === canonicalOtherValue || value === otherText;
   
-  if (hasOther && !displayItems.includes(otherText)) {
-    displayItems.push(otherText);
+  if (hasOther && !displayItems.some((item) => isOtherOption(item.value) || isOtherOption(item.label))) {
+    displayItems.push({ value: canonicalOtherValue, label: otherText });
   }
 
   const theme = {
@@ -43,8 +48,8 @@ export const PickerModal = ({ visible, title, items, selectedValue, onSelect, on
     >
       <View style={[styles.modalOverlay, { backgroundColor: theme.overlay }]}>
         <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-          <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>{title}</Text>
+          <View style={[styles.modalHeader, { borderBottomColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <Text style={[styles.modalTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{title}</Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={24} color={theme.textMuted} />
             </TouchableOpacity>
@@ -52,30 +57,38 @@ export const PickerModal = ({ visible, title, items, selectedValue, onSelect, on
           
           <ScrollView style={styles.modalList}>
             {displayItems.map((item, index) => (
+              (() => {
+                const isSelected = selectedValue === item.value || (isOtherOption(item.value) && isOtherOption(selectedValue));
+                const displayLabel = isOtherOption(item.value) ? otherText : item.label;
+
+                return (
               <TouchableOpacity
-                key={`${item}-${index}`}
+                key={`${item.value}-${index}`}
                 style={[
                   styles.modalItem,
+                  { flexDirection: isRTL ? 'row-reverse' : 'row' },
                   { borderBottomColor: theme.border },
-                  selectedValue === item && styles.modalItemSelected,
-                  selectedValue === item && { backgroundColor: theme.selectedBg },
+                  isSelected && styles.modalItemSelected,
+                  isSelected && { backgroundColor: theme.selectedBg },
                 ]}
                 onPress={() => {
-                  onSelect(item);
+                  onSelect(isOtherOption(item.value) ? canonicalOtherValue : item.value);
                   onClose();
                 }}
               >
                 <Text style={[
                   styles.modalItemText,
-                  { color: theme.text },
-                  selectedValue === item && styles.modalItemTextSelected,
+                  { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' },
+                  isSelected && styles.modalItemTextSelected,
                 ]}>
-                  {item}
+                  {displayLabel}
                 </Text>
-                {selectedValue === item && (
+                {isSelected && (
                   <Ionicons name="checkmark" size={20} color={isDark ? '#fff' : '#000'} />
                 )}
               </TouchableOpacity>
+                );
+              })()
             ))}
           </ScrollView>
         </View>
@@ -96,7 +109,6 @@ const styles = StyleSheet.create({
     minHeight: 300,
   },
   modalHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 20,
@@ -105,14 +117,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    flex: 1,
   },
   modalList: {
     flex: 1,
   },
   modalItem: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
@@ -123,8 +133,6 @@ const styles = StyleSheet.create({
   },
   modalItemText: {
     fontSize: 15,
-    textAlign: 'right',
-    writingDirection: 'rtl',
     flex: 1,
   },
   modalItemTextSelected: {

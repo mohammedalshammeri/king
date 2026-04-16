@@ -1,7 +1,7 @@
 {
   "name": "kom-mobile-app",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "scripts": {
     "start": "expo start --go",
     "start:go": "expo start --go",
@@ -9,7 +9,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run"
   },
   "dependencies": {
     "@expo-google-fonts/cairo": "^0.4.2",
@@ -22,6 +23,8 @@
     "date-fns": "^4.1.0",
     "eslint": "^10.0.2",
     "expo": "~54.0.33",
+    "expo-apple-authentication": "~8.0.8",
+    "expo-auth-session": "~7.0.10",
     "expo-av": "^16.0.8",
     "expo-constants": "~18.0.13",
     "expo-dev-client": "^6.0.20",
@@ -33,6 +36,7 @@
     "expo-image-picker": "^17.0.10",
     "expo-linear-gradient": "^15.0.8",
     "expo-linking": "~8.0.11",
+    "expo-localization": "~17.0.8",
     "expo-navigation-bar": "~5.0.10",
     "expo-notifications": "~0.32.16",
     "expo-print": "~15.0.8",
@@ -44,9 +48,11 @@
     "expo-updates": "~29.0.16",
     "expo-video": "~3.0.16",
     "expo-web-browser": "~15.0.10",
+    "i18next": "^26.0.4",
     "nativewind": "^4.2.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-i18next": "^17.0.3",
     "react-native": "0.81.5",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
@@ -59,10 +65,17 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.58.2",
+    "@typescript-eslint/parser": "^8.58.2",
+    "autoprefixer": "^10.4.20",
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-plugin-transform-remove-console": "^6.9.4",
+    "jsdom": "^26.1.0",
+    "postcss": "^8.4.49",
     "react-test-renderer": "19.1.0",
-    "typescript": "~5.9.2"
+    "tailwindcss": "^3.4.4",
+    "typescript": "~5.9.2",
+    "vitest": "^3.2.4"
   },
   "private": true
 }

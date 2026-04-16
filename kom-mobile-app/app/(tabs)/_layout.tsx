@@ -1,11 +1,12 @@
 import { Tabs, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Platform, View, StyleSheet, I18nManager } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
 import { useChatStore } from '../../store/chatStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 import { Colors } from '../../constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -16,9 +17,8 @@ export default function TabLayout() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
-
-  // App is Arabic-first: force RTL UI even if Expo Go iOS doesn't flip I18nManager.isRTL.
-  const IS_RTL = I18nManager.isRTL;
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
   const tabBarBackground = '#0E1830'; // Always deep navy (brand identity)
   const activeTint = '#FFFFFF';       // White when selected
@@ -34,7 +34,7 @@ export default function TabLayout() {
     if (user) {
       fetchChats();
     }
-  }, [user]);
+  }, [user, fetchChats]);
 
   const handleTabPress = () => {
     if (Platform.OS !== 'web') {
@@ -42,11 +42,10 @@ export default function TabLayout() {
     }
   };
 
-  // ✅ ترتيب التابات للعربية RTL — الرئيسية أقصى اليمين
   const mainTabs = [
     {
       name: 'index' as const,
-      title: 'الرئيسية',
+      title: t('tabs.home'),
       icon: ({ color, focused }: { color: string; focused: boolean }) => (
         <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
       ),
@@ -56,7 +55,7 @@ export default function TabLayout() {
     },
     {
       name: 'feed' as const,
-      title: 'فيديو',
+      title: t('tabs.video'),
       icon: ({ color, focused }: { color: string; focused: boolean }) => (
         <Ionicons name={focused ? 'videocam' : 'videocam-outline'} size={24} color={color} />
       ),
@@ -89,7 +88,7 @@ export default function TabLayout() {
     },
     {
       name: 'chat' as const,
-      title: 'المحادثات',
+      title: t('chat.title'),
       icon: ({ color, focused }: { color: string; focused: boolean }) => (
         <Ionicons name={focused ? 'chatbubbles' : 'chatbubbles-outline'} size={24} color={color} />
       ),
@@ -113,7 +112,7 @@ export default function TabLayout() {
     },
     {
       name: 'profile/index' as const,
-      title: 'الملف',
+      title: t('tabs.profile'),
       icon: ({ color, focused }: { color: string; focused: boolean }) => (
         <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
       ),
@@ -163,7 +162,6 @@ export default function TabLayout() {
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
-        headerTitleAlign: 'center',
         tabBarHideOnKeyboard: true,
 
         tabBarStyle: [
@@ -182,6 +180,7 @@ export default function TabLayout() {
           fontSize: 10,
           fontWeight: '600',
           marginBottom: 4,
+          textAlign: isRTL ? 'right' : 'left',
         },
       })}
     >
@@ -201,7 +200,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="my-listings"
         options={{
-          title: 'إعلاناتي',
+          title: t('tabs.myListings'),
           href: null,
           tabBarIcon: ({ color }) => <Ionicons name="list-outline" size={24} color={color} />,
         }}
@@ -219,70 +218,70 @@ export default function TabLayout() {
         name="profile/edit"
         options={{
           href: null,
-          title: 'تعديل  الملف الشخصي',
+          title: t('settings.editProfile'),
         }}
       />
       <Tabs.Screen
         name="profile/payments"
         options={{
           href: null,
-          title: 'مدفوعاتي',
+          title: t('tabs.payments'),
         }}
       />
       <Tabs.Screen
         name="profile/subscriptions"
         options={{
           href: null,
-          title: 'اشتراكاتي',
+          title: t('tabs.subscriptions'),
         }}
       />
       <Tabs.Screen
         name="profile/individual-packages"
         options={{
           href: null,
-          title: 'باقاتي',
+          title: t('tabs.packages'),
         }}
       />
       <Tabs.Screen
         name="profile/payment-proof"
         options={{
           href: null,
-          title: 'إثبات الدفع',
+          title: t('tabs.paymentProof'),
         }}
       />
       <Tabs.Screen
         name="favorites"
         options={{
           href: null,
-          title: 'المفضلة',
+          title: t('favorites.title'),
         }}
       />
       <Tabs.Screen
         name="complaints"
         options={{
           href: null,
-          title: 'الشكاوى',
+          title: t('complaints.title'),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           href: null,
-          title: 'الإعدادات',
+          title: t('settings.title'),
         }}
       />
       <Tabs.Screen
         name="listing/[id]"
         options={{
           href: null,
-          title: 'تفاصيل الإعلان',
+          title: t('listing.detailsTitle'),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           href: null,
-          title: 'بحث',
+          title: t('tabs.search'),
         }}
       />
     </Tabs>

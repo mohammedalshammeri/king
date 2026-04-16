@@ -23,6 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StoryUser } from './StoriesRail';
 import { storiesService } from '@/services/stories';
 import { useAuthStore } from '@/store/authStore';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -31,12 +32,15 @@ interface StoryViewerProps {
   storyUsers: StoryUser[];
   initialUserIndex: number; // Keeping for fallback/compat
   initialUserId?: string;   // Adding for safety
+  initialStoryId?: string;
   onClose: () => void;
 }
 
-export default function StoryViewer({ visible, storyUsers, initialUserIndex, initialUserId, onClose }: StoryViewerProps) {
+export default function StoryViewer({ visible, storyUsers, initialUserIndex, initialUserId, initialStoryId, onClose }: StoryViewerProps) {
   const { user } = useAuthStore();
   const safeInsets = useSafeAreaInsets();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
   const [userIndex, setUserIndex] = useState(() => {
     if (initialUserId) {
@@ -71,8 +75,18 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
       if (found !== -1) idx = found;
     }
     setUserIndex(idx);
-    setStoryIndex(0);
-  }, [initialUserIndex, initialUserId, visible, storyUsers]);
+
+    let nextStoryIndex = 0;
+    if (initialStoryId) {
+      const storiesForUser = storyUsers[idx]?.stories ?? [];
+      const foundStoryIndex = storiesForUser.findIndex((story) => story?.id === initialStoryId);
+      if (foundStoryIndex !== -1) {
+        nextStoryIndex = foundStoryIndex;
+      }
+    }
+
+    setStoryIndex(nextStoryIndex);
+  }, [initialUserIndex, initialUserId, initialStoryId, visible, storyUsers]);
 
   const safeCurrentUser = storyUsers[userIndex] || storyUsers[initialUserIndex];
   const safeCurrentStory = safeCurrentUser?.stories?.[storyIndex];
@@ -422,7 +436,7 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
             >
               <TouchableOpacity activeOpacity={1} style={[styles.commentsContainer, { backgroundColor: '#1e1e1e' }]}>
                 <View style={styles.dragHandle} />
-                <Text style={styles.commentsTitle}>التعليقات</Text>
+                <Text style={[styles.commentsTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.commentsTitle')}</Text>
 
                 {loadingComments ? (
                   <ActivityIndicator style={{ marginTop: 20 }} color="#fff" />
@@ -433,8 +447,8 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
                     style={{ flex: 1 }}
                     contentContainerStyle={{ padding: 16 }}
                     ListEmptyComponent={
-                      <Text style={{ color: '#aaa', textAlign: 'center', marginTop: 20 }}>
-                        لا توجد تعليقات بعد. كن أول من يعلق!
+                      <Text style={{ color: '#aaa', textAlign: 'center', marginTop: 20, writingDirection: isRTL ? 'rtl' : 'ltr' }}>
+                        {t('stories.noComments')}
                       </Text>
                     }
                     renderItem={({ item }) => (
@@ -451,8 +465,8 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
                           ]}
                         />
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.commentUser}>{item.userName || 'مستخدم'}</Text>
-                          <Text style={styles.commentText}>{item.text}</Text>
+                          <Text style={[styles.commentUser, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{item.userName || t('feed.defaultStoryUser')}</Text>
+                          <Text style={[styles.commentText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{item.text}</Text>
                         </View>
                       </View>
                     )}
@@ -461,8 +475,8 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
 
                 <View style={styles.inputContainer}>
                   <TextInput
-                    style={styles.commentInput}
-                    placeholder="أضف تعليقاً..."
+                    style={[styles.commentInput, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}
+                    placeholder={t('stories.addCommentPlaceholder')}
                     placeholderTextColor="#999"
                     value={newComment}
                     onChangeText={setNewComment}

@@ -1,16 +1,19 @@
 import { Link, Stack } from 'expo-router';
 import { StyleSheet } from 'react-native';
 
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 import { Text, View } from '@/components/Themed';
 export default function NotFoundScreen() {
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
   return (
     <>
-      <Stack.Screen options={{ title: 'خطأ' }} />
+      <Stack.Screen options={{ title: t('notFound.title') }} />
       <View style={[styles.container]}>
-        <Text style={styles.title}>هذه الصفحة غير موجودة</Text>
+        <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('notFound.message')}</Text>
 
         <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>العودة للرئيسية</Text>
+          <Text style={[styles.linkText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('notFound.backHome')}</Text>
         </Link>
       </View>
     </>

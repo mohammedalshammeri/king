@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CloudinaryService } from '../media/cloudinary.service';
+import { S3Service } from '../media/s3.service';
 import { EmailService } from '../email/email.service';
 import { PaymentStatus, Currency, NotificationType, UserRole } from '@prisma/client';
 import {
@@ -27,6 +28,7 @@ export class PaymentsService {
     private readonly configService: ConfigService,
     private readonly notificationsService: NotificationsService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly s3Service: S3Service,
     private readonly emailService: EmailService,
   ) {}
 
@@ -583,10 +585,25 @@ export class PaymentsService {
   }
 
   async uploadProofImage(buffer: Buffer, _mimeType: string): Promise<string> {
-    const result = await this.cloudinaryService.uploadBuffer(buffer, {
-      folder: 'payment-proofs',
-      resourceType: 'image',
-    });
-    return result.secureUrl;
+    if (this.cloudinaryService.isReady()) {
+      try {
+        const result = await this.cloudinaryService.uploadBuffer(buffer, {
+          folder: 'payment-proofs',
+          resourceType: 'image',
+        });
+        return result.secureUrl;
+      } catch {
+        const result = await this.s3Service.uploadBuffer(
+          'payment-proofs',
+          buffer,
+          _mimeType || 'image/jpeg',
+          'proof',
+        );
+        return result.publicUrl;
+      }
+    }
+
+    const result = await this.s3Service.uploadBuffer('payment-proofs', buffer, _mimeType || 'image/jpeg', 'proof');
+    return result.publicUrl;
   }
 }

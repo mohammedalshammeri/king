@@ -38,5 +38,7 @@ COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/dist ./dist
 
+RUN chmod +x ./scripts/start-prod.sh
+
 EXPOSE 3000
-CMD ["npm","run","start:prod"]
+CMD ["./scripts/start-prod.sh"]

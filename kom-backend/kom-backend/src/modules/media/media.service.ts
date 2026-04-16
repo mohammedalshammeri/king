@@ -88,7 +88,7 @@ export class MediaService {
       sameTypeMedia.length > 0 ? Math.max(...sameTypeMedia.map((m) => m.sortOrder)) : -1;
     const sortOrder = maxSortOrder + 1;
 
-    // Upload to Cloudinary
+    // Upload to Cloudinary when configured, otherwise store directly in S3.
     const folder = `listings/${dto.listingId}/${dto.type.toLowerCase()}s`;
     const resourceType = dto.type === MediaType.VIDEO ? 'video' : 'image';
     let uploaded: {
@@ -101,10 +101,33 @@ export class MediaService {
     };
 
     try {
-      uploaded = await this.cloudinaryService.uploadBuffer(file.buffer, {
-        folder,
-        resourceType,
-      });
+      if (this.cloudinaryService.isReady()) {
+        try {
+          uploaded = await this.cloudinaryService.uploadBuffer(file.buffer, {
+            folder,
+            resourceType,
+          });
+        } catch {
+          const stored = await this.s3Service.uploadBuffer(
+            folder,
+            file.buffer,
+            contentType,
+            `${dto.type.toLowerCase()}`,
+          );
+          uploaded = {
+            secureUrl: stored.publicUrl,
+            publicId: stored.objectKey,
+            bytes: fileSize,
+          };
+        }
+      } else {
+        const stored = await this.s3Service.uploadBuffer(folder, file.buffer, contentType, `${dto.type.toLowerCase()}`);
+        uploaded = {
+          secureUrl: stored.publicUrl,
+          publicId: stored.objectKey,
+          bytes: fileSize,
+        };
+      }
     } catch (err: unknown) {
       // Convert unexpected Cloudinary errors into a clear 400 for the client.
       if (err instanceof BadRequestException) {

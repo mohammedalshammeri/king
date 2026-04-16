@@ -16,8 +16,12 @@ import { Logger } from '@nestjs/common';
   },
 })
 export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() server: Server;
+  @WebSocketServer() server!: Server;
   private logger: Logger = new Logger('ChatsGateway');
+
+  private getUserRoom(userId: string) {
+    return `user:${userId}`;
+  }
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
@@ -36,12 +40,32 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage('joinUserRoom')
+  handleJoinUserRoom(@MessageBody() data: { userId: string }, @ConnectedSocket() client: Socket) {
+    const { userId } = data;
+    if (userId) {
+      const roomId = this.getUserRoom(userId);
+      client.join(roomId);
+      this.logger.log(`Client ${client.id} joined user room: ${roomId}`);
+    }
+  }
+
   @SubscribeMessage('leaveRoom')
   handleLeaveRoom(@MessageBody() data: { roomId: string }, @ConnectedSocket() client: Socket) {
     const { roomId } = data;
     if (roomId) {
       client.leave(roomId);
       this.logger.log(`Client ${client.id} left room: ${roomId}`);
+    }
+  }
+
+  @SubscribeMessage('leaveUserRoom')
+  handleLeaveUserRoom(@MessageBody() data: { userId: string }, @ConnectedSocket() client: Socket) {
+    const { userId } = data;
+    if (userId) {
+      const roomId = this.getUserRoom(userId);
+      client.leave(roomId);
+      this.logger.log(`Client ${client.id} left user room: ${roomId}`);
     }
   }
 
@@ -54,6 +78,12 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   sendMessagesReadToRoom(roomId: string) {
     if (this.server) {
       this.server.to(roomId).emit('messagesRead');
+    }
+  }
+
+  sendChatRefreshToUser(userId: string, payload?: unknown) {
+    if (this.server) {
+      this.server.to(this.getUserRoom(userId)).emit('chat:refresh', payload ?? { userId });
     }
   }
 }

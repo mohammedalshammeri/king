@@ -13,6 +13,9 @@ export default function AuditLogsPage() {
   const [data, setData] = useState<PaginatedResponse<AuditLogItem> | null>(null);
   const [loading, setLoading] = useState(true);
   const [entityLookup, setEntityLookup] = useState<Record<string, { title?: string; owner?: string }>>({});
+  const [search, setSearch] = useState("");
+  const [actionFilter, setActionFilter] = useState("ALL");
+  const [entityFilter, setEntityFilter] = useState("ALL");
 
   const getActionLabel = (action: string) => {
     const map: Record<string, string> = {
@@ -228,10 +231,91 @@ export default function AuditLogsPage() {
     );
   }
 
+  const logs = data?.data ?? [];
+  const actionOptions = Array.from(new Set(logs.map((log) => log.action))).sort();
+  const entityOptions = Array.from(new Set(logs.map((log) => log.entityType))).sort();
+  const normalizedSearch = search.trim().toLowerCase();
+
+  const filteredLogs = logs.filter((log) => {
+    if (actionFilter !== "ALL" && log.action !== actionFilter) return false;
+    if (entityFilter !== "ALL" && log.entityType !== entityFilter) return false;
+    if (!normalizedSearch) return true;
+
+    const haystack = [
+      log.actor?.email,
+      getActionLabel(log.action),
+      log.entityType,
+      getEntityTitle(log),
+      getEntityOwner(log),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(normalizedSearch);
+  });
+
+  const todayCount = filteredLogs.filter((log) => {
+    const now = new Date();
+    const createdAt = new Date(log.createdAt);
+    return createdAt.toDateString() === now.toDateString();
+  }).length;
+
   return (
-    <div className="rounded-xl shadow-sm bg-white overflow-hidden">
-      <div className="bg-gray-50 px-4 py-3 text-sm font-semibold border-b border-gray-100">سجل العمليات</div>
-      <div className="overflow-x-auto">
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-xl bg-white p-4 shadow-sm">
+          <div className="text-sm text-gray-500">إجمالي العمليات</div>
+          <div className="mt-2 text-3xl font-bold text-gray-900">{logs.length}</div>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm">
+          <div className="text-sm text-gray-500">نتيجة الفلترة الحالية</div>
+          <div className="mt-2 text-3xl font-bold text-primary">{filteredLogs.length}</div>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm">
+          <div className="text-sm text-gray-500">عمليات اليوم</div>
+          <div className="mt-2 text-3xl font-bold text-amber-600">{todayCount}</div>
+        </div>
+      </div>
+
+      <div className="rounded-xl bg-white p-4 shadow-sm">
+        <div className="grid gap-3 md:grid-cols-3">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="بحث بالمشغل أو العملية أو الكيان أو المالك"
+            className="h-10 rounded-lg border px-3 text-sm outline-none focus:border-primary"
+          />
+          <select
+            value={actionFilter}
+            onChange={(e) => setActionFilter(e.target.value)}
+            className="h-10 rounded-lg border px-3 text-sm outline-none focus:border-primary"
+          >
+            <option value="ALL">كل العمليات</option>
+            {actionOptions.map((action) => (
+              <option key={action} value={action}>
+                {getActionLabel(action)}
+              </option>
+            ))}
+          </select>
+          <select
+            value={entityFilter}
+            onChange={(e) => setEntityFilter(e.target.value)}
+            className="h-10 rounded-lg border px-3 text-sm outline-none focus:border-primary"
+          >
+            <option value="ALL">كل الكيانات</option>
+            {entityOptions.map((entity) => (
+              <option key={entity} value={entity}>
+                {entity}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="rounded-xl shadow-sm bg-white overflow-hidden">
+        <div className="bg-gray-50 px-4 py-3 text-sm font-semibold border-b border-gray-100">سجل العمليات</div>
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-xs text-gray-500 font-medium">
             <tr>
@@ -244,7 +328,14 @@ export default function AuditLogsPage() {
             </tr>
           </thead>
           <tbody>
-            {data?.data?.map((log) => (
+            {filteredLogs.length === 0 && (
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-sm text-gray-400">
+                  لا توجد نتائج مطابقة للفلترة الحالية.
+                </td>
+              </tr>
+            )}
+            {filteredLogs.map((log) => (
               <tr key={log.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors last:border-0">
                 <td className="p-3">{log.actor?.email ?? "-"}</td>
                 <td className="p-3">
@@ -267,6 +358,7 @@ export default function AuditLogsPage() {
             ))}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );

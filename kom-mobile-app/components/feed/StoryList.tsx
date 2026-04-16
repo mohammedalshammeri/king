@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { Colors } from '../../constants/Colors';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 
 // Mock types - align with API response later
 interface StoryGroup {
@@ -19,10 +20,12 @@ interface StoryListProps {
 
 export default function StoryList({ stories, onStoryPress }: StoryListProps) {
   const { isDark } = useTheme();
+  const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#121212' : '#fff' }]}>
-      <Text style={[styles.title, { color: isDark ? '#fff' : '#000' }]}>القصص</Text>
+      <Text style={[styles.title, { color: isDark ? '#fff' : '#000', textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.title')}</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -35,7 +38,7 @@ export default function StoryList({ stories, onStoryPress }: StoryListProps) {
             <View style={[styles.avatarContainer, { borderColor: isDark ? '#333' : '#eee', borderStyle: 'dashed' }]}>
                 <Text style={{ fontSize: 24, color: Colors.primary }}>+</Text>
             </View>
-            <Text style={[styles.name, { color: isDark ? '#ccc' : '#666' }]}>قصتي</Text>
+            <Text style={[styles.name, { color: isDark ? '#ccc' : '#666', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.myStory')}</Text>
         </TouchableOpacity>
 
         {stories.map((group, index) => {
@@ -57,8 +60,8 @@ export default function StoryList({ stories, onStoryPress }: StoryListProps) {
                     resizeMode={isSystemAdmin ? 'contain' : 'cover'}
                 />
               </View>
-              <Text numberOfLines={1} style={[styles.name, { color: isDark ? '#fff' : '#000' }]}>
-                  {group.userName}
+              <Text numberOfLines={1} style={[styles.name, { color: isDark ? '#fff' : '#000', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+                  {group.userName || t('feed.defaultStoryUser')}
               </Text>
             </TouchableOpacity>
           );

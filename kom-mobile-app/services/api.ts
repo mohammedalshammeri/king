@@ -4,6 +4,12 @@ import * as SecureStore from 'expo-secure-store';
 import { getApiBaseUrl } from './api-url';
 
 const isWeb = typeof document !== 'undefined';
+
+type QueuedRequest = {
+  resolve: (token: string) => void;
+  reject: (error: unknown) => void;
+};
+
 async function getStoredToken(key: string): Promise<string | null> {
   if (isWeb) return window.localStorage?.getItem(key) ?? null;
   return SecureStore.getItemAsync(key);
@@ -15,6 +21,11 @@ async function saveStoredToken(key: string, value: string): Promise<void> {
 async function removeStoredToken(key: string): Promise<void> {
   if (isWeb) { window.localStorage?.removeItem(key); return; }
   await SecureStore.deleteItemAsync(key);
+}
+
+async function clearStoredAuthTokens(): Promise<void> {
+  await removeStoredToken('access_token');
+  await removeStoredToken('refresh_token');
 }
 
 // iOS Note: If localhost doesn't work on iOS Simulator, replace with your computer's local IP
@@ -54,11 +65,11 @@ api.interceptors.request.use(async (config) => {
 });
 
 let isRefreshing = false;
-let failedQueue: any[] = [];
+let failedQueue: QueuedRequest[] = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token?: string) => {
   failedQueue.forEach((prom) => {
-    if (error) {
+    if (error || !token) {
       prom.reject(error);
     } else {
       prom.resolve(token);
@@ -73,20 +84,22 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
+    const requestUrl = String(originalRequest?.url || '');
 
     // Handle 401 - Try to refresh token
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      // Don't attempt to refresh token if the 401 came from login itself
-      if (originalRequest.url && originalRequest.url.includes('/auth/login')) {
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      // Don't attempt to refresh token if the 401 came from auth endpoints themselves
+      if (requestUrl.includes('/auth/login') || requestUrl.includes('/auth/refresh')) {
         return Promise.reject(error);
       }
 
       if (isRefreshing) {
         // If already refreshing, queue this request
-        return new Promise((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
+            originalRequest.headers = originalRequest.headers ?? {};
             originalRequest.headers.Authorization = `Bearer ${token}`;
             return api(originalRequest);
           })
@@ -112,35 +125,32 @@ api.interceptors.response.use(
           refreshToken: effectiveRefreshToken,
         });
 
-        const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+        const tokenPayload = response.data?.data ?? response.data;
+        const accessToken = tokenPayload?.accessToken;
+        const newRefreshToken = tokenPayload?.refreshToken;
+
+        if (typeof accessToken !== 'string' || accessToken.length === 0) {
+          throw new Error('Invalid refresh response');
+        }
 
         // Save new tokens
         await saveStoredToken('access_token', accessToken);
         if (newRefreshToken) {
           await saveStoredToken('refresh_token', newRefreshToken);
         }
-        if (typeof window !== 'undefined') {
-          window.localStorage?.setItem('access_token', accessToken);
-          if (newRefreshToken) {
-            window.localStorage?.setItem('refresh_token', newRefreshToken);
-          }
-        }
 
         // Update authorization header
         api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+        originalRequest.headers = originalRequest.headers ?? {};
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
-        processQueue(null, accessToken);
+        processQueue(undefined, accessToken);
         return api(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null);
+        processQueue(refreshError);
         // Clear tokens if refresh fails
-        await removeStoredToken('access_token');
-        await removeStoredToken('refresh_token');
-        if (typeof window !== 'undefined') {
-          window.localStorage?.removeItem('access_token');
-          window.localStorage?.removeItem('refresh_token');
-        }
+        delete api.defaults.headers.common.Authorization;
+        await clearStoredAuthTokens();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
