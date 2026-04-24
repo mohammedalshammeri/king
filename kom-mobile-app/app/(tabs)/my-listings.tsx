@@ -1,6 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, ActivityIndicator, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +7,7 @@ import { Image } from 'expo-image';
 import { Colors } from '@/constants/Colors';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
-import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
+import { useAppTranslation } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { PageHeader } from '@/components/ui/page-header';
 
@@ -35,7 +34,6 @@ export default function MyListingsScreen() {
   const { isAuthenticated } = useAuthStore();
   const { isDark } = useTheme();
   const { t } = useAppTranslation();
-  const { isRTL } = useLanguage();
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -52,8 +50,8 @@ export default function MyListingsScreen() {
     primary: Colors.primary,
   };
 
-  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
-  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
+  const dirText = { textAlign: 'auto' as const};
+  const rowDirection = { flexDirection: 'row' as const };
 
   const statusLabels: Record<string, { label: string; color: string; bg: string }> = {
     DRAFT: { label: t('myListings.statusDraft'), color: '#64748B', bg: '#F1F5F9' },
@@ -115,7 +113,7 @@ export default function MyListingsScreen() {
               setListings(listings.filter(l => l.id !== listingId));
               fetchListings(true);
               Alert.alert(t('common.success'), t('myListings.deleteSuccess'));
-            } catch (error: any) {
+            } catch {
               Alert.alert(t('common.error'), t('myListings.deleteFailed'));
             }
           },
@@ -144,7 +142,7 @@ export default function MyListingsScreen() {
               await api.post(`/listings/${listingId}/mark-sold`);
               fetchListings();
               Alert.alert(t('common.success'), t('myListings.soldSuccess'));
-            } catch (error: any) {
+            } catch {
               Alert.alert(t('common.error'), t('myListings.updateFailed'));
             }
           },
@@ -560,7 +558,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1E293B',
-    textAlign: 'right',
+    textAlign: 'auto',
     marginEnd: 8,
   },
   statusBadge: {
@@ -577,7 +575,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.primary,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: 'auto',
   },
   cardLocation: {
     flexDirection: 'row',
@@ -615,7 +613,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     color: '#EF4444',
-    textAlign: 'right',
+    textAlign: 'auto',
   },
   cardActions: {
     flexDirection: 'row',

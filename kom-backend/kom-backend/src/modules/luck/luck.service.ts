@@ -84,9 +84,17 @@ export class LuckService {
   /** Admin: toggle feature on/off */
   async toggle() {
     const feature = await this.getOrCreateFeature();
+    const nextIsEnabled = !feature.isEnabled;
     const updated = await this.prisma.luckFeature.update({
       where: { id: feature.id },
-      data: { isEnabled: !feature.isEnabled },
+      data: nextIsEnabled
+        ? { isEnabled: true }
+        : {
+            isEnabled: false,
+            winnerId: null,
+            winnerCode: null,
+            drawnAt: null,
+          },
     });
     return {
       isEnabled: updated.isEnabled,

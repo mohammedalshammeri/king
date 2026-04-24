@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  I18nManager,
   View,
   Text,
   TextInput,
@@ -17,7 +18,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
+import { useAppTranslation } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 
@@ -51,7 +52,7 @@ export default function ResetPasswordScreen() {
   const [confirmFocused, setConfirmFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useAppTranslation();
-  const { isRTL } = useLanguage();
+  const isRTL = I18nManager.isRTL;
 
   const inputBg     = isDark ? '#1E2A40' : '#F8FAFC';
   const inputBorder = isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0';
@@ -101,13 +102,13 @@ export default function ResetPasswordScreen() {
   };
 
   const CheckRow = ({ ok, label }: { ok: boolean; label: string }) => (
-    <View style={[s.reqRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+    <View style={[s.reqRow, { flexDirection: 'row' }]}>
       <Ionicons
         name={ok ? 'checkmark-circle' : 'ellipse-outline'}
         size={16}
         color={ok ? '#10B981' : '#9CA3AF'}
       />
-      <Text style={[s.reqText, { color: mutedColor, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{label}</Text>
+      <Text style={[s.reqText, { color: mutedColor, textAlign: 'auto'}]}>{label}</Text>
     </View>
   );
 
@@ -129,7 +130,7 @@ export default function ResetPasswordScreen() {
         <View style={s.blob2} />
 
         <TouchableOpacity
-          style={[s.backBtn, isRTL ? s.backBtnRtl : s.backBtnLtr, { top: insets.top + 12 }]}
+          style={[s.backBtn, { top: insets.top + 12 }, isRTL ? s.backBtnEnd : s.backBtnStart]}
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/(auth)/login'))}
         >
           <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color="#FFFFFF" />
@@ -137,8 +138,8 @@ export default function ResetPasswordScreen() {
 
         <View style={[s.heroContent, isRTL ? s.heroContentRtl : s.heroContentLtr]}>
           <Image source={require('../../assets/images/logo.png')} style={s.logo} contentFit="contain" />
-          <Text style={[s.heroTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.resetPassword')}</Text>
-          <Text style={[s.heroSub, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.resetSubtitle')}</Text>
+          <Text style={[s.heroTitle, { textAlign: 'auto'}]}>{t('auth.resetPassword')}</Text>
+          <Text style={[s.heroSub, { textAlign: 'auto'}]}>{t('auth.resetSubtitle')}</Text>
         </View>
       </LinearGradient>
 
@@ -152,8 +153,8 @@ export default function ResetPasswordScreen() {
 
           {/* New password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.newPassword')}</Text>
-            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }, newPassFocused && s.inputWrapFocused]}>
+            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.newPassword')}</Text>
+            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }, newPassFocused && s.inputWrapFocused]}>
               <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={s.icon}>
                 <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={18} color={newPassFocused ? '#D4AF37' : '#94A3B8'} />
               </TouchableOpacity>
@@ -165,9 +166,7 @@ export default function ResetPasswordScreen() {
                 onChangeText={setNewPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
-                textAlign={isRTL ? 'right' : 'left'}
-                writingDirection={isRTL ? 'rtl' : 'ltr'}
-                onFocus={() => setNewPassFocused(true)}
+                                onFocus={() => setNewPassFocused(true)}
                 onBlur={() => setNewPassFocused(false)}
               />
               <Ionicons name="lock-closed" size={18} color={newPassFocused ? '#D4AF37' : '#94A3B8'} style={{ marginEnd: 4 }} />
@@ -176,8 +175,8 @@ export default function ResetPasswordScreen() {
 
           {/* Confirm password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.confirmPassword')}</Text>
-            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }, confirmFocused && s.inputWrapFocused]}>
+            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.confirmPassword')}</Text>
+            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }, confirmFocused && s.inputWrapFocused]}>
               <TouchableOpacity onPress={() => setShowConfirm(v => !v)} style={s.icon}>
                 <Ionicons name={showConfirm ? 'eye' : 'eye-off'} size={18} color={confirmFocused ? '#D4AF37' : '#94A3B8'} />
               </TouchableOpacity>
@@ -189,9 +188,7 @@ export default function ResetPasswordScreen() {
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirm}
                 autoCapitalize="none"
-                textAlign={isRTL ? 'right' : 'left'}
-                writingDirection={isRTL ? 'rtl' : 'ltr'}
-                onFocus={() => setConfirmFocused(true)}
+                                onFocus={() => setConfirmFocused(true)}
                 onBlur={() => setConfirmFocused(false)}
               />
               <Ionicons name="lock-closed" size={18} color={confirmFocused ? '#D4AF37' : '#94A3B8'} style={{ marginEnd: 4 }} />
@@ -200,7 +197,7 @@ export default function ResetPasswordScreen() {
 
           {/* Requirements */}
           <View style={[s.reqBox, { backgroundColor: reqBg }]}>
-            <Text style={[s.reqTitle, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.passwordRequirements')}</Text>
+            <Text style={[s.reqTitle, { color: labelColor, textAlign: 'auto' }]}>{t('auth.passwordRequirements')}</Text>
             <CheckRow ok={checks.length}  label={t('auth.passwordReqLength')} />
             <CheckRow ok={checks.upper}   label={t('auth.passwordReqUpper')} />
             <CheckRow ok={checks.lower}   label={t('auth.passwordReqLower')} />
@@ -241,8 +238,8 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center', alignItems: 'center',
   },
-  backBtnRtl: { right: 20 },
-  backBtnLtr: { left: 20 },
+  backBtnStart: { left: 20 },
+  backBtnEnd: { right: 20 },
   heroContent: { paddingTop: 70, width: '100%' },
   heroContentRtl: { alignItems: 'flex-end' },
   heroContentLtr: { alignItems: 'flex-start' },

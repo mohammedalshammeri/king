@@ -1,11 +1,9 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { I18nManager, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
-
-const { width } = Dimensions.get('window');
+import { useAppTranslation } from '@/context/LanguageContext';
 
 interface ListingCardProps {
   id: string;
@@ -25,7 +23,7 @@ const typeColor = (t: string) =>
   t === 'CAR' ? '#3B82F6' : t === 'MOTORCYCLE' ? '#8B5CF6' : t === 'PLATE' ? '#059669' : '#F59E0B';
 
 export default function ListingCard({ id, title, price, image, location, type, viewsCount }: ListingCardProps) {
-  const { isRTL } = useLanguage();
+  const isRTL = I18nManager.isRTL;
   const { t } = useAppTranslation();
   const accent = typeColor(type);
   return (
@@ -55,34 +53,34 @@ export default function ListingCard({ id, title, price, image, location, type, v
           </View>
 
           {/* Type badge - colored accent */}
-          <View style={[styles.typeBadge, isRTL ? styles.typeBadgeRtl : styles.typeBadgeLtr, { backgroundColor: accent }]}>
-            <Text style={[styles.typeText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t(typeLabelKey(type))}</Text>
+          <View style={[styles.typeBadge, isRTL ? styles.typeBadgeEnd : styles.typeBadgeStart, { backgroundColor: accent }]}>
+            <Text style={styles.typeText}>{t(typeLabelKey(type))}</Text>
           </View>
 
-          <View style={[styles.priceWrap, isRTL ? styles.priceWrapRtl : styles.priceWrapLtr, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
+          <View style={[styles.priceWrap, isRTL ? styles.priceWrapEnd : styles.priceWrapStart]}>
             <Text style={styles.priceValue}>{Number(price).toLocaleString()}</Text>
             <Text style={styles.priceCur}>{t('common.bhd')}</Text>
           </View>
         </View>
 
         {/* ── Content Section ── */}
-        <View style={[styles.content, isRTL ? styles.contentRtl : styles.contentLtr]}>
-          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]} numberOfLines={2}>{title}</Text>
+        <View style={[styles.content, isRTL ? styles.contentEndInset : styles.contentStartInset]}>
+          <Text style={[styles.title, { textAlign: 'auto'}]} numberOfLines={2}>{title}</Text>
 
-          <View style={[styles.metaRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-            <View style={[styles.metaItem, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          <View style={[styles.metaRow, { flexDirection: 'row' }]}>
+            <View style={[styles.metaItem, { flexDirection: 'row' }]}>
               <Ionicons name="location-sharp" size={13} color="#9BA3B2" />
-              <Text style={[styles.metaText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{location || t('common.bahrain')}</Text>
+              <Text style={[styles.metaText, { textAlign: 'auto'}]}>{location || t('common.bahrain')}</Text>
             </View>
 
-            <View style={[styles.metaItem, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <View style={[styles.metaItem, { flexDirection: 'row' }]}>
               <Ionicons name="eye-outline" size={13} color="#9BA3B2" />
-              <Text style={[styles.metaText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{viewsCount || 0}</Text>
+              <Text style={[styles.metaText, { textAlign: 'auto'}]}>{viewsCount || 0}</Text>
             </View>
           </View>
         </View>
 
-        <View style={[styles.accentStripe, isRTL ? styles.accentStripeRtl : styles.accentStripeLtr, { backgroundColor: accent }]} />
+        <View style={[styles.accentStripe, isRTL ? styles.accentStripeStart : styles.accentStripeEnd, { backgroundColor: accent }]} />
       </TouchableOpacity>
     </Link>
   );
@@ -139,12 +137,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     zIndex: 2,
   },
-  typeBadgeRtl: {
-    right: 12,
-  },
-  typeBadgeLtr: {
-    left: 12,
-  },
+  typeBadgeStart: { left: 12 },
+  typeBadgeEnd: { right: 12 },
   typeText: {
     color: '#FFFFFF',
     fontSize: 11,
@@ -154,16 +148,13 @@ const styles = StyleSheet.create({
   priceWrap: {
     position: 'absolute',
     bottom: 12,
+    flexDirection: 'row',
     alignItems: 'baseline',
     gap: 4,
     zIndex: 2,
   },
-  priceWrapRtl: {
-    right: 14,
-  },
-  priceWrapLtr: {
-    left: 14,
-  },
+  priceWrapStart: { left: 14 },
+  priceWrapEnd: { right: 14 },
   priceValue: {
     color: '#D4AF37',
     fontSize: 20,
@@ -181,12 +172,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  contentRtl: {
-    paddingStart: 22,
-  },
-  contentLtr: {
-    paddingEnd: 22,
-  },
+  contentStartInset: { paddingEnd: 22 },
+  contentEndInset: { paddingStart: 22 },
   title: {
     fontSize: 15,
     fontWeight: '700',
@@ -213,12 +200,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 4,
   },
-  accentStripeRtl: {
+  accentStripeStart: {
     left: 0,
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
   },
-  accentStripeLtr: {
+  accentStripeEnd: {
     right: 0,
     borderTopRightRadius: 20,
     borderBottomRightRadius: 20,

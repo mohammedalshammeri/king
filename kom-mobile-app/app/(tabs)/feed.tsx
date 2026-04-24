@@ -19,14 +19,13 @@ import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PageHeader } from '../../components/ui/page-header';
-import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
+import { useAppTranslation } from '../../context/LanguageContext';
 import api from '../../services/api';
 import VideoFeedItem from '../../components/feed/VideoFeedItem';
 import StoryViewer from '../../components/stories/StoryViewer';
 import type { StoryUser } from '../../components/stories/StoriesRail';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
-const SCREEN_FULL_HEIGHT = Dimensions.get('screen').height;
 const GRID_COLS = 2;
 const GRID_GAP = 3;
 const THUMB_WIDTH = (SCREEN_WIDTH - GRID_GAP * (GRID_COLS + 1)) / GRID_COLS;
@@ -166,12 +165,10 @@ function VideoThumb({ item, onPress }: { item: any; onPress: () => void }) {
 // ??? Main Component ??????????????????????????????????????????????
 export default function Feed() {
   const isFocused = useIsFocused();
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
   const { storyId } = useLocalSearchParams<{ storyId?: string }>();
   const { t } = useAppTranslation();
-  const { isRTL } = useLanguage();
 
   useLayoutEffect(() => {
     navigation.getParent()?.setOptions({ tabBarStyle: { display: 'none' } });
@@ -289,7 +286,7 @@ export default function Feed() {
           ListEmptyComponent={() => (
             <View style={s.centered}>
               <Ionicons name="videocam-outline" size={52} color="rgba(255,255,255,0.3)" />
-              <Text style={[s.emptyText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('feed.empty')}</Text>
+              <Text style={[s.emptyText, { textAlign: 'auto'}]}>{t('feed.empty')}</Text>
             </View>
           )}
         />

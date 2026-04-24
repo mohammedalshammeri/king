@@ -163,7 +163,7 @@ export default function NotificationsScreen() {
     <TouchableOpacity
       style={[
         styles.notificationItem,
-        { flexDirection: isRTL ? 'row-reverse' : 'row' },
+        { flexDirection: 'row' },
         {
           backgroundColor: item.isRead ? theme.card : theme.unread,
         },
@@ -185,11 +185,11 @@ export default function NotificationsScreen() {
         />
       </View>
       <View style={[styles.contentContainer, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-        <Text style={[styles.title, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{item.title}</Text>
-        <Text style={[styles.message, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+        <Text style={[styles.title, { color: theme.text, textAlign: 'auto'}]}>{item.title}</Text>
+        <Text style={[styles.message, { color: theme.textSecondary, textAlign: 'auto'}]}>
           {item.message}
         </Text>
-        <Text style={[styles.time, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+        <Text style={[styles.time, { color: theme.textSecondary, textAlign: 'auto'}]}>
           {formatDate(item.createdAt)}
         </Text>
       </View>
@@ -217,8 +217,8 @@ export default function NotificationsScreen() {
       {!isAuthenticated ? (
         <View style={[styles.centered]}>
           <Ionicons name="lock-closed-outline" size={64} color={theme.textSecondary} />
-          <Text style={[styles.emptyText, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('notifications.loginRequired')}</Text>
-          <Text style={[styles.loginHint, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+          <Text style={[styles.emptyText, { color: theme.textSecondary, textAlign: 'auto'}]}>{t('notifications.loginRequired')}</Text>
+          <Text style={[styles.loginHint, { color: theme.textSecondary, textAlign: 'auto'}]}>
             {t('notifications.loginRequiredMessage')}
           </Text>
           <TouchableOpacity 
@@ -231,7 +231,7 @@ export default function NotificationsScreen() {
       ) : notifications.length === 0 ? (
         <View style={[styles.centered]}>
           <Ionicons name="notifications-off-outline" size={64} color={theme.textSecondary} />
-          <Text style={[styles.emptyText, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+          <Text style={[styles.emptyText, { color: theme.textSecondary, textAlign: 'auto'}]}>
             {t('notifications.noNotifications')}
           </Text>
         </View>
@@ -310,26 +310,19 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    alignItems: 'flex-end',
   },
   title: {
     fontSize: 15,
     fontWeight: '700',
     marginBottom: 3,
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   message: {
     fontSize: 13,
     marginBottom: 6,
-    textAlign: 'right',
-    writingDirection: 'rtl',
     lineHeight: 20,
   },
   time: {
     fontSize: 11,
-    textAlign: 'right',
-    writingDirection: 'rtl',
     fontWeight: '500',
   },
   unreadDot: {
@@ -383,7 +376,5 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
 });

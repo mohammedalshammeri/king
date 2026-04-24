@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuthStore } from '../../../store/authStore';
-import { useAppTranslation, useLanguage } from '../../../context/LanguageContext';
+import { useAppTranslation } from '../../../context/LanguageContext';
 import { useTheme } from '../../../context/ThemeContext';
 import { PageHeader } from '@/components/ui/page-header';
 
@@ -24,7 +24,6 @@ export default function EditProfileScreen() {
   const { user, updateProfile, uploadAvatar } = useAuthStore();
   const { isDark } = useTheme();
   const { t } = useAppTranslation();
-  const { isRTL } = useLanguage();
 
   const theme = {
     background: isDark ? '#0f172a' : '#fff',
@@ -159,29 +158,25 @@ export default function EditProfileScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{isShowroom ? t('auth.showroomLabel') : t('auth.fullName')}</Text>
+          <Text style={[styles.label, { color: theme.textMuted, textAlign: 'auto'}]}>{isShowroom ? t('auth.showroomLabel') : t('auth.fullName')}</Text>
           <TextInput
             style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
             value={name}
             onChangeText={setName}
             placeholder={isShowroom ? t('auth.showroomLabel') : t('auth.fullName')}
-            textAlign={isRTL ? 'right' : 'left'}
-            writingDirection={isRTL ? 'rtl' : 'ltr'}
-            placeholderTextColor={theme.textMuted}
+                        placeholderTextColor={theme.textMuted}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.phone')}</Text>
+          <Text style={[styles.label, { color: theme.textMuted, textAlign: 'auto'}]}>{t('auth.phone')}</Text>
           <TextInput
             style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
             value={phone}
             onChangeText={setPhone}
             placeholder={t('auth.phonePlaceholder')}
             keyboardType="phone-pad"
-            textAlign={isRTL ? 'right' : 'left'}
-            writingDirection={isRTL ? 'rtl' : 'ltr'}
-            placeholderTextColor={theme.textMuted}
+                        placeholderTextColor={theme.textMuted}
           />
         </View>
 
@@ -273,8 +268,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#64748b',
     marginBottom: 6,
-    textAlign: 'right',
-    writingDirection: 'rtl',
     alignSelf: 'flex-end',
     width: '100%',
   },
@@ -287,8 +280,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 15,
     color: '#0f172a',
-    textAlign: 'right',
-    writingDirection: 'rtl',
     width: '100%',
     alignSelf: 'stretch',
   },

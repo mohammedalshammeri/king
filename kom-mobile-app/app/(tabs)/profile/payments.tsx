@@ -48,8 +48,8 @@ export default function PaymentsScreen() {
   const textColor = isDark ? '#F8FAFC' : '#0A0B14';
   const mutedColor = isDark ? '#94A3B8' : '#64748B';
   const borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
-  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
+  const dirText = { textAlign: 'auto' as const};
+  const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
 
   const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
     PAID:          { label: t('payments.statusPaid'), color: '#16A34A', bg: '#DCFCE7' },
@@ -434,8 +434,8 @@ const styles = StyleSheet.create({
   amount: { fontSize: 18, fontWeight: '800' },
   statusPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   statusText: { fontSize: 12, fontWeight: '700' },
-  listingTitle: { fontSize: 14, fontWeight: '600', marginBottom: 4, textAlign: 'right' },
-  dateText: { fontSize: 12, textAlign: 'right' },
+  listingTitle: { fontSize: 14, fontWeight: '600', marginBottom: 4 },
+  dateText: { fontSize: 12 },
   uploadBtn: { marginTop: 10, backgroundColor: 'rgba(212,175,55,0.12)', borderRadius: 12, paddingVertical: 10, alignItems: 'center' },
   uploadBtnText: { color: '#D4AF37', fontSize: 13, fontWeight: '700' },
 
@@ -446,8 +446,8 @@ const styles = StyleSheet.create({
 
 // ─── Invoice header constants ────────────────────────────────────
 function InvRow({ k, v, isRTL }: { k: string; v: string; isRTL: boolean }) {
-  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
-  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
+  const dirText = { textAlign: 'auto' as const};
+  const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
   return (
     <View style={[inv.row, rowDirection]}>
       <Text style={[inv.rowValue, dirText]} numberOfLines={1}>{v}</Text>
@@ -554,7 +554,6 @@ const inv = StyleSheet.create({
     fontSize: 13,
     color: '#64748B',
     fontWeight: '500',
-    textAlign: 'right',
     minWidth: 80,
   },
   rowValue: {
@@ -562,7 +561,6 @@ const inv = StyleSheet.create({
     color: '#0A0B14',
     fontWeight: '600',
     flex: 1,
-    textAlign: 'right',
     paddingStart: 8,
   },
   footer: {

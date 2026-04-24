@@ -382,10 +382,6 @@ export class ListingsService {
       });
     }
 
-    if (listing.owner?.role === UserRole.USER_SHOWROOM) {
-      await this.packagesService.incrementListingsUsed(userId);
-    }
-
     if (listing.owner?.role === UserRole.USER_INDIVIDUAL) {
       await this.packagesService.incrementIndividualCreditsUsed(userId);
     }
@@ -504,7 +500,11 @@ export class ListingsService {
 
     const updated = await this.prisma.listing.update({
       where: { id: listingId },
-      data: { status: ListingStatus.SOLD },
+      data: {
+        status: ListingStatus.SOLD,
+        soldCheckCount: 0,
+        lastSoldCheckAt: null,
+      },
     });
 
     return updated;

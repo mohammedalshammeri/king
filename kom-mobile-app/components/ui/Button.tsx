@@ -1,7 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Colors } from '../../constants/Colors';
-import { useLanguage } from '../../context/LanguageContext';
 
 interface ButtonProps {
   title: string;
@@ -22,8 +21,6 @@ export function Button({
   style,
   textStyle
 }: ButtonProps) {
-  const { isRTL } = useLanguage();
-  
   const getBackgroundColor = () => {
     if (disabled) return '#CCCCCC';
     switch (variant) {
@@ -86,6 +83,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
-    writingDirection: 'auto',
   },
 });

@@ -51,57 +51,57 @@ export default function ContactScreen() {
 
       <View style={[styles.content]}>
         <TouchableOpacity
-          style={[styles.card, { flexDirection: isRTL ? 'row-reverse' : 'row', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
+          style={[styles.card, { flexDirection: 'row', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
           onPress={() => openLink(`mailto:${CONTACT.email}`)}
         >
           <Ionicons name="mail-outline" size={22} color="#D4AF37" />
           <View style={[styles.cardText, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-            <Text style={[styles.title, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('contact.email')}</Text>
-            <Text style={[styles.value, { color: theme.subText, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{CONTACT.email}</Text>
+            <Text style={[styles.title, { color: theme.text, textAlign: 'auto'}]}>{t('contact.email')}</Text>
+            <Text style={[styles.value, { color: theme.subText, textAlign: 'auto'}]}>{CONTACT.email}</Text>
           </View>
         </TouchableOpacity>
 
         {!!CONTACT.phone && (
           <TouchableOpacity
-            style={[styles.card, { flexDirection: isRTL ? 'row-reverse' : 'row', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
+            style={[styles.card, { flexDirection: 'row', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
             onPress={() => openLink(`tel:${CONTACT.phone.replace(/\s/g, '')}`)}
           >
             <Ionicons name="call-outline" size={22} color="#D4AF37" />
             <View style={[styles.cardText, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-              <Text style={[styles.title, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('contact.phone')}</Text>
-              <Text style={[styles.value, { color: theme.subText, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{CONTACT.phone}</Text>
+              <Text style={[styles.title, { color: theme.text, textAlign: 'auto'}]}>{t('contact.phone')}</Text>
+              <Text style={[styles.value, { color: theme.subText, textAlign: 'auto'}]}>{CONTACT.phone}</Text>
             </View>
           </TouchableOpacity>
         )}
 
         {!!CONTACT.whatsapp && (
           <TouchableOpacity
-            style={[styles.card, { flexDirection: isRTL ? 'row-reverse' : 'row', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
+            style={[styles.card, { flexDirection: 'row', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
             onPress={() => openLink(CONTACT.whatsapp)}
           >
             <Ionicons name="logo-whatsapp" size={22} color="#22c55e" />
             <View style={[styles.cardText, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-              <Text style={[styles.title, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('contact.whatsapp')}</Text>
-              <Text style={[styles.value, { color: theme.subText, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{CONTACT.whatsapp}</Text>
+              <Text style={[styles.title, { color: theme.text, textAlign: 'auto'}]}>{t('contact.whatsapp')}</Text>
+              <Text style={[styles.value, { color: theme.subText, textAlign: 'auto'}]}>{CONTACT.whatsapp}</Text>
             </View>
           </TouchableOpacity>
         )}
 
         {!!CONTACT.instagram && (
           <TouchableOpacity
-            style={[styles.card, { flexDirection: isRTL ? 'row-reverse' : 'row', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
+            style={[styles.card, { flexDirection: 'row', gap: 12, backgroundColor: theme.surface, borderColor: theme.border }]}
             onPress={() => openLink(CONTACT.instagram)}
           >
             <Ionicons name="logo-instagram" size={22} color="#ec4899" />
             <View style={[styles.cardText, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-              <Text style={[styles.title, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('contact.instagram')}</Text>
-              <Text style={[styles.value, { color: theme.subText, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{CONTACT.instagram}</Text>
+              <Text style={[styles.title, { color: theme.text, textAlign: 'auto'}]}>{t('contact.instagram')}</Text>
+              <Text style={[styles.value, { color: theme.subText, textAlign: 'auto'}]}>{CONTACT.instagram}</Text>
             </View>
           </TouchableOpacity>
         )}
 
         {!CONTACT.phone && !CONTACT.whatsapp && !CONTACT.instagram && (
-          <Text style={[styles.note, { color: theme.muted, writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('contact.emailOnlyNote')}</Text>
+          <Text style={[styles.note, { color: theme.muted}]}>{t('contact.emailOnlyNote')}</Text>
         )}
       </View>
     </SafeAreaView>
@@ -135,16 +135,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#0f172a',
-    textAlign: 'right',
-    writingDirection: 'rtl',
     width: '100%',
   },
   value: {
     fontSize: 13,
     color: '#475569',
     marginTop: 2,
-    textAlign: 'right',
-    writingDirection: 'rtl',
     width: '100%',
   },
   note: {
@@ -152,6 +148,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#94a3b8',
     textAlign: 'center',
-    writingDirection: 'rtl',
   },
 });

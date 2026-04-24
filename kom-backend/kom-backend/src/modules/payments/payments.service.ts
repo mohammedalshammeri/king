@@ -10,7 +10,13 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { CloudinaryService } from '../media/cloudinary.service';
 import { S3Service } from '../media/s3.service';
 import { EmailService } from '../email/email.service';
-import { PaymentStatus, Currency, NotificationType, UserRole } from '@prisma/client';
+import {
+  PaymentStatus,
+  Currency,
+  NotificationType,
+  UserRole,
+  SubscriptionStatus,
+} from '@prisma/client';
 import {
   InitiatePaymentDto,
   InitiateSubscriptionPaymentDto,
@@ -31,6 +37,49 @@ export class PaymentsService {
     private readonly s3Service: S3Service,
     private readonly emailService: EmailService,
   ) {}
+
+  private toNumericValue(value: number | string | { toString(): string }) {
+    return Number(value.toString());
+  }
+
+  private resolveSubscriptionDuration(
+    pkg: {
+      durationDays?: number | null;
+      priceMonthly: number | string | { toString(): string };
+      price3Months?: number | string | { toString(): string } | null;
+      price6Months?: number | string | { toString(): string } | null;
+      price12Months?: number | string | { toString(): string } | null;
+    },
+    durationChoice: '1' | '3' | '6' | '12' = '1',
+  ) {
+    const baseDurationDays = pkg.durationDays ?? 30;
+
+    if (durationChoice === '3') {
+      if (!pkg.price3Months) {
+        throw new BadRequestException('هذه الباقة لا تدعم الاشتراك لـ 3 أشهر');
+      }
+
+      return { amount: this.toNumericValue(pkg.price3Months), durationDays: baseDurationDays * 3 };
+    }
+
+    if (durationChoice === '6') {
+      if (!pkg.price6Months) {
+        throw new BadRequestException('هذه الباقة لا تدعم الاشتراك لـ 6 أشهر');
+      }
+
+      return { amount: this.toNumericValue(pkg.price6Months), durationDays: baseDurationDays * 6 };
+    }
+
+    if (durationChoice === '12') {
+      if (!pkg.price12Months) {
+        throw new BadRequestException('هذه الباقة لا تدعم الاشتراك لسنة كاملة');
+      }
+
+      return { amount: this.toNumericValue(pkg.price12Months), durationDays: baseDurationDays * 12 };
+    }
+
+    return { amount: this.toNumericValue(pkg.priceMonthly), durationDays: baseDurationDays };
+  }
 
   // ─── Benefit IBAN ────────────────────────────────────────────────────────────
 
@@ -133,24 +182,10 @@ export class PaymentsService {
 
     // Resolve amount based on durationChoice
     const durationChoice = dto.durationChoice ?? '1';
-    let amount: number;
-    let totalDays: number;
-    if (durationChoice === '3') {
-      if (!pkg.price3Months) throw new Error('هذه الباقة لا تدعم الاشتراك لـ 3 أشهر');
-      amount = Number(pkg.price3Months);
-      totalDays = (pkg.durationDays ?? 30) * 3;
-    } else if (durationChoice === '6') {
-      if (!pkg.price6Months) throw new Error('هذه الباقة لا تدعم الاشتراك لـ 6 أشهر');
-      amount = Number(pkg.price6Months);
-      totalDays = (pkg.durationDays ?? 30) * 6;
-    } else if (durationChoice === '12') {
-      if (!pkg.price12Months) throw new Error('هذه الباقة لا تدعم الاشتراك لسنة كاملة');
-      amount = Number(pkg.price12Months);
-      totalDays = (pkg.durationDays ?? 30) * 12;
-    } else {
-      amount = Number(pkg.priceMonthly);
-      totalDays = pkg.durationDays ?? 30;
-    }
+    const { amount, durationDays: totalDays } = this.resolveSubscriptionDuration(
+      pkg,
+      durationChoice,
+    );
 
     // Check for existing pending payment for this package
     const existingPending = await this.prisma.paymentTransaction.findFirst({
@@ -274,6 +309,7 @@ export class PaymentsService {
     showroomProfile: { select: { showroomName: true, logoUrl: true, merchantType: true } },
     subscription: {
       select: {
+        userId: true,
         status: true,
         startDate: true,
         endDate: true,
@@ -315,6 +351,72 @@ export class PaymentsService {
     }));
   }
 
+  private async attachActiveSubscriptionUsage<
+    T extends {
+      user?: {
+        subscription?: {
+          userId?: string;
+          listingsUsed: number;
+          package?: { maxListings: number } | null;
+        } | null;
+      };
+    },
+  >(items: T[]) {
+    const userIds = [
+      ...new Set(
+        items
+          .map((item) => item.user?.subscription?.userId)
+          .filter((userId): userId is string => Boolean(userId)),
+      ),
+    ];
+
+    if (userIds.length === 0) {
+      return items;
+    }
+
+    const counts = await Promise.all(
+      userIds.map(async (userId) => {
+        const activeListingsCount = await this.prisma.listing.count({
+          where: {
+            ownerId: userId,
+            status: { in: ['PENDING_REVIEW', 'APPROVED'] },
+          },
+        });
+
+        return [userId, activeListingsCount] as const;
+      }),
+    );
+
+    const countMap = new Map(counts);
+
+    return items.map((item) => {
+      const subscription = item.user?.subscription;
+      const userId = subscription?.userId;
+
+      if (!subscription || !userId) {
+        return item;
+      }
+
+      const activeListingsCount = countMap.get(userId) ?? 0;
+
+      return {
+        ...item,
+        user: {
+          ...item.user,
+          subscription: {
+            ...subscription,
+            listingsUsed: activeListingsCount,
+            activeListingsCount,
+            listingsRemaining: Math.max(
+              0,
+              (subscription.package?.maxListings ?? 0) - activeListingsCount,
+            ),
+          },
+        },
+      };
+    });
+  }
+
   async getPendingProofPayments() {
     const rows = await this.prisma.paymentTransaction.findMany({
       where: { status: PaymentStatus.PENDING_PROOF },
@@ -324,7 +426,8 @@ export class PaymentsService {
         listing: { select: { id: true, title: true } },
       },
     });
-    return this.enrichWithPackage(rows);
+    const withPackages = await this.enrichWithPackage(rows);
+    return this.attachActiveSubscriptionUsage(withPackages);
   }
 
   async getAllPaymentsAdmin(page = 1, limit = 20) {
@@ -341,7 +444,8 @@ export class PaymentsService {
       }),
       this.prisma.paymentTransaction.count(),
     ]);
-    const data = await this.enrichWithPackage(rows);
+    const withPackages = await this.enrichWithPackage(rows);
+    const data = await this.attachActiveSubscriptionUsage(withPackages);
     return { data, total, page, limit };
   }
 
@@ -398,9 +502,29 @@ export class PaymentsService {
           where: { id: transaction.subscriptionId },
         });
         if (pkg) {
+          const meta = transaction.metadata as Record<string, unknown> | null;
+          const durationChoice = ((meta?.durationChoice as string | undefined) ?? '1') as
+            | '1'
+            | '3'
+            | '6'
+            | '12';
+          const durationFromMeta = Number(meta?.durationDays ?? 0);
+          const { durationDays } = durationFromMeta > 0
+            ? { durationDays: durationFromMeta }
+            : this.resolveSubscriptionDuration(pkg, durationChoice);
+
           const now = new Date();
-          const endDate = new Date(now);
-          endDate.setDate(endDate.getDate() + (pkg.durationDays ?? 30));
+          const existingSubscription = await this.prisma.subscription.findUnique({
+            where: { userId: transaction.userId },
+          });
+
+          const renewalBase =
+            existingSubscription?.status === SubscriptionStatus.ACTIVE &&
+            existingSubscription.endDate > now
+              ? existingSubscription.endDate
+              : now;
+          const endDate = new Date(renewalBase);
+          endDate.setDate(endDate.getDate() + durationDays);
 
           await this.prisma.subscription.upsert({
             where: { userId: transaction.userId },
@@ -408,6 +532,7 @@ export class PaymentsService {
               userId: transaction.userId,
               packageId: pkg.id,
               status: 'ACTIVE',
+              durationChoice,
               startDate: now,
               endDate,
               listingsUsed: 0,
@@ -416,8 +541,10 @@ export class PaymentsService {
             update: {
               packageId: pkg.id,
               status: 'ACTIVE',
+              durationChoice,
               startDate: now,
               endDate,
+              listingsUsed: 0,
               paidAmount: transaction.amount,
             },
           });

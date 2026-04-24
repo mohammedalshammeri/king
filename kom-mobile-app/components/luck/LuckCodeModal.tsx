@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
+import { useAppTranslation } from '@/context/LanguageContext';
 
 interface LuckCodeModalProps {
   visible: boolean;
@@ -21,7 +21,6 @@ interface LuckCodeModalProps {
 
 export default function LuckCodeModal({ visible, code, onClose }: LuckCodeModalProps) {
   const { t } = useAppTranslation();
-  const { isRTL } = useLanguage();
 
   const handleShare = async () => {
     try {
@@ -52,19 +51,19 @@ export default function LuckCodeModal({ visible, code, onClose }: LuckCodeModalP
             style={styles.header}
           >
             <Text style={styles.headerEmoji}>🎉</Text>
-            <Text style={[styles.headerTitle, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('luck.congrats')}</Text>
-            <Text style={[styles.headerSubtitle, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('luck.receivedCode')}</Text>
+            <Text style={styles.headerTitle}>{t('luck.congrats')}</Text>
+            <Text style={styles.headerSubtitle}>{t('luck.receivedCode')}</Text>
           </LinearGradient>
 
           <View style={styles.body}>
-            <Text style={[styles.infoText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('luck.infoText')}</Text>
+            <Text style={styles.infoText}>{t('luck.infoText')}</Text>
 
             {/* Code Card */}
             <LinearGradient
               colors={['#D4AF37', '#C9A227', '#997D2D']}
               style={styles.codeCard}
             >
-                <Text style={[styles.codeLabel, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('luck.codeLabel')}</Text>
+                <Text style={styles.codeLabel}>{t('luck.codeLabel')}</Text>
                 <View style={styles.codeDigitsRow}>
                   {digits.map((digit, i) => (
                     <React.Fragment key={i}>
@@ -80,23 +79,23 @@ export default function LuckCodeModal({ visible, code, onClose }: LuckCodeModalP
                 <Text style={styles.codeFooter}>{t('luck.brandFooter')}</Text>
               </LinearGradient>
 
-            <Text style={[styles.warningText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('luck.warningText')}</Text>
+            <Text style={styles.warningText}>{t('luck.warningText')}</Text>
 
             {/* Action Buttons */}
-            <View style={[styles.actions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <View style={[styles.actions, { flexDirection: 'row' }]}>
               <TouchableOpacity style={styles.copyBtn} onPress={handleCopy}>
                 <Ionicons name="copy-outline" size={20} color="#fff" />
-                <Text style={[styles.copyBtnText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('luck.copyCode')}</Text>
+                <Text style={styles.copyBtnText}>{t('luck.copyCode')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
                 <Ionicons name="share-social-outline" size={20} color="#D4AF37" />
-                <Text style={[styles.shareBtnText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('common.share')}</Text>
+                <Text style={styles.shareBtnText}>{t('common.share')}</Text>
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-              <Text style={[styles.closeBtnText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('common.close')}</Text>
+              <Text style={styles.closeBtnText}>{t('common.close')}</Text>
             </TouchableOpacity>
           </View>
         </View>

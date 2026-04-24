@@ -1,6 +1,12 @@
+jest.mock('jose', () => ({
+  createRemoteJWKSet: jest.fn(() => 'mock-jwks'),
+  jwtVerify: jest.fn(),
+}));
+
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { AuthService } from './auth.service';
+import { SocialProvider } from './dto';
 
 describe('AuthService', () => {
   const createService = () => {
@@ -21,11 +27,13 @@ describe('AuthService', () => {
 
     const configService = {
       get: jest.fn((key: string) => {
-        const values: Record<string, string> = {
+        const values: Record<string, string | string[]> = {
           'jwt.refreshSecret': 'refresh-secret',
           'jwt.accessSecret': 'access-secret',
           'jwt.accessExpiration': '15m',
           'jwt.refreshExpiration': '7d',
+          'auth.googleClientIds': ['google-client-id'],
+          'auth.appleAudience': 'apple-client-id',
         };
         return values[key];
       }),
@@ -110,5 +118,24 @@ describe('AuthService', () => {
     await expect(service.refreshToken({ refreshToken: 'missing-token' })).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
+  });
+
+  it('maps invalid Google social tokens to UnauthorizedException', async () => {
+    const { service } = createService();
+
+    const verifyIdToken = jest.fn().mockRejectedValue(new Error('Token used too late'));
+    (service as any).googleClient = { verifyIdToken };
+
+    await expect(
+      service.socialAuth({
+        provider: SocialProvider.GOOGLE,
+        idToken: 'invalid-token',
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+
+    expect(verifyIdToken).toHaveBeenCalledWith({
+      idToken: 'invalid-token',
+      audience: ['google-client-id'],
+    });
   });
 });

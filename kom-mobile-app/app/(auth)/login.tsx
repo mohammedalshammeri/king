@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import AdsBanner from '@/components/ads/AdsBanner';
 import {
   View,
@@ -143,7 +143,7 @@ export default function LoginScreen() {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[s.root, { backgroundColor: isDark ? '#0B0F1E' : '#F2F5FC' }]}>
       <StatusBar style="light" />
 
-      {/* ── Full-bleed navy hero ── */}
+      {/* ?? Full-bleed navy hero ?? */}
       <LinearGradient colors={['#0A0F1E', '#0E1830', '#162444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.hero}>
         {/* Decorative blobs */}
         <View style={s.blob1} />
@@ -151,21 +151,21 @@ export default function LoginScreen() {
 
         {/* Back button */}
         <TouchableOpacity
-          style={[s.backBtn, isRTL ? s.backBtnRtl : s.backBtnLtr, { top: insets.top + 12 }]}
+          style={[s.backBtn, { top: insets.top + 12 }, isRTL ? s.backBtnEnd : s.backBtnStart]}
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
         >
           <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color="#FFFFFF" />
         </TouchableOpacity>
 
         {/* Logo + title */}
-        <View style={[s.heroContent, isRTL ? s.heroContentRtl : s.heroContentLtr]}>
+        <View style={s.heroContent}>
           <Image source={require('../../assets/images/logo.png')} style={s.logo} contentFit="contain" />
-          <Text style={[s.heroTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.login')}</Text>
-          <Text style={[s.heroSub, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.loginSubtitle')}</Text>
+          <Text style={s.heroTitle}>{t('auth.login')}</Text>
+          <Text style={s.heroSub}>{t('auth.loginSubtitle')}</Text>
         </View>
       </LinearGradient>
 
-      {/* ── Form card ── */}
+      {/* ?? Form card ?? */}
       <ScrollView
         contentContainerStyle={[s.scrollContent, { paddingBottom: insets.bottom + 32 }]}
         keyboardShouldPersistTaps="handled"
@@ -174,8 +174,8 @@ export default function LoginScreen() {
         <View style={[s.card, { backgroundColor: isDark ? '#111827' : '#FFFFFF' }]}>
           {/* Email */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.email')}</Text>
-            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }, emailFocused && s.inputWrapFocused]}>
+            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.email')}</Text>
+            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }, emailFocused && s.inputWrapFocused]}>
               <Ionicons name="mail" size={18} color={emailFocused ? '#D4AF37' : '#94A3B8'} style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
@@ -188,9 +188,7 @@ export default function LoginScreen() {
                 autoComplete="email"
                 textContentType="emailAddress"
                 keyboardType="email-address"
-                textAlign={isRTL ? 'right' : 'left'}
-                writingDirection={isRTL ? 'rtl' : 'ltr'}
-                onFocus={() => setEmailFocused(true)}
+                                onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
               />
             </View>
@@ -198,8 +196,8 @@ export default function LoginScreen() {
 
           {/* Password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.password')}</Text>
-            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }, passFocused && s.inputWrapFocused]}>
+            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.password')}</Text>
+            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }, passFocused && s.inputWrapFocused]}>
               <Ionicons name="lock-closed" size={18} color={passFocused ? '#D4AF37' : '#94A3B8'} style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
@@ -212,9 +210,7 @@ export default function LoginScreen() {
                 autoCorrect={false}
                 autoComplete="password"
                 textContentType="password"
-                textAlign={isRTL ? 'right' : 'left'}
-                writingDirection={isRTL ? 'rtl' : 'ltr'}
-                onFocus={() => setPassFocused(true)}
+                                onFocus={() => setPassFocused(true)}
                 onBlur={() => setPassFocused(false)}
               />
               <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={{ paddingHorizontal: 8 }}>
@@ -224,15 +220,15 @@ export default function LoginScreen() {
           </View>
 
           {loginError ? (
-            <View style={s.errorBox}>
+            <View style={[s.errorBox, { flexDirection: 'row' }]}>
               <Ionicons name="alert-circle" size={18} color="#B42318" style={s.errorIcon} />
-              <Text style={s.errorText}>{loginError}</Text>
+              <Text style={[s.errorText, { textAlign: 'auto'}]}>{loginError}</Text>
             </View>
           ) : null}
 
           {/* Forgot password */}
-          <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')} style={s.forgotRow}>
-            <Text style={[s.forgotText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.forgotQuestion')}</Text>
+          <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')} style={[s.forgotRow, { alignSelf: isRTL ? 'flex-end' : 'flex-start' }]}>
+            <Text style={[s.forgotText, { textAlign: 'auto'}]}>{t('auth.forgotQuestion')}</Text>
           </TouchableOpacity>
 
           {/* Login CTA */}
@@ -249,7 +245,7 @@ export default function LoginScreen() {
           <SocialAuthSection mode="login" disabled={isLoading} onAuthenticate={handleSocialAuth} />
 
           {/* Register link */}
-          <View style={[s.footer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          <View style={[s.footer, { flexDirection: 'row' }]}>
             <Text style={s.footerNote}>{t('auth.noAccount')}</Text>
             <Link href="/(auth)/register" asChild>
               <TouchableOpacity>
@@ -283,14 +279,12 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center', alignItems: 'center',
   },
-  backBtnRtl: { right: 20 },
-  backBtnLtr: { left: 20 },
-  heroContent: { paddingTop: 70, width: '100%' },
-  heroContentRtl: { alignItems: 'flex-end' },
-  heroContentLtr: { alignItems: 'flex-start' },
+  backBtnStart: { left: 20 },
+  backBtnEnd: { right: 20 },
+  heroContent: { paddingTop: 70, width: '100%', alignItems: 'center' },
   logo: { width: 110, height: 42, marginBottom: 20 },
-  heroTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', marginBottom: 6, width: '100%' },
-  heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.6)', width: '100%' },
+  heroTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', marginBottom: 6, width: '100%', textAlign: 'center' },
+  heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.6)', width: '100%', textAlign: 'center' },
 
   // scroll + card
   scrollContent: { flexGrow: 1, paddingHorizontal: 16, marginTop: 24 },
@@ -321,7 +315,6 @@ const s = StyleSheet.create({
     fontSize: 15,
   },
   errorBox: {
-    flexDirection: 'row-reverse',
     alignItems: 'flex-start',
     backgroundColor: '#FEF3F2',
     borderWidth: 1,
@@ -344,7 +337,7 @@ const s = StyleSheet.create({
   },
 
   // forgot
-  forgotRow: { alignSelf: 'flex-end', marginTop: -8, marginBottom: 20 },
+  forgotRow: { marginTop: -8, marginBottom: 20 },
   forgotText: { color: '#D4AF37', fontSize: 13, fontWeight: '600' },
 
   // login btn

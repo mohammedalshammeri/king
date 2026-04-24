@@ -25,8 +25,8 @@ interface StoriesRailProps {
 export default function StoriesRail({ onPressStory, onAddStory, refreshTrigger }: StoriesRailProps) {
   const { user } = useAuthStore();
   const { isDark } = useTheme();
-  const { t } = useAppTranslation();
   const { isRTL } = useLanguage();
+  const { t } = useAppTranslation();
   const [stories, setStories] = useState<StoryUser[]>([]);
   const scrollRef = useRef<any>(null);
 
@@ -58,8 +58,8 @@ export default function StoriesRail({ onPressStory, onAddStory, refreshTrigger }
         ref={scrollRef}
         horizontal 
         showsHorizontalScrollIndicator={false} 
-        style={styles.container}
-        contentContainerStyle={styles.content}
+        style={[styles.container, { direction: (isRTL ? 'rtl' : 'ltr') as 'rtl' | 'ltr' }]}
+        contentContainerStyle={[styles.content, { direction: (isRTL ? 'rtl' : 'ltr') as 'rtl' | 'ltr' }]}
       >
         {/* Add Story Button */}
         <TouchableOpacity style={styles.item} onPress={onAddStory}>
@@ -73,7 +73,7 @@ export default function StoriesRail({ onPressStory, onAddStory, refreshTrigger }
               <Ionicons name="add" size={16} color="white" />
             </View>
           </View>
-          <Text style={[styles.username, { color: usernameClr, writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.addStory')}</Text>
+          <Text style={[styles.username, { color: usernameClr}]}>{t('stories.addStory')}</Text>
         </TouchableOpacity>
 
         {/* Stories List */}
@@ -106,7 +106,7 @@ export default function StoriesRail({ onPressStory, onAddStory, refreshTrigger }
                 />
               </View>
             </LinearGradient>
-            <Text style={[styles.username, { color: usernameClr, writingDirection: isRTL ? 'rtl' : 'ltr' }]} numberOfLines={1}>{storyUser.userName || t('feed.defaultStoryUser')}</Text>
+            <Text style={[styles.username, { color: usernameClr}]} numberOfLines={1}>{storyUser.userName || t('feed.defaultStoryUser')}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     gap: 16, 
-    flexDirection: 'row', // Ensure it respects RTL (starts from right) or simple row (RTL=row-reverse by native?)
+    flexDirection: 'row',
     // In React Native with I18nManager.isRTL, 'row' is automatically reversed visually. 
     // IF we want explicit RTL, we just use logical properties, but let's stick to standard flow.
   },

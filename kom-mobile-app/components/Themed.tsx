@@ -6,7 +6,6 @@
 import { Text as DefaultText, View as DefaultView } from 'react-native';
 
 import { Colors } from '@/constants/Colors';
-import { useLanguage } from '@/context/LanguageContext';
 import { useColorScheme } from './useColorScheme';
 
 type ThemeProps = {
@@ -34,17 +33,11 @@ export function useThemeColor(
 export function Text(props: TextProps) {
   const { style, lightColor, darkColor, ...otherProps } = props;
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-  const { isRTL } = useLanguage();
-
-  const directionalStyle = ({
-    writingDirection: isRTL ? 'rtl' : 'ltr',
-    textAlign: isRTL ? 'right' : 'left',
-  } as const);
 
   return (
     <DefaultText
       {...otherProps}
-      style={[{ color }, style, directionalStyle]}
+      style={[{ color }, style]}
     />
   );
 }

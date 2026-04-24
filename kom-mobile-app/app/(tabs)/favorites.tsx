@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
-import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
+import { useAppTranslation } from '../../context/LanguageContext';
 
 interface FavoriteListing {
   id: string;
@@ -27,7 +27,6 @@ export default function FavoritesScreen() {
   const { source } = useLocalSearchParams<{ source?: string }>();
   const { isDark } = useTheme();
   const { t } = useAppTranslation();
-  const { isRTL } = useLanguage();
   const { isAuthenticated } = useAuthStore();
   const [favorites, setFavorites] = useState<FavoriteListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,15 +139,15 @@ export default function FavoritesScreen() {
         </TouchableOpacity>
 
         <View style={styles.cardContent}>
-          <Text style={[styles.price]}>
-            {Number(item.price).toLocaleString()} <Text style={styles.currency}>د.ب</Text>
+          <Text style={[styles.price, { textAlign: 'auto' }]}>
+            {Number(item.price).toLocaleString()} <Text style={styles.currency}>{t('common.bhd')}</Text>
           </Text>
 
-          <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>{item.title}</Text>
+          <Text style={[styles.title, { color: theme.text, textAlign: 'auto'}]} numberOfLines={2}>{item.title}</Text>
           
-          <View style={styles.locationContainer}>
+          <View style={[styles.locationContainer, { flexDirection: 'row' }]}>
             <Ionicons name="location-sharp" size={12} color="#9BA3B2" />
-            <Text style={[styles.location, { color: theme.textMuted }]} numberOfLines={1}>{item.location}</Text>
+            <Text style={[styles.location, { color: theme.textMuted, textAlign: 'auto'}]} numberOfLines={1}>{item.location}</Text>
           </View>
         </View>
 
@@ -330,7 +329,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#D4AF37',
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: 'auto',
   },
   currency: {
     fontSize: 12,
@@ -341,8 +340,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     marginBottom: 8,
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    textAlign: 'auto',
     lineHeight: 19,
     width: '100%',
   },
@@ -354,7 +352,7 @@ const styles = StyleSheet.create({
   location: {
     fontSize: 11,
     fontWeight: '500',
-    textAlign: 'right',
+    textAlign: 'auto',
   },
   accentStripe: {
     position: 'absolute',

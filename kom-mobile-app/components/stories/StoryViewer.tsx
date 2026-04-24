@@ -23,7 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StoryUser } from './StoriesRail';
 import { storiesService } from '@/services/stories';
 import { useAuthStore } from '@/store/authStore';
-import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
+import { useAppTranslation } from '@/context/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -40,7 +40,6 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
   const { user } = useAuthStore();
   const safeInsets = useSafeAreaInsets();
   const { t } = useAppTranslation();
-  const { isRTL } = useLanguage();
 
   const [userIndex, setUserIndex] = useState(() => {
     if (initialUserId) {
@@ -436,7 +435,7 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
             >
               <TouchableOpacity activeOpacity={1} style={[styles.commentsContainer, { backgroundColor: '#1e1e1e' }]}>
                 <View style={styles.dragHandle} />
-                <Text style={[styles.commentsTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.commentsTitle')}</Text>
+                <Text style={[styles.commentsTitle, { textAlign: 'auto'}]}>{t('stories.commentsTitle')}</Text>
 
                 {loadingComments ? (
                   <ActivityIndicator style={{ marginTop: 20 }} color="#fff" />
@@ -447,12 +446,12 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
                     style={{ flex: 1 }}
                     contentContainerStyle={{ padding: 16 }}
                     ListEmptyComponent={
-                      <Text style={{ color: '#aaa', textAlign: 'center', marginTop: 20, writingDirection: isRTL ? 'rtl' : 'ltr' }}>
+                      <Text style={{ color: '#aaa', textAlign: 'center', marginTop: 20}}>
                         {t('stories.noComments')}
                       </Text>
                     }
                     renderItem={({ item }) => (
-                      <View style={styles.commentItem}>
+                      <View style={[styles.commentItem, { flexDirection: 'row' }]}>
                         <Image
                           source={
                             item.userName?.toLowerCase().includes('admin')
@@ -465,17 +464,17 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
                           ]}
                         />
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.commentUser, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{item.userName || t('feed.defaultStoryUser')}</Text>
-                          <Text style={[styles.commentText, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{item.text}</Text>
+                          <Text style={[styles.commentUser, { textAlign: 'auto'}]}>{item.userName || t('feed.defaultStoryUser')}</Text>
+                          <Text style={[styles.commentText, { textAlign: 'auto'}]}>{item.text}</Text>
                         </View>
                       </View>
                     )}
                   />
                 )}
 
-                <View style={styles.inputContainer}>
+                <View style={[styles.inputContainer, { flexDirection: 'row' }]}>
                   <TextInput
-                    style={[styles.commentInput, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}
+                    style={[styles.commentInput, { textAlign: 'auto'}]}
                     placeholder={t('stories.addCommentPlaceholder')}
                     placeholderTextColor="#999"
                     value={newComment}
@@ -645,15 +644,12 @@ const styles = StyleSheet.create({
       fontSize: 12,
       fontWeight: 'bold',
       marginBottom: 2,
-      textAlign: 'right'
   },
   commentText: {
       color: '#ddd',
       fontSize: 13,
-      textAlign: 'right'
   },
   inputContainer: {
-      flexDirection: 'row',
       padding: 12,
       borderTopWidth: 1,
       borderTopColor: '#333',
@@ -667,7 +663,6 @@ const styles = StyleSheet.create({
       paddingHorizontal: 16,
       paddingVertical: 8,
       color: '#fff',
-      textAlign: 'right',
       marginEnd: 10
   },
   sendButton: {

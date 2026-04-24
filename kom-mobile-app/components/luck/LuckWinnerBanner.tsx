@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { I18nManager, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
+import { useAppTranslation } from '@/context/LanguageContext';
 
 interface LuckWinnerBannerProps {
   winner: {
@@ -15,7 +15,7 @@ interface LuckWinnerBannerProps {
 export default function LuckWinnerBanner({ winner }: LuckWinnerBannerProps) {
   const [dismissed, setDismissed] = useState(false);
   const { t } = useAppTranslation();
-  const { isRTL } = useLanguage();
+  const isRTL = I18nManager.isRTL;
 
   if (dismissed) return null;
 
@@ -26,16 +26,16 @@ export default function LuckWinnerBanner({ winner }: LuckWinnerBannerProps) {
       end={{ x: 1, y: 0 }}
       style={styles.container}
     >
-      <TouchableOpacity style={[styles.dismiss, isRTL ? styles.dismissRtl : styles.dismissLtr]} onPress={() => setDismissed(true)}>
+      <TouchableOpacity style={[styles.dismiss, isRTL ? styles.dismissStart : styles.dismissEnd]} onPress={() => setDismissed(true)}>
         <Ionicons name="close" size={16} color="rgba(255,255,255,0.8)" />
       </TouchableOpacity>
 
-      <View style={[styles.content, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
+      <View style={styles.content}>
         <Text style={styles.trophy}>🏆</Text>
-        <View style={[styles.textBlock, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('luck.winnerTitle')}</Text>
-          <Text style={styles.code}>{winner.code}</Text>
-          <Text style={[styles.name, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('luck.winnerName', { name: winner.userName })}</Text>
+        <View style={styles.textBlock}>
+          <Text style={[styles.title, { textAlign: 'auto'}]}>{t('luck.winnerTitle')}</Text>
+          <Text style={[styles.code, { textAlign: 'auto' }]}>{winner.code}</Text>
+          <Text style={[styles.name, { textAlign: 'auto'}]}>{t('luck.winnerName', { name: winner.userName })}</Text>
         </View>
       </View>
     </LinearGradient>
@@ -57,29 +57,21 @@ const styles = StyleSheet.create({
     padding: 4,
     zIndex: 1,
   },
-  dismissRtl: {
-    left: 10,
-  },
-  dismissLtr: {
-    right: 10,
-  },
+  dismissStart: { left: 10 },
+  dismissEnd: { right: 10 },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    justifyContent: 'flex-end',
   },
   trophy: {
     fontSize: 36,
   },
-  textBlock: {
-    alignItems: 'flex-end',
-  },
+  textBlock: { flex: 1 },
   title: {
     fontSize: 11,
     color: 'rgba(255,255,255,0.85)',
     fontWeight: '600',
-    textAlign: 'right',
     marginBottom: 2,
   },
   code: {
@@ -87,12 +79,10 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#fff',
     letterSpacing: 4,
-    textAlign: 'right',
   },
   name: {
     fontSize: 11,
     color: 'rgba(255,255,255,0.8)',
-    textAlign: 'right',
     marginTop: 2,
   },
 });

@@ -17,8 +17,8 @@ export default function TabLayout() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
-  const { t } = useAppTranslation();
   const { isRTL } = useLanguage();
+  const { t } = useAppTranslation();
 
   const tabBarBackground = '#0E1830'; // Always deep navy (brand identity)
   const activeTint = '#FFFFFF';       // White when selected
@@ -143,6 +143,7 @@ export default function TabLayout() {
     bottom: bottomMargin,
     left: 20,
     right: 20,
+    direction: (isRTL ? 'rtl' : 'ltr') as 'rtl' | 'ltr',
     borderRadius: 28,
     height: 66,
     backgroundColor: tabBarBackground,
@@ -180,7 +181,7 @@ export default function TabLayout() {
           fontSize: 10,
           fontWeight: '600',
           marginBottom: 4,
-          textAlign: isRTL ? 'right' : 'left',
+          textAlign: 'auto',
         },
       })}
     >

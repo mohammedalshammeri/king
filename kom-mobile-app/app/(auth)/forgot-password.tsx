@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AdsBanner from '@/components/ads/AdsBanner';
 import {
+  I18nManager,
   View,
   Text,
   TextInput,
@@ -18,7 +19,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
+import { useAppTranslation } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 
@@ -32,7 +33,7 @@ export default function ForgotPasswordScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const { t } = useAppTranslation();
-  const { isRTL } = useLanguage();
+  const isRTL = I18nManager.isRTL;
 
   const inputBg     = isDark ? '#1E2A40' : '#F8FAFC';
   const inputBorder = isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0';
@@ -76,7 +77,7 @@ export default function ForgotPasswordScreen() {
         <View style={s.blob2} />
 
         <TouchableOpacity
-          style={[s.backBtn, isRTL ? s.backBtnRtl : s.backBtnLtr, { top: insets.top + 12 }]}
+          style={[s.backBtn, { top: insets.top + 12 }, isRTL ? s.backBtnEnd : s.backBtnStart]}
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/(auth)/login'))}
         >
           <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color="#FFFFFF" />
@@ -84,8 +85,8 @@ export default function ForgotPasswordScreen() {
 
         <View style={[s.heroContent, isRTL ? s.heroContentRtl : s.heroContentLtr]}>
           <Image source={require('../../assets/images/logo.png')} style={s.logo} contentFit="contain" />
-          <Text style={[s.heroTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.forgotTitle')}</Text>
-          <Text style={[s.heroSub, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.forgotSubtitle')}</Text>
+          <Text style={[s.heroTitle, { textAlign: 'auto'}]}>{t('auth.forgotTitle')}</Text>
+          <Text style={[s.heroSub, { textAlign: 'auto'}]}>{t('auth.forgotSubtitle')}</Text>
         </View>
       </LinearGradient>
 
@@ -101,8 +102,8 @@ export default function ForgotPasswordScreen() {
           {!emailSent ? (
             <>
               <View style={s.inputGroup}>
-                <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.email')}</Text>
-                <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }, emailFocused && s.inputWrapFocused]}>
+                <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.email')}</Text>
+                <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }, emailFocused && s.inputWrapFocused]}>
                   <Ionicons name="mail" size={18} color={emailFocused ? '#D4AF37' : '#94A3B8'} style={s.icon} />
                   <TextInput
                     style={[s.input, { color: inputColor }]}
@@ -112,9 +113,7 @@ export default function ForgotPasswordScreen() {
                     onChangeText={setEmail}
                     autoCapitalize="none"
                     keyboardType="email-address"
-                    textAlign={isRTL ? 'right' : 'left'}
-                    writingDirection={isRTL ? 'rtl' : 'ltr'}
-                    onFocus={() => setEmailFocused(true)}
+                                        onFocus={() => setEmailFocused(true)}
                     onBlur={() => setEmailFocused(false)}
                   />
                 </View>
@@ -136,7 +135,7 @@ export default function ForgotPasswordScreen() {
                 <Ionicons name="checkmark" size={36} color="#fff" />
               </LinearGradient>
               <Text style={[s.successTitle, { color: labelColor }]}>{t('auth.forgotSentTitle')}</Text>
-              <Text style={[s.successSub, { color: mutedColor, writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              <Text style={[s.successSub, { color: mutedColor}]}>
                 {t('auth.forgotSentMessage')}
               </Text>
             </View>
@@ -164,8 +163,8 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center', alignItems: 'center',
   },
-  backBtnRtl: { right: 20 },
-  backBtnLtr: { left: 20 },
+  backBtnStart: { left: 20 },
+  backBtnEnd: { right: 20 },
   heroContent: { paddingTop: 70, width: '100%' },
   heroContentRtl: { alignItems: 'flex-end' },
   heroContentLtr: { alignItems: 'flex-start' },

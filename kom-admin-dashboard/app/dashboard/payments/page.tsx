@@ -76,6 +76,7 @@ function SubscriptionInfoBlock({ sub, pkg }: {
 }) {
   const remaining = sub ? daysLeft(sub.endDate) : 0;
   const subActive = sub?.status === "ACTIVE" && remaining > 0;
+  const activeListingsCount = sub?.activeListingsCount ?? sub?.listingsUsed ?? 0;
 
   return (
     <div className="rounded-xl border border-dashed border-purple-200 dark:border-purple-700 bg-purple-50/50 dark:bg-purple-900/10 p-3 space-y-2 text-sm">
@@ -112,8 +113,8 @@ function SubscriptionInfoBlock({ sub, pkg }: {
             <span className="font-semibold">{new Date(sub.endDate).toLocaleDateString("ar-BH", { year: "numeric", month: "long", day: "numeric" })}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-gray-500">الإعلانات المستخدمة:</span>
-            <span className="font-semibold">{sub.listingsUsed} / {sub.package.maxListings}</span>
+            <span className="text-gray-500">الإعلانات النشطة:</span>
+            <span className="font-semibold">{activeListingsCount} / {sub.package.maxListings}</span>
           </div>
         </div>
       ) : (

@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 
-import { useAppTranslation, useLanguage } from '../../../context/LanguageContext';
+import { useAppTranslation } from '../../../context/LanguageContext';
 import { useTheme } from '../../../context/ThemeContext';
 import api from '../../../services/api';
 import PageHeader from '../../../components/ui/page-header';
@@ -31,7 +31,6 @@ export default function PaymentProofScreen() {
   const navigation = useNavigation();
   const { isDark } = useTheme();
   const { t } = useAppTranslation();
-  const { isRTL } = useLanguage();
 
   const { transactionId, amount, currency, paymentType, returnToListingId } = useLocalSearchParams<{
     transactionId: string;
@@ -50,9 +49,9 @@ export default function PaymentProofScreen() {
   const textColor = isDark ? '#F8FAFC' : '#0A0B14';
   const mutedColor = isDark ? '#94A3B8' : '#64748B';
   const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
-  const dirText = { writingDirection: isRTL ? 'rtl' as const : 'ltr' as const, textAlign: isRTL ? 'right' as const : 'left' as const };
-  const centerDirText = { writingDirection: isRTL ? 'rtl' as const : 'ltr' as const, textAlign: 'center' as const };
-  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
+  const dirText = { textAlign: 'auto' as const };
+  const centerDirText = { textAlign: 'center' as const };
+  const rowDirection = { flexDirection: 'row' as const };
 
   // Hide bottom tabs on this screen only
   useEffect(() => {
@@ -319,8 +318,6 @@ export default function PaymentProofScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
 
-  rtlText: { writingDirection: 'rtl', textAlign: 'right' },
-  rtlTextCenter: { writingDirection: 'rtl', textAlign: 'center' },
   ltrNumber: { writingDirection: 'ltr', textAlign: 'center', letterSpacing: 1.5 },
 
   scrollContent: { padding: 16, paddingBottom: 48 },
@@ -402,7 +399,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
   },
-  copyBtnText: { color: '#D4AF37', fontSize: 14, fontWeight: '700', writingDirection: 'rtl' },
+  copyBtnText: { color: '#D4AF37', fontSize: 14, fontWeight: '700' },
 
   pickerArea: {
     borderRadius: 20,

@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
   ConflictException,
   BadRequestException,
@@ -9,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { OAuth2Client } from 'google-auth-library';
+import { OAuth2Client, TokenPayload as GoogleTokenPayload } from 'google-auth-library';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
@@ -50,6 +51,7 @@ const APPLE_JWKS = createRemoteJWKSet(new URL('https://appleid.apple.com/auth/ke
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   private readonly googleClient = new OAuth2Client();
 
   constructor(
@@ -601,11 +603,26 @@ export class AuthService {
       throw new BadRequestException('Google sign-in is not configured on the server');
     }
 
-    const ticket = await this.googleClient.verifyIdToken({
-      idToken,
-      audience: audiences,
-    });
-    const payload = ticket.getPayload();
+    let payload: GoogleTokenPayload | undefined;
+
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience: audiences,
+      });
+      payload = ticket.getPayload();
+    } catch (error) {
+      const jwtPayload = this.decodeJwtWithoutVerification(idToken);
+      this.logger.warn('Rejected Google social token', {
+        configuredAudiences: audiences,
+        tokenAudience: jwtPayload?.aud,
+        authorizedParty: jwtPayload?.azp,
+        issuer: jwtPayload?.iss,
+        email: jwtPayload?.email,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw new UnauthorizedException('Invalid Google identity token');
+    }
 
     if (!payload?.sub || !payload.email || !payload.email_verified) {
       throw new UnauthorizedException('Invalid Google identity token');
@@ -620,10 +637,29 @@ export class AuthService {
 
   private async verifyAppleIdentity(idToken: string): Promise<SocialProfile> {
     const audience = this.configService.get<string>('auth.appleAudience');
-    const { payload } = await jwtVerify(idToken, APPLE_JWKS, {
-      issuer: 'https://appleid.apple.com',
-      audience,
-    });
+    if (!audience) {
+      throw new BadRequestException('Apple sign-in is not configured on the server');
+    }
+
+    let payload;
+
+    try {
+      ({ payload } = await jwtVerify(idToken, APPLE_JWKS, {
+        issuer: 'https://appleid.apple.com',
+        audience,
+      }));
+    } catch (error) {
+      const jwtPayload = this.decodeJwtWithoutVerification(idToken);
+      this.logger.warn('Rejected Apple social token', {
+        configuredAudience: audience,
+        tokenAudience: jwtPayload?.aud,
+        issuer: jwtPayload?.iss,
+        subject: jwtPayload?.sub,
+        email: jwtPayload?.email,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw new UnauthorizedException('Invalid Apple identity token');
+    }
 
     const email = typeof payload.email === 'string' ? payload.email : undefined;
     const subject = typeof payload.sub === 'string' ? payload.sub : undefined;
@@ -637,6 +673,22 @@ export class AuthService {
       email,
       providerUserId: subject,
     };
+  }
+
+  private decodeJwtWithoutVerification(token: string): Record<string, unknown> | null {
+    try {
+      const [, payload] = token.split('.');
+      if (!payload) {
+        return null;
+      }
+
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+      const decoded = Buffer.from(padded, 'base64').toString('utf8');
+      return JSON.parse(decoded) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
   }
 
   private async createSocialUser(

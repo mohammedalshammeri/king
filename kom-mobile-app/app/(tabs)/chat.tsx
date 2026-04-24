@@ -56,7 +56,7 @@ export default function ChatScreen() {
 
   const renderChatCard = ({ item }: { item: any }) => (
     <TouchableOpacity
-      style={[styles.chatCard, { backgroundColor: theme.card, flexDirection: isRTL ? 'row-reverse' : 'row' }]}
+      style={[styles.chatCard, { backgroundColor: theme.card, flexDirection: 'row' }]}
       onPress={() => router.push({
         pathname: '/chat/[id]',
         params: {
@@ -88,22 +88,22 @@ export default function ChatScreen() {
       </View>
 
       <View style={[styles.chatContent, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-        <View style={[styles.chatHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-          <Text style={[styles.userName, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{item.otherUserName}</Text>
+        <View style={[styles.chatHeader, { flexDirection: 'row' }]}>
+          <Text style={[styles.userName, { color: theme.text, textAlign: 'auto'}]}>{item.otherUserName}</Text>
           {item.lastMessageTime && (
             <Text style={[styles.time]}>{formatTime(item.lastMessageTime)}</Text>
           )}
         </View>
 
-        <Text style={[styles.listingTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]} numberOfLines={1}>
+        <Text style={[styles.listingTitle, { textAlign: 'auto'}]} numberOfLines={1}>
           {item.listingTitle}
         </Text>
 
-        <View style={[styles.lastMessageRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+        <View style={[styles.lastMessageRow, { flexDirection: 'row' }]}>
           <Text
             style={[
               styles.lastMessage,
-              { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' },
+              { color: theme.textMuted, textAlign: 'auto'},
               item.unreadCount > 0 && [styles.lastMessageUnread, { color: theme.text }],
             ]}
             numberOfLines={1}
@@ -302,10 +302,8 @@ const styles = StyleSheet.create({
   },
   chatContent: {
     flex: 1,
-    alignItems: 'flex-end',
   },
   chatHeader: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
@@ -314,8 +312,6 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: '700',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   time: {
     fontSize: 11,
@@ -326,20 +322,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#D4AF37',
     marginBottom: 5,
-    textAlign: 'right',
-    writingDirection: 'rtl',
     fontWeight: '600',
   },
   lastMessageRow: {
-    flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
   },
   lastMessage: {
     flex: 1,
     fontSize: 13,
-    textAlign: 'right',
-    writingDirection: 'rtl',
     lineHeight: 18,
   },
   lastMessageUnread: {

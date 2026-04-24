@@ -210,7 +210,19 @@ function normalizeListing(raw: any): ListingDetail {
 export default function ListingDetailScreen() {
   const { id, backLink } = useLocalSearchParams();
   const listingId = Array.isArray(id) ? id[0] : id;
-  const backLinkStr = Array.isArray(backLink) ? backLink[0] : (backLink || '/(tabs)/index');
+  const rawBackLink = Array.isArray(backLink) ? backLink[0] : backLink;
+  const backLinkStr = (() => {
+    const candidate = rawBackLink || '/';
+
+    if (candidate === '/(tabs)/index') return '/';
+    if (candidate === '/(tabs)/search') return '/search';
+    if (candidate.startsWith('/(tabs)/')) {
+      const normalized = candidate.replace('/(tabs)', '');
+      return normalized === '/index' ? '/' : normalized;
+    }
+
+    return candidate;
+  })();
   const { user, isAuthenticated } = useAuthStore();
   const { isDark } = useTheme();
   const { t } = useAppTranslation();
@@ -243,8 +255,8 @@ export default function ListingDetailScreen() {
   const insets = useSafeAreaInsets();
   const mainListRef = useRef<FlatList>(null);
   const thumbsListRef = useRef<FlatList>(null);
-  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
-  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
+  const dirText = { textAlign: 'auto' as const};
+  const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
 
   const checkFavoriteStatus = useCallback(async () => {
     if (!listingId) return;
@@ -596,17 +608,35 @@ export default function ListingDetailScreen() {
             pointerEvents="none"
           />
           {/* Price badge overlaid on hero */}
-          <View style={styles.heroPriceBadge}>
+          <View
+            style={[
+              styles.heroPriceBadge,
+              rowDirection,
+              isRTL ? { left: 16, right: undefined } : { right: 16, left: undefined },
+            ]}
+          >
             <Text style={[styles.heroPriceNum, dirText]}>{Number(listing.price).toLocaleString()}</Text>
             <Text style={[styles.heroPriceCur, dirText]}> {t('common.bhd')}</Text>
           </View>
           {/* Type badge */}
-          <View style={[styles.heroTypeBadge, { backgroundColor: accentColor }]}>
+          <View
+            style={[
+              styles.heroTypeBadge,
+              { backgroundColor: accentColor },
+              isRTL ? { left: 16, right: undefined } : { right: 16, left: undefined },
+            ]}
+          >
             <Text style={[styles.heroTypeTxt, dirText]}>{typeLabel}</Text>
           </View>
           {/* Counter */}
           {listing.media.length > 1 && (
-            <View style={styles.heroCnt}>
+            <View
+              style={[
+                styles.heroCnt,
+                rowDirection,
+                isRTL ? { right: 16, left: undefined } : { left: 16, right: undefined },
+              ]}
+            >
               <Ionicons name="images-outline" size={12} color="rgba(255,255,255,0.8)" />
               <Text style={styles.heroCntTxt}>{activeIndex + 1}/{listing.media.length}</Text>
             </View>
@@ -688,6 +718,7 @@ export default function ListingDetailScreen() {
       i === allSpecs.length - 1 && styles.specRowLast,
     ]}
   >
+    <View style={rowDirection}>
     <Text
       style={[styles.specLbl, { color: theme.textMuted }, dirText]}
       numberOfLines={1}
@@ -713,6 +744,7 @@ export default function ListingDetailScreen() {
         {spec.value}
       </Text>
     )}
+    </View>
   </View>
 ))}
             </View>
@@ -884,7 +916,7 @@ export default function ListingDetailScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorText: { fontSize: 16, color: '#ef4444', marginBottom: 20, textAlign: 'right', writingDirection: 'rtl' },
+  errorText: { fontSize: 16, color: '#ef4444', marginBottom: 20, textAlign: 'auto'},
   backButtonSimple: { padding: 10, backgroundColor: '#ef4444', borderRadius: 8 },
   backButtonText: { color: 'white', fontWeight: 'bold' },
 
@@ -976,12 +1008,12 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 2,
   },
   titleTxt: {
-    fontSize: 20, fontWeight: '800', textAlign: 'right', writingDirection: 'rtl',
+    fontSize: 20, fontWeight: '800',
     lineHeight: 30, marginBottom: 12,
   },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaTxt: { fontSize: 12, fontWeight: '500', textAlign: 'right', writingDirection: 'rtl' },
+  metaTxt: { fontSize: 12, fontWeight: '500' },
 
   // ── Quick Specs Block ──
   quickBlock: {
@@ -995,7 +1027,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1,
   },
   blockAccent: { width: 4, height: 18, borderRadius: 2 },
-  blockTitle: { fontSize: 15, fontWeight: '800', textAlign: 'right', writingDirection: 'rtl' },
+  blockTitle: { fontSize: 15, fontWeight: '800' },
   quickGrid: {
     flexDirection: 'row', flexWrap: 'wrap',
     paddingHorizontal: 12, paddingVertical: 14, gap: 10,
@@ -1010,8 +1042,8 @@ const styles = StyleSheet.create({
     width: 38, height: 38, borderRadius: 10,
     justifyContent: 'center', alignItems: 'center',
   },
-  quickVal: { fontSize: 12, fontWeight: '800', textAlign: 'center', writingDirection: 'rtl' },
-  quickLbl: { fontSize: 10, fontWeight: '500', textAlign: 'center', writingDirection: 'rtl' },
+  quickVal: { fontSize: 12, fontWeight: '800', textAlign: 'center' },
+  quickLbl: { fontSize: 10, fontWeight: '500', textAlign: 'center' },
 
   // ── Specs Block – clean list rows ──
   specsBlock: {
@@ -1027,8 +1059,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   specRowLast: { borderBottomWidth: 0 },
-  specLbl: { width: 120, fontSize: 13, fontWeight: '500', textAlign: 'right', writingDirection: 'rtl' },
-  specVal: { flex: 1, fontSize: 13, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl' },
+  specLbl: { width: 120, fontSize: 13, fontWeight: '500' },
+  specVal: { flex: 1, fontSize: 13, fontWeight: '700' },
 
   // ── Description Block ──
   descBlock: {
@@ -1037,7 +1069,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
   descTxt: {
-    fontSize: 14, lineHeight: 26, textAlign: 'right', writingDirection: 'rtl',
+    fontSize: 14, lineHeight: 26,
     paddingHorizontal: 16, paddingBottom: 16,
   },
 
@@ -1056,7 +1088,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   sellerInit: { fontSize: 20, fontWeight: '900' },
-  sellerName: { fontSize: 16, fontWeight: '700', textAlign: 'right', writingDirection: 'rtl', marginBottom: 3 },
+  sellerName: { fontSize: 16, fontWeight: '700', marginBottom: 3 },
   verifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   verifiedTxt: { fontSize: 12, color: '#10B981', fontWeight: '600' },
   callPill: {
@@ -1121,8 +1153,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   pkgMid: { flex: 1 },
-  pkgName: { fontSize: 15, fontWeight: '800', textAlign: 'right', marginBottom: 4 },
-  pkgDuration: { fontSize: 12, fontWeight: '500', textAlign: 'right' },
+  pkgName: { fontSize: 15, fontWeight: '800', marginBottom: 4 },
+  pkgDuration: { fontSize: 12, fontWeight: '500' },
   pkgRight: { alignItems: 'center' },
   pkgPrice: { fontSize: 20, fontWeight: '900', color: '#D4AF37' },
   pkgCurrency: { fontSize: 11, fontWeight: '600' },

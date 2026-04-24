@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import api, { BASE_URL } from '../services/api';
+import api from '../services/api';
 import { registerForPushNotificationsAsync, savePushTokenToServer } from '../lib/notifications';
 
 // Secure token helpers — use SecureStore on native, AsyncStorage fallback on web
@@ -18,6 +17,22 @@ async function getToken(key: string): Promise<string | null> {
 async function removeToken(key: string) {
   if (isWeb) { window.localStorage?.removeItem(key); return; }
   await SecureStore.deleteItemAsync(key);
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const [, payload] = token.split('.');
+    if (!payload || typeof globalThis.atob !== 'function') {
+      return null;
+    }
+
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const decoded = globalThis.atob(padded);
+    return JSON.parse(decoded) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
 }
 
 interface User {
@@ -204,6 +219,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true });
 
+      if (__DEV__ && payload.provider === 'GOOGLE') {
+        const jwtPayload = decodeJwtPayload(payload.idToken);
+        console.log('Google social token payload', {
+          aud: jwtPayload?.aud,
+          azp: jwtPayload?.azp,
+          iss: jwtPayload?.iss,
+          email: jwtPayload?.email,
+        });
+      }
+
       const trimmedPhone = payload.phone?.trim();
       const trimmedFullName = payload.fullName?.trim();
       const trimmedShowroomName = payload.showroomName?.trim();
@@ -229,8 +254,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       registerForPushNotificationsAsync().then((token) => { if (token) savePushTokenToServer(token); });
 
       return { user, message };
-    } catch (error) {
-      console.error('Social auth failed', error);
+    } catch (error: any) {
+      console.error('Social auth failed', {
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message,
+      });
       throw error;
     } finally {
       set({ isLoading: false });
@@ -336,7 +365,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } else {
         set({ user: null, isAuthenticated: false });
       }
-    } catch (error) {
+    } catch {
       set({ user: null, isAuthenticated: false });
     } finally {
       set({ isAuthLoading: false });

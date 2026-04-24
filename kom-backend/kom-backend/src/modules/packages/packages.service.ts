@@ -6,7 +6,12 @@
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { UserRole, SubscriptionStatus, IndividualPurchaseStatus } from '@prisma/client';
+import {
+  UserRole,
+  SubscriptionStatus,
+  IndividualPurchaseStatus,
+  ListingStatus,
+} from '@prisma/client';
 import {
   CreatePackageDto,
   UpdatePackageDto,
@@ -56,10 +61,16 @@ export class PackagesService {
   // ═══════════════════════════════════════════════════════════
 
   async getMySubscription(userId: string) {
-    return this.prisma.subscription.findUnique({
+    const subscription = await this.prisma.subscription.findUnique({
       where: { userId },
       include: { package: true },
     });
+
+    if (!subscription) {
+      return null;
+    }
+
+    return this.hydrateSubscriptionUsage(subscription);
   }
 
   async subscribe(userId: string, dto: SubscribeDto) {
@@ -323,7 +334,9 @@ export class PackagesService {
       return { allowed: false, reason: 'انتهى اشتراكك. يرجى تجديد الاشتراك.' };
     }
 
-    if (subscription.listingsUsed >= subscription.package.maxListings) {
+    const activeListingsCount = await this.countActiveShowroomListings(userId);
+
+    if (activeListingsCount >= subscription.package.maxListings) {
       return {
         allowed: false,
         reason: `لقد وصلت إلى الحد الأقصى من الإعلانات (${subscription.package.maxListings}) لباقتك الحالية.`,
@@ -335,14 +348,7 @@ export class PackagesService {
 
   /** Check if an INDIVIDUAL user has remaining listing credits */
   async canIndividualPost(userId: string): Promise<{ allowed: boolean; reason?: string }> {
-    // Find the oldest active purchase with remaining credits (FIFO)
-    const purchase = await this.prisma.individualPurchase.findFirst({
-      where: {
-        userId,
-        status: IndividualPurchaseStatus.ACTIVE,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    const purchase = await this.findOldestAvailableIndividualPurchase(userId);
 
     if (!purchase) {
       return {
@@ -351,23 +357,12 @@ export class PackagesService {
       };
     }
 
-    const remaining = purchase.creditsTotal - purchase.creditsUsed;
-    if (remaining <= 0) {
-      return {
-        allowed: false,
-        reason: 'لا يوجد رصيد إعلانات. يرجى شراء باقة إضافية.',
-      };
-    }
-
     return { allowed: true };
   }
 
   /** Deduct one listing credit from the oldest active purchase (FIFO) */
   async incrementIndividualCreditsUsed(userId: string) {
-    const purchase = await this.prisma.individualPurchase.findFirst({
-      where: { userId, status: IndividualPurchaseStatus.ACTIVE },
-      orderBy: { createdAt: 'asc' },
-    });
+    const purchase = await this.findOldestAvailableIndividualPurchase(userId);
 
     if (!purchase) return;
 
@@ -392,9 +387,55 @@ export class PackagesService {
 
   /** Deduct one listing from merchant's listingsUsed counter */
   async incrementListingsUsed(userId: string) {
+    await this.syncMerchantListingUsage(userId);
+  }
+
+  async syncMerchantListingUsage(userId: string) {
+    const activeListingsCount = await this.countActiveShowroomListings(userId);
+
     await this.prisma.subscription.updateMany({
       where: { userId, status: SubscriptionStatus.ACTIVE },
-      data: { listingsUsed: { increment: 1 } },
+      data: { listingsUsed: activeListingsCount },
     });
+  }
+
+  private async countActiveShowroomListings(userId: string) {
+    return this.prisma.listing.count({
+      where: {
+        ownerId: userId,
+        status: {
+          in: [ListingStatus.PENDING_REVIEW, ListingStatus.APPROVED],
+        },
+      },
+    });
+  }
+
+  private async findOldestAvailableIndividualPurchase(userId: string) {
+    const purchases = await this.prisma.individualPurchase.findMany({
+      where: {
+        userId,
+        status: IndividualPurchaseStatus.ACTIVE,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return purchases.find((purchase) => purchase.creditsUsed < purchase.creditsTotal) ?? null;
+  }
+
+  private async hydrateSubscriptionUsage<
+    T extends {
+      listingsUsed: number;
+      package: { maxListings: number };
+      userId: string;
+    },
+  >(subscription: T) {
+    const activeListingsCount = await this.countActiveShowroomListings(subscription.userId);
+
+    return {
+      ...subscription,
+      listingsUsed: activeListingsCount,
+      activeListingsCount,
+      listingsRemaining: Math.max(0, subscription.package.maxListings - activeListingsCount),
+    };
   }
 }

@@ -1,5 +1,4 @@
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { getApiBaseUrl } from './api-url';
 
@@ -89,7 +88,11 @@ api.interceptors.response.use(
     // Handle 401 - Try to refresh token
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       // Don't attempt to refresh token if the 401 came from auth endpoints themselves
-      if (requestUrl.includes('/auth/login') || requestUrl.includes('/auth/refresh')) {
+      if (
+        requestUrl.includes('/auth/login')
+        || requestUrl.includes('/auth/social')
+        || requestUrl.includes('/auth/refresh')
+      ) {
         return Promise.reject(error);
       }
 

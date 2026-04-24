@@ -59,8 +59,8 @@ export default function IndividualPackagesScreen() {
   const cardBg = isDark ? '#111827' : '#FFFFFF';
   const textColor = isDark ? '#F8FAFC' : '#0A0B14';
   const mutedColor = isDark ? '#94A3B8' : '#64748B';
-  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
-  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
+  const dirText = { textAlign: 'auto' as const};
+  const rowDirection = { flexDirection: 'row' as const };
 
   const totalCredits = purchases.reduce((sum, p) => sum + (p.creditsTotal - p.creditsUsed), 0);
 
@@ -322,7 +322,7 @@ export default function IndividualPackagesScreen() {
 }
 
 function StatBox({ label, value, color, isRTL }: { label: string; value: string; color: string; isRTL: boolean }) {
-  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
+  const dirText = { textAlign: 'auto' as const};
   return (
     <View style={statStyles.box}>
       <Text style={[statStyles.value, { color }, dirText]}>{value}</Text>
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
-  zeroBadgeText: { fontSize: 11, fontWeight: '700', color: '#DC2626', textAlign: 'right', writingDirection: 'rtl' },
+  zeroBadgeText: { fontSize: 11, fontWeight: '700', color: '#DC2626' },
 
   sectionTitle: { fontSize: 16, fontWeight: '800', marginBottom: 12, marginTop: 4, alignSelf: 'stretch' },
 
@@ -455,8 +455,8 @@ const styles = StyleSheet.create({
   countBadgeLabel: { fontSize: 10, color: '#D4AF37', fontWeight: '700' },
 
   pkgInfo: { flex: 1, alignItems: 'flex-end' },
-  pkgName: { fontSize: 16, fontWeight: '800', marginBottom: 4, textAlign: 'right', writingDirection: 'rtl' },
-  pkgDesc: { fontSize: 12, marginBottom: 6, textAlign: 'right', writingDirection: 'rtl' },
+  pkgName: { fontSize: 16, fontWeight: '800', marginBottom: 4 },
+  pkgDesc: { fontSize: 12, marginBottom: 6 },
   pkgFeature: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2, alignSelf: 'flex-end' },
   featureText: { fontSize: 12 },
 

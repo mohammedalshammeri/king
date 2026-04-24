@@ -98,27 +98,27 @@ export default function AddStoryModal({ visible, onClose, onSuccess }: AddStoryM
           colors={['#0E1830', '#162444']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={styles.header}
+          style={[styles.header, { flexDirection: 'row' }]}
         >
           <TouchableOpacity onPress={onClose} style={[styles.closeBtn, isRTL ? styles.closeBtnRtl : styles.closeBtnLtr]} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <View style={styles.closeCircle}>
               <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={18} color="#D4AF37" />
             </View>
           </TouchableOpacity>
-          <Text style={[styles.title, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.addStory')}</Text>
-          <View style={styles.closeBtnPlaceholder} />
+          <Text style={styles.title}>{t('stories.addStory')}</Text>
+          <View style={[styles.closeBtnPlaceholder, isRTL ? styles.closeBtnPlaceholderRtl : styles.closeBtnPlaceholderLtr]} />
         </LinearGradient>
 
         <View style={[styles.content, { backgroundColor: theme.background }]}>
            {!media ? (
-                 <View style={[styles.buttons, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                 <View style={[styles.buttons, { flexDirection: 'row' }]}>
                    <TouchableOpacity style={styles.btn} onPress={() => pickMedia('image')}>
                        <Ionicons name="image" size={32} color="white" />
-                     <Text style={[styles.btnText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.chooseImage')}</Text>
+                     <Text style={styles.btnText}>{t('stories.chooseImage')}</Text>
                    </TouchableOpacity>
                    <TouchableOpacity style={styles.btn} onPress={() => pickMedia('video')}>
                        <Ionicons name="videocam" size={32} color="white" />
-                     <Text style={[styles.btnText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.chooseVideo')}</Text>
+                     <Text style={styles.btnText}>{t('stories.chooseVideo')}</Text>
                    </TouchableOpacity>
                </View>
            ) : (
@@ -135,12 +135,12 @@ export default function AddStoryModal({ visible, onClose, onSuccess }: AddStoryM
                        <Image source={{ uri: media.uri }} style={styles.previewMedia} contentFit="contain" />
                    )}
                    
-                     <View style={[styles.actions, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                     <View style={[styles.actions, { flexDirection: 'row' }]}>
                         <TouchableOpacity style={[styles.actionBtn, styles.cancelBtn, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setMedia(null)} disabled={uploading}>
-                        <Text style={[styles.cancelText, { color: theme.text, writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('common.cancel')}</Text>
+                        <Text style={[styles.cancelText, { color: theme.text}]}>{t('common.cancel')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.actionBtn, styles.uploadBtn]} onPress={uploadStory} disabled={uploading}>
-                        {uploading ? <ActivityIndicator color="white" /> : <Text style={[styles.uploadText, { writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('stories.publishStory')}</Text>}
+                        {uploading ? <ActivityIndicator color="white" /> : <Text style={styles.uploadText}>{t('stories.publishStory')}</Text>}
                         </TouchableOpacity>
                    </View>
                </View>
@@ -194,15 +194,19 @@ const styles = StyleSheet.create({
   },
   closeBtnPlaceholder: {
     position: 'absolute',
-    left: 16,
     width: 44,
+  },
+  closeBtnPlaceholderRtl: {
+    left: 16,
+  },
+  closeBtnPlaceholderLtr: {
+    right: 16,
   },
   title: {
     fontSize: 18,
     fontWeight: '800',
     textAlign: 'center',
     color: '#D4AF37',
-    writingDirection: 'rtl',
     letterSpacing: 0.3,
   },
   content: {

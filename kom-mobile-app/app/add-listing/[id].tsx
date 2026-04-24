@@ -351,10 +351,9 @@ export default function AddListingDetailScreen() {
     subText: isDark ? '#cbd5e1' : '#6b7280',
     primary: Colors.primary,
   };
-  const direction: 'rtl' | 'ltr' = isRTL ? 'rtl' : 'ltr';
-  const textAlign: 'right' | 'left' = isRTL ? 'right' : 'left';
-  const rowDirection: 'row-reverse' | 'row' = isRTL ? 'row-reverse' : 'row';
-  const inputDirectionProps = { textAlign, writingDirection: direction as 'rtl' | 'ltr' };
+  const textAlign: 'left' | 'right' = isRTL ? 'right' : 'left';
+  const rowDirection: 'row' | 'row-reverse' = isRTL ? 'row-reverse' : 'row';
+  const inputDirectionProps = { textAlign };
   const otherOption = t('common.other');
 
   const translatedContactPreferences = [
@@ -1661,15 +1660,13 @@ export default function AddListingDetailScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('addListing.descriptionLabel')}</Text>
+        <Text style={[styles.label, { color: theme.text, textAlign: 'auto' }]}>{t('addListing.descriptionLabel')}</Text>
         <TextInput
           style={[inputStyle, styles.textArea]}
           value={formData.description}
           onChangeText={(text) => setFormData({ ...formData, description: text })}
           placeholder={t('addListing.descriptionPlaceholder')}
-          textAlign={isRTL ? 'right' : 'left'}
-          writingDirection={isRTL ? 'rtl' : 'ltr'}
-          multiline
+                    multiline
           numberOfLines={4}
           maxLength={5000}
           placeholderTextColor={theme.textMuted}
@@ -1850,8 +1847,7 @@ export default function AddListingDetailScreen() {
             onChangeText={(text) => setCarDetails({ ...carDetails, make: text })}
             placeholder={t('addListing.enterMake')}
             textAlign={textAlign}
-            writingDirection={direction}
-            placeholderTextColor={theme.textMuted}
+                        placeholderTextColor={theme.textMuted}
           />
         </View>
 
@@ -1863,8 +1859,7 @@ export default function AddListingDetailScreen() {
             onChangeText={(text) => setCarDetails({ ...carDetails, model: text })}
             placeholder={t('addListing.enterModel')}
             textAlign={textAlign}
-            writingDirection={direction}
-            placeholderTextColor={theme.textMuted}
+                        placeholderTextColor={theme.textMuted}
           />
         </View>
       </View>
@@ -1877,9 +1872,8 @@ export default function AddListingDetailScreen() {
             value={carDetails.year}
             onChangeText={(text) => setCarDetails({ ...carDetails, year: text.replace(/[^0-9]/g, '') })}
             placeholder="2020"
-            textAlign="right"
-            writingDirection="rtl"
-            keyboardType="number-pad"
+            textAlign={textAlign}
+                        keyboardType="number-pad"
             maxLength={4}
             placeholderTextColor={theme.textMuted}
           />
@@ -1892,9 +1886,8 @@ export default function AddListingDetailScreen() {
             value={carDetails.mileageKm}
             onChangeText={(text) => setCarDetails({ ...carDetails, mileageKm: text.replace(/[^0-9]/g, '') })}
             placeholder="50000"
-            textAlign="right"
-            writingDirection="rtl"
-            keyboardType="number-pad"
+            textAlign={textAlign}
+                        keyboardType="number-pad"
             placeholderTextColor={theme.textMuted}
           />
         </View>
@@ -1931,7 +1924,7 @@ export default function AddListingDetailScreen() {
               disabled={!carDetails.model && !isCustomCarModel}
             >
               <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
-              <Text style={[styles.selectorText, { color: carDetails.trim ? theme.text : theme.textMuted, textAlign, writingDirection: direction }]}> 
+              <Text style={[styles.selectorText, { color: carDetails.trim ? theme.text : theme.textMuted, textAlign}]}> 
                 {isCustomCarTrim ? (carDetails.trim || t('addListing.allOther')) : (carDetails.trim || t('addListing.selectTrim'))}
               </Text>
             </TouchableOpacity>
@@ -1942,8 +1935,7 @@ export default function AddListingDetailScreen() {
                 onChangeText={(text) => setCarDetails((prev) => ({ ...prev, trim: text }))}
                 placeholder={t('addListing.enterTrim')}
                 textAlign={textAlign}
-                writingDirection={direction}
-                placeholderTextColor={theme.textMuted}
+                                placeholderTextColor={theme.textMuted}
               />
             )}
           </View>
@@ -2011,7 +2003,7 @@ export default function AddListingDetailScreen() {
           style={[inputStyle, { flexDirection: rowDirection, justifyContent: 'space-between', alignItems: 'center' }]}
           onPress={() => setShowCarColorModal(true)}
         >
-          <Text style={{ color: carDetails.color ? theme.text : theme.textMuted, textAlign, writingDirection: direction }}>
+          <Text style={{ color: carDetails.color ? theme.text : theme.textMuted, textAlign}}>
             {isCustomCarColor ? (carDetails.color || t('addListing.allOther')) : (carDetails.color || t('addListing.colorSelectTitle'))}
           </Text>
           <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
@@ -2023,8 +2015,7 @@ export default function AddListingDetailScreen() {
             onChangeText={(text) => setCarDetails({ ...carDetails, color: text })}
             placeholder={t('addListing.colorPlaceholder')}
             textAlign={textAlign}
-            writingDirection={direction}
-            placeholderTextColor={theme.textMuted}
+                        placeholderTextColor={theme.textMuted}
           />
         )}
       </View>
@@ -2054,8 +2045,7 @@ export default function AddListingDetailScreen() {
           onChangeText={(text) => setCarDetails({ ...carDetails, trim: text })}
           placeholder={t('addListing.trimPlaceholder')}
           textAlign={textAlign}
-          writingDirection={direction}
-          placeholderTextColor={theme.textMuted}
+                    placeholderTextColor={theme.textMuted}
         />
       </View>
 
@@ -2094,8 +2084,7 @@ export default function AddListingDetailScreen() {
           onChangeText={(text) => setCarDetails({ ...carDetails, interiorColor: text })}
           placeholder={t('addListing.interiorColorPlaceholder')}
           textAlign={textAlign}
-          writingDirection={direction}
-          placeholderTextColor={theme.textMuted}
+                    placeholderTextColor={theme.textMuted}
         />
       </View>
 
@@ -2108,8 +2097,7 @@ export default function AddListingDetailScreen() {
             onChangeText={(text) => setCarDetails({ ...carDetails, bodyCondition: text })}
             placeholder={t('addListing.bodyConditionPlaceholder')}
             textAlign={textAlign}
-            writingDirection={direction}
-            placeholderTextColor={theme.textMuted}
+                        placeholderTextColor={theme.textMuted}
           />
         </View>
       )}
@@ -2123,8 +2111,7 @@ export default function AddListingDetailScreen() {
             onChangeText={(text) => setCarDetails({ ...carDetails, paintType: text })}
             placeholder={t('addListing.paintTypePlaceholder')}
             textAlign={textAlign}
-            writingDirection={direction}
-            placeholderTextColor={theme.textMuted}
+                        placeholderTextColor={theme.textMuted}
           />
         </View>
       )}
@@ -2154,8 +2141,7 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
             onChangeText={(text) => setMotorcycleDetails({ ...motorcycleDetails, mileageKm: text.replace(/[^0-9]/g, '') })}
             placeholder="0"
             textAlign={textAlign}
-            writingDirection={direction}
-            keyboardType="number-pad"
+                        keyboardType="number-pad"
             placeholderTextColor={theme.textMuted}
             editable={motorcycleDetails.condition !== 'NEW'}
           />
@@ -2170,8 +2156,7 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
             onChangeText={(text) => setMotorcycleDetails({ ...motorcycleDetails, engineSize: text })}
             placeholder="1000"
             textAlign={textAlign}
-            writingDirection={direction}
-            keyboardType="number-pad"
+                        keyboardType="number-pad"
             placeholderTextColor={theme.textMuted}
           />
         </View>
@@ -2271,7 +2256,7 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
             style={[inputStyle, { flexDirection: rowDirection, justifyContent: 'space-between', alignItems: 'center' }]}
             onPress={() => setShowMotorcycleColorModal(true)}
           >
-            <Text style={{ color: motorcycleDetails.color ? theme.text : theme.textMuted, textAlign, writingDirection: direction }}>
+            <Text style={{ color: motorcycleDetails.color ? theme.text : theme.textMuted, textAlign}}>
               {isCustomMotorcycleColor ? (motorcycleDetails.color || t('addListing.allOther')) : (motorcycleDetails.color || t('addListing.colorSelectTitle'))}
             </Text>
             <Ionicons name="chevron-down" size={20} color={theme.textMuted} />
@@ -2283,8 +2268,7 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
               onChangeText={(text) => setMotorcycleDetails({ ...motorcycleDetails, color: text })}
               placeholder={t('addListing.colorPlaceholder')}
               textAlign={textAlign}
-              writingDirection={direction}
-              placeholderTextColor={theme.textMuted}
+                            placeholderTextColor={theme.textMuted}
             />
           )}
       </View>
@@ -2322,8 +2306,7 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
           onChangeText={(text) => setPlateDetails({ ...plateDetails, plateNumber: text })}
           placeholder={t('addListing.enterPlateNumberExample')}
           textAlign={textAlign}
-          writingDirection={direction}
-          keyboardType="number-pad"
+                    keyboardType="number-pad"
           placeholderTextColor={theme.textMuted}
         />
       </View>
@@ -2363,8 +2346,7 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
           onChangeText={(text) => setPlateDetails({ ...plateDetails, plateCode: text })}
           placeholder="أ"
           textAlign={textAlign}
-          writingDirection={direction}
-          placeholderTextColor={theme.textMuted}
+                    placeholderTextColor={theme.textMuted}
         />
       </View>
     </View>
@@ -2382,8 +2364,7 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
           onChangeText={(text) => setPartDetails({ ...partDetails, partCategory: text })}
           placeholder={t('addListing.partCategoryPlaceholder')}
           textAlign={textAlign}
-          writingDirection={direction}
-          placeholderTextColor={theme.textMuted}
+                    placeholderTextColor={theme.textMuted}
         />
       </View>
 
@@ -2395,8 +2376,7 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
           onChangeText={(text) => setPartDetails({ ...partDetails, partName: text })}
           placeholder={t('addListing.enterPartNameExample')}
           textAlign={textAlign}
-          writingDirection={direction}
-          placeholderTextColor={theme.textMuted}
+                    placeholderTextColor={theme.textMuted}
         />
       </View>
 
@@ -2409,8 +2389,7 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
             onChangeText={(text) => setPartDetails({ ...partDetails, compatibleCarMake: text })}
             placeholder={t('addListing.enterMake')}
             textAlign={textAlign}
-            writingDirection={direction}
-            placeholderTextColor={theme.textMuted}
+                        placeholderTextColor={theme.textMuted}
           />
         </View>
 
@@ -2422,8 +2401,7 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
             onChangeText={(text) => setPartDetails({ ...partDetails, compatibleCarModel: text })}
             placeholder={t('addListing.enterModel')}
             textAlign={textAlign}
-            writingDirection={direction}
-            placeholderTextColor={theme.textMuted}
+                        placeholderTextColor={theme.textMuted}
           />
         </View>
       </View>
@@ -2458,7 +2436,7 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
       </View>
 
       <View style={[styles.inputGroup, { flexDirection: rowDirection, alignItems: 'center', justifyContent: 'space-between' }]}>
-        <Text style={[styles.label, { color: theme.text, marginBottom: 0, textAlign, writingDirection: direction }]}>{t('addListing.deliveryAvailableLabel')}</Text>
+        <Text style={[styles.label, { color: theme.text, marginBottom: 0, textAlign}]}>{t('addListing.deliveryAvailableLabel')}</Text>
         <TouchableOpacity
             style={[
               { width: 50, height: 30, borderRadius: 15, justifyContent: 'center', padding: 2 },
@@ -2471,7 +2449,10 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
                  height: 26,
                  borderRadius: 13,
                  backgroundColor: 'white',
-                 alignSelf: partDetails.deliveryAvailable ? 'flex-end' : 'flex-start' 
+                 alignSelf:
+                   partDetails.deliveryAvailable
+                     ? (isRTL ? 'flex-start' : 'flex-end')
+                     : (isRTL ? 'flex-end' : 'flex-start')
              }} />
         </TouchableOpacity>
       </View>
@@ -2480,14 +2461,14 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
 
   const renderImagesStep = () => (
     <View style={styles.form}>
-      <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('addListing.imagesTitle')}</Text>
-      <Text style={[styles.subtitle, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}> 
+      <Text style={[styles.sectionTitle, { color: theme.text, textAlign: 'auto' }]}>{t('addListing.imagesTitle')}</Text>
+      <Text style={[styles.subtitle, { color: theme.textMuted, textAlign: 'auto' }]}> 
         {type === 'CAR' ? t('addListing.imagesCarSubtitle') : t('addListing.imagesGenericSubtitle')}
       </Text>
 
       {existingMedia.length > 0 && (
         <View style={styles.existingMediaSection}>
-          <Text style={[styles.sectionSubtitle, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>{t('addListing.currentMedia')}</Text>
+          <Text style={[styles.sectionSubtitle, { color: theme.textMuted, textAlign: 'auto' }]}>{t('addListing.currentMedia')}</Text>
           <View style={styles.imageGrid}>
             {existingMedia.map((media) => (
               <View key={media.id} style={styles.imageContainer}>
@@ -2515,7 +2496,10 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
                   </View>
                 )}
                 <TouchableOpacity
-                  style={styles.removeImageButton}
+                  style={[
+                    styles.removeImageButton,
+                    isRTL ? { right: 4, left: undefined } : { left: 4, right: undefined },
+                  ]}
                   onPress={() => removeExistingMedia(media.id)}
                 >
                   <Ionicons name="trash-outline" size={20} color="#EF4444" />
@@ -2550,7 +2534,10 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
               </View>
             </View>
             <TouchableOpacity
-              style={styles.removeImageButton}
+              style={[
+                styles.removeImageButton,
+                isRTL ? { right: 4, left: undefined } : { left: 4, right: undefined },
+              ]}
               onPress={() => removeImage(index)}
             >
               <Ionicons name="close-circle" size={24} color="#EF4444" />
@@ -2570,7 +2557,10 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
               </View>
             </View>
             <TouchableOpacity
-              style={styles.removeImageButton}
+              style={[
+                styles.removeImageButton,
+                isRTL ? { right: 4, left: undefined } : { left: 4, right: undefined },
+              ]}
               onPress={() => removeVideo(index)}
             >
               <Ionicons name="close-circle" size={24} color="#EF4444" />
@@ -2703,7 +2693,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#1E293B',
-    textAlign: 'right',
+    textAlign: 'auto',
     marginEnd: 12,
   },
   stepIndicator: {
@@ -2756,7 +2746,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1E293B',
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: 'auto',
     alignSelf: 'flex-end',
     width: '100%',
   },
@@ -2764,7 +2754,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
     marginBottom: 20,
-    textAlign: 'right',
+    textAlign: 'auto',
     alignSelf: 'flex-end',
     width: '100%',
   },
@@ -2776,7 +2766,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#334155',
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: 'auto',
     alignSelf: 'flex-end',
     width: '100%',
   },
@@ -2788,29 +2778,27 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: '#1E293B',
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    textAlign: 'auto',
   },
   textArea: {
     height: 100,
     textAlignVertical: 'top',
   },
   selectorField: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   selectorText: {
     flex: 1,
     fontSize: 16,
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    textAlign: 'auto',
   },
   disabledField: {
     opacity: 0.5,
   },
   pickerContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
@@ -2835,7 +2823,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   row: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: 12,
   },
   halfWidth: {
@@ -2859,7 +2847,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   imageGrid: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
   },
@@ -2880,7 +2868,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: 'auto',
     alignSelf: 'flex-end',
     width: '100%',
   },
@@ -2932,12 +2920,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   editActions: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: 12,
     marginTop: 24,
   },
   footer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     padding: 16,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
@@ -2945,7 +2933,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   toggleRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },

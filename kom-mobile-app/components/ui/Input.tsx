@@ -6,11 +6,9 @@ import {
   Text,
   StyleSheet,
   TextInputProps,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
-import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
@@ -33,7 +31,6 @@ export function Input({
   ...props
 }: InputProps) {
   const { isDark } = useTheme();
-  const { isRTL } = useLanguage();
 
   const theme = {
     label: isDark ? '#e5e7eb' : Colors.text,
@@ -51,7 +48,7 @@ export function Input({
       <View
         style={[
           styles.inputWrapper,
-          { flexDirection: isRTL ? 'row-reverse' : 'row' },
+          styles.inputRow,
           { backgroundColor: theme.background, borderColor: theme.border },
           error && styles.inputWrapperError,
         ]}
@@ -73,11 +70,10 @@ export function Input({
             rightIcon && styles.inputWithTrailingIcon,
             { color: theme.text },
             style,
-            { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' },
+            styles.directionalInput,
           ]}
           placeholderTextColor={theme.placeholder}
 
-          textAlign={isRTL ? 'right' : 'left'}
           textAlignVertical="center"
 
           /* Android stability */
@@ -113,6 +109,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
 
+  inputRow: {
+    flexDirection: 'row',
+  },
+
   inputWrapperError: {
     borderColor: Colors.error,
   },
@@ -133,6 +133,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 0,
     paddingHorizontal: 0,
+  },
+
+  directionalInput: {
+    textAlign: 'auto',
   },
 
   inputWithLeadingIcon: {},

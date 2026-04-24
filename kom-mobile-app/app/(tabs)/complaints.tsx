@@ -21,7 +21,7 @@ export default function ComplaintsScreen() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const { t } = useAppTranslation();
-  const { isRTL, language } = useLanguage();
+  const { language } = useLanguage();
   const { isDark } = useTheme();
   const [title, setTitle] = useState('');
   const [details, setDetails] = useState('');
@@ -116,16 +116,14 @@ export default function ComplaintsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
         >
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('complaints.newComplaintTitle')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign: 'auto'}]}>{t('complaints.newComplaintTitle')}</Text>
           <TextInput
             placeholder={t('complaints.complaintTitlePlaceholder')}
             value={title}
             onChangeText={setTitle}
             style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
             placeholderTextColor={theme.textMuted}
-            textAlign={isRTL ? 'right' : 'left'}
-            writingDirection={isRTL ? 'rtl' : 'ltr'}
-          />
+                      />
           <TextInput
             placeholder={t('complaints.complaintDetailsPlaceholder')}
             value={details}
@@ -134,9 +132,7 @@ export default function ComplaintsScreen() {
             placeholderTextColor={theme.textMuted}
             multiline
             textAlignVertical="top"
-            textAlign={isRTL ? 'right' : 'left'}
-            writingDirection={isRTL ? 'rtl' : 'ltr'}
-          />
+                      />
           <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={submitting}>
             {submitting ? (
               <ActivityIndicator color="#fff" />
@@ -147,34 +143,34 @@ export default function ComplaintsScreen() {
         </View>
 
         <View style={[styles.card, styles.cardSpacing, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('complaints.trackTitle')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign: 'auto'}]}>{t('complaints.trackTitle')}</Text>
           {loading ? (
-            <View style={[styles.loadingRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <View style={[styles.loadingRow, { flexDirection: 'row' }]}>
               <ActivityIndicator style={styles.loadingIcon} />
               <Text style={[styles.loadingText, { color: theme.textMuted }]}>{t('complaints.loading')}</Text>
             </View>
           ) : items.length === 0 ? (
-            <Text style={[styles.emptyText, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('complaints.empty')}</Text>
+            <Text style={[styles.emptyText, { color: theme.textMuted, textAlign: 'auto'}]}>{t('complaints.empty')}</Text>
           ) : (
             items.map((item) => {
               const status = statusMap[item.status] || statusMap.OPEN;
               return (
                 <View key={item.id} style={[styles.ticketCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                  <View style={[styles.ticketHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-                    <Text style={[styles.ticketTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]} numberOfLines={2}>{item.reason}</Text>
+                  <View style={[styles.ticketHeader, { flexDirection: 'row' }]}>
+                    <Text style={[styles.ticketTitle, { color: theme.text, textAlign: 'auto'}]} numberOfLines={2}>{item.reason}</Text>
                     <View style={[styles.badge, { backgroundColor: status.bg }]}
                       >
                       <Text style={[styles.badgeText, { color: status.color }]}>{status.label}</Text>
                     </View>
                   </View>
-                  <Text style={[styles.ticketDate, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{new Date(item.createdAt).toLocaleDateString(language === 'ar' ? 'ar' : 'en-US')}</Text>
+                  <Text style={[styles.ticketDate, { color: theme.textMuted, textAlign: 'auto'}]}>{new Date(item.createdAt).toLocaleDateString(language === 'ar' ? 'ar' : 'en-US')}</Text>
                   {item.details ? (
-                    <Text style={[styles.ticketDetails, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]} numberOfLines={3}>{item.details}</Text>
+                    <Text style={[styles.ticketDetails, { color: theme.textMuted, textAlign: 'auto'}]} numberOfLines={3}>{item.details}</Text>
                   ) : null}
                   {item.resolution ? (
                     <View style={[styles.resolutionBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                      <Text style={[styles.resolutionLabel, { color: theme.primary, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('complaints.adminReply')}</Text>
-                      <Text style={[styles.resolutionText, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{item.resolution}</Text>
+                      <Text style={[styles.resolutionLabel, { color: theme.primary, textAlign: 'auto'}]}>{t('complaints.adminReply')}</Text>
+                      <Text style={[styles.resolutionText, { color: theme.text, textAlign: 'auto'}]}>{item.resolution}</Text>
                     </View>
                   ) : null}
                 </View>
@@ -232,8 +228,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
     marginBottom: 10,
-    textAlign: 'right',
-    writingDirection: 'rtl',
     width: '100%',
     alignSelf: 'flex-end', // التعديل هنا
   },
@@ -246,7 +240,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0f172a',
     marginBottom: 10,
-    textAlign: 'right',
   },
   textArea: {
     minHeight: 90,
@@ -274,8 +267,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: '#64748b',
-    textAlign: 'right',
-    writingDirection: 'rtl',
     paddingVertical: 10,
     width: '100%',
     alignSelf: 'flex-end', // التعديل هنا
@@ -298,22 +289,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#0f172a',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   ticketDate: {
     fontSize: 12,
     color: '#94a3b8',
     marginTop: 4,
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   ticketDetails: {
     fontSize: 13,
     color: '#475569',
     marginTop: 8,
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   badge: {
     paddingHorizontal: 8,
@@ -336,14 +321,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#D4AF37',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   resolutionText: {
     fontSize: 13,
     color: '#0f172a',
     marginTop: 4,
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
 });

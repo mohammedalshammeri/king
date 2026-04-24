@@ -25,6 +25,8 @@ test-create-10-users.js
 # Credentials
 credentials.json
 credentials/
+client_secret_*.json
+client_*.apps.googleusercontent.com.plist
 
 # Hostinger deployment secrets
 hostinger/.env

@@ -17,7 +17,6 @@ export default function PrivacyScreen() {
     text: isDark ? '#e5e7eb' : '#0f172a',
     body: isDark ? '#cbd5e1' : '#334155',
   };
-  const textDirection = isRTL ? 'rtl' : 'ltr';
   const textAlign = isRTL ? 'right' : 'left';
 
   return (
@@ -30,60 +29,60 @@ export default function PrivacyScreen() {
         borderColor={theme.border}
         textColor={theme.text}
         variant="light"
-        onBack={() => router.replace('/settings')}
+        onBack={() => router.replace('/(tabs)/settings')}
       />
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.contentWrapper}>
-          <Text style={[styles.title, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('privacy.heading')}</Text>
+          <Text style={[styles.title, { color: theme.text, textAlign}]}>{t('privacy.heading')}</Text>
 
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('privacy.intro')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('privacy.intro')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('privacy.collectTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('privacy.collectIntro')}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.collectBullet1')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.collectBullet2')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.collectBullet3')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.collectBullet4')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.collectBullet5')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.collectBullet6')}`}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('privacy.collectTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('privacy.collectIntro')}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.collectBullet1')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.collectBullet2')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.collectBullet3')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.collectBullet4')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.collectBullet5')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.collectBullet6')}`}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('privacy.useTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('privacy.useIntro')}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.useBullet1')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.useBullet2')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.useBullet3')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.useBullet4')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.useBullet5')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.useBullet6')}`}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('privacy.useTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('privacy.useIntro')}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.useBullet1')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.useBullet2')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.useBullet3')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.useBullet4')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.useBullet5')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.useBullet6')}`}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('privacy.shareTitle')}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.shareBullet1')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.shareBullet2')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.shareBullet3')}`}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('privacy.shareTitle')}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.shareBullet1')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.shareBullet2')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.shareBullet3')}`}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('privacy.protectionTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('privacy.protectionIntro')}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.protectionBullet1')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.protectionBullet2')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.protectionBullet3')}`}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('privacy.protectionTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('privacy.protectionIntro')}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.protectionBullet1')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.protectionBullet2')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.protectionBullet3')}`}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('privacy.mediaTitle')}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.mediaBullet1')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.mediaBullet2')}`}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('privacy.mediaTitle')}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.mediaBullet1')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.mediaBullet2')}`}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('privacy.deletionTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('privacy.deletionBody')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('privacy.deletionTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('privacy.deletionBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('privacy.changesTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('privacy.changesBody')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('privacy.changesTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('privacy.changesBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('privacy.consentTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('privacy.consentBody')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('privacy.consentTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('privacy.consentBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('privacy.contactTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('privacy.contactBody')}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('privacy.contactEmail')}`}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('privacy.contactTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('privacy.contactBody')}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('privacy.contactEmail')}`}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

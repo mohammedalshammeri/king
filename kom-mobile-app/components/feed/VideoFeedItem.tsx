@@ -1,12 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Image } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useTheme } from '../../context/ThemeContext';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAppTranslation } from '@/context/LanguageContext';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -26,8 +25,8 @@ interface VideoFeedItemProps {
 }
 
 export default function VideoFeedItem({ video, isActive = false, height }: VideoFeedItemProps) {
-  const { isDark } = useTheme();
   const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
   // Removed videoRef
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -91,7 +90,13 @@ export default function VideoFeedItem({ video, isActive = false, height }: Video
       </TouchableOpacity>
         
       {/* Side Actions (Like, Share, etc. - Mocked for now) */}
-      <View style={[styles.sideActions, { bottom: 100 + insets.bottom }]}>
+      <View
+        style={[
+          styles.sideActions,
+          { bottom: 100 + insets.bottom },
+          isRTL ? styles.sideActionsRtl : styles.sideActionsLtr,
+        ]}
+      >
            <TouchableOpacity style={styles.actionButton} onPress={() => setIsMuted(!isMuted)}>
               <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={26} color="#fff" />
           </TouchableOpacity>
@@ -105,8 +110,8 @@ export default function VideoFeedItem({ video, isActive = false, height }: Video
       />
 
       {/* Detail Overlay */}
-      <View style={[styles.detailsOverlay, { bottom: 20 + insets.bottom }]}>
-         <View style={styles.userInfo}>
+      <View style={[styles.detailsOverlay, { bottom: 20 + insets.bottom, left: isRTL ? 60 : 10, right: isRTL ? 10 : 60 }]}>
+        <View style={[styles.userInfo, { flexDirection: 'row', justifyContent: isRTL ? 'flex-end' : 'flex-start' }]}>
             <View style={[styles.adminAvatar, { backgroundColor: '#fff' }]}>
                 <Image 
                   source={require('../../assets/images/logo.png')} 
@@ -114,12 +119,12 @@ export default function VideoFeedItem({ video, isActive = false, height }: Video
                   style={{ width: '100%', height: '100%', borderRadius: 16 }}
                 />
             </View>
-            <Text style={styles.authorName}>{t('feed.adminAuthor')}</Text>
+          <Text style={[styles.authorName, { textAlign: 'auto'}]}>{t('feed.adminAuthor')}</Text>
          </View>
          
-         {video.title && <Text style={styles.title}>{video.title}</Text>}
+        {video.title && <Text style={[styles.title, { textAlign: 'auto'}]}>{video.title}</Text>}
          {video.description && (
-             <Text numberOfLines={2} style={styles.description}>
+           <Text numberOfLines={2} style={[styles.description, { textAlign: 'auto'}]}>
                 {video.description}
              </Text>
          )}
@@ -159,11 +164,16 @@ const styles = StyleSheet.create({
   },
   sideActions: {
       position: 'absolute',
-      right: 10,
       zIndex: 2,
       alignItems: 'center',
       gap: 20
   },
+    sideActionsLtr: {
+      right: 10,
+    },
+    sideActionsRtl: {
+      left: 10,
+    },
   actionButton: {
       alignItems: 'center',
       gap: 5
@@ -202,32 +212,26 @@ const styles = StyleSheet.create({
       color: '#fff',
       fontWeight: 'bold',
       fontSize: 15,
-      textAlign: 'right',
       textShadowColor: 'rgba(0,0,0,0.9)',
       textShadowOffset: {width: 0, height: 1},
       textShadowRadius: 4,
-      writingDirection: 'rtl'
   },
   title: {
       color: '#fff',
       fontSize: 15,
       fontWeight: '700',
       marginBottom: 6,
-      textAlign: 'right',
       textShadowColor: 'rgba(0,0,0,0.9)',
       textShadowOffset: {width: 0, height: 1},
       textShadowRadius: 4,
-      writingDirection: 'rtl'
   },
   description: {
       color: '#f0f0f0',
       fontSize: 13,
       marginBottom: 6,
-      textAlign: 'right',
       textShadowColor: 'rgba(0,0,0,0.9)',
       textShadowOffset: {width: 0, height: 1},
       textShadowRadius: 4,
-      writingDirection: 'rtl'
   },
   stats: {
       flexDirection: 'row',

@@ -64,9 +64,12 @@ export default function SocialAuthSection({ mode, disabled = false, onAuthentica
   const googleButtonLabel = mode === 'register'
     ? t('auth.signUpWithGoogle')
     : t('auth.continueWithGoogle');
-  const appleButtonLabel = mode === 'register'
-    ? t('auth.signUpWithApple')
-    : t('auth.continueWithApple');
+  const appleButtonType = mode === 'register'
+    ? AppleAuthentication.AppleAuthenticationButtonType.SIGN_UP
+    : AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN;
+  const appleButtonStyle = isDark
+    ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+    : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK;
 
   const [googleRequest, googleResponse, promptGoogleAsync] = Google.useIdTokenAuthRequest({
     ...(GOOGLE_EXPO_CLIENT_ID ? { expoClientId: GOOGLE_EXPO_CLIENT_ID } : {}),
@@ -217,51 +220,39 @@ export default function SocialAuthSection({ mode, disabled = false, onAuthentica
       {hasGoogleConfig ? (
         <Pressable
           style={({ pressed }) => [
-            styles.socialButton,
-            {
-              backgroundColor: isDark ? '#0F172A' : '#F8FAFC',
-              borderColor: isDark ? 'rgba(255,255,255,0.12)' : '#E2E8F0',
-              opacity: pressed ? 0.9 : 1,
-            },
+            styles.googleButton,
+            pressed && styles.googleButtonPressed,
             (disabled || googleBusy || !googleRequest) && styles.socialButtonDisabled,
           ]}
           onPress={handleGooglePress}
           disabled={disabled || googleBusy || !googleRequest}
         >
-          <View style={styles.socialButtonIconWrap}>
+          <View style={styles.googleIconWrap}>
             {googleBusy ? (
-              <ActivityIndicator size="small" color="#D4AF37" />
+              <ActivityIndicator size="small" color="#5F6368" />
             ) : (
               <Ionicons name="logo-google" size={18} color="#DB4437" />
             )}
           </View>
-          <Text style={[styles.socialButtonText, { color: isDark ? '#F8FAFC' : '#0A0B14' }]}>{googleButtonLabel}</Text>
+          <Text style={styles.googleButtonText}>{googleButtonLabel}</Text>
         </Pressable>
       ) : null}
 
       {isAppleAvailable ? (
-        <Pressable
-          style={({ pressed }) => [
-            styles.socialButton,
-            {
-              backgroundColor: isDark ? '#111827' : '#0A0B14',
-              borderColor: isDark ? 'rgba(255,255,255,0.14)' : '#0A0B14',
-              opacity: pressed ? 0.92 : 1,
-            },
-            (disabled || appleBusy) && styles.socialButtonDisabled,
-          ]}
-          onPress={handleApplePress}
-          disabled={disabled || appleBusy}
-        >
-          <View style={styles.socialButtonIconWrap}>
-            {appleBusy ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Ionicons name="logo-apple" size={20} color="#FFFFFF" />
-            )}
-          </View>
-          <Text style={[styles.socialButtonText, styles.appleButtonText]}>{appleButtonLabel}</Text>
-        </Pressable>
+        <View style={[styles.appleButtonContainer, (disabled || appleBusy) && styles.socialButtonDisabled]}>
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={appleButtonType}
+            buttonStyle={appleButtonStyle}
+            cornerRadius={16}
+            style={styles.appleButton}
+            onPress={handleApplePress}
+          />
+          {appleBusy ? (
+            <View style={styles.appleLoadingOverlay} pointerEvents="none">
+              <ActivityIndicator size="small" color={isDark ? '#0A0B14' : '#FFFFFF'} />
+            </View>
+          ) : null}
+        </View>
       ) : null}
     </View>
   );
@@ -269,13 +260,15 @@ export default function SocialAuthSection({ mode, disabled = false, onAuthentica
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
-    gap: 12,
+    marginTop: 20,
+    marginBottom: 18,
+    gap: 14,
   },
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginBottom: 2,
   },
   dividerLine: {
     flex: 1,
@@ -284,30 +277,61 @@ const styles = StyleSheet.create({
   dividerText: {
     fontSize: 12,
     fontWeight: '700',
+    letterSpacing: 0.2,
   },
-  socialButton: {
-    minHeight: 54,
+  googleButton: {
+    minHeight: 56,
     borderRadius: 16,
-    borderWidth: 1.5,
-    paddingHorizontal: 16,
+    borderWidth: 1,
+    paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#DADCE0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  googleButtonPressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.995 }],
   },
   socialButtonDisabled: {
-    opacity: 0.7,
+    opacity: 0.65,
   },
-  socialButtonIconWrap: {
-    width: 28,
+  googleIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  socialButtonText: {
+  googleButtonText: {
     fontSize: 15,
     fontWeight: '800',
-    marginLeft: 10,
+    marginStart: 12,
+    color: '#1F1F1F',
+    letterSpacing: 0.1,
   },
-  appleButtonText: {
-    color: '#FFFFFF',
+  appleButtonContainer: {
+    minHeight: 56,
+    borderRadius: 16,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  appleButton: {
+    width: '100%',
+    height: 56,
+  },
+  appleLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

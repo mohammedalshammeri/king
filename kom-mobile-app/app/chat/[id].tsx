@@ -55,6 +55,8 @@ export default function ChatDetailScreen() {
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const socketRef = useRef<Socket | null>(null);
+  const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
+  const dirText = { textAlign: 'auto' as const};
 
   useEffect(() => {
     const fullApiUrl = getApiBaseUrl();
@@ -200,12 +202,14 @@ export default function ChatDetailScreen() {
           <Text
             style={[
               styles.messageText,
-              isMyMessage ? styles.myMessageText : [styles.theirMessageText, { color: theme.text }],
+              isMyMessage
+                ? [styles.myMessageText, dirText]
+                : [styles.theirMessageText, { color: theme.text }, dirText],
             ]}
           >
             {item.text}
           </Text>
-          <View style={styles.messageFooter}>
+          <View style={[styles.messageFooter, rowDirection]}>
             <Text
               style={[
                 styles.messageTime,
@@ -234,16 +238,16 @@ export default function ChatDetailScreen() {
         colors={['#0E1830', '#162444']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={[styles.header, { paddingTop: insets.top + 12 }]}
+        style={[styles.header, rowDirection, { paddingTop: insets.top + 12 }]}
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
           <View style={styles.backCircle}>
             <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={18} color="#D4AF37" />
           </View>
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <Text style={[styles.headerName, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{headerName}</Text>
-          <Text style={[styles.headerStatus, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('chat.onlineNow')}</Text>
+          <Text style={styles.headerName}>{headerName}</Text>
+          <Text style={styles.headerStatus}>{t('chat.onlineNow')}</Text>
         </View>
         <View style={{ width: 44 }} />
       </LinearGradient>
@@ -268,8 +272,8 @@ export default function ChatDetailScreen() {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Ionicons name="chatbubbles-outline" size={48} color={theme.textMuted} />
-                <Text style={[styles.emptyTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{isLoading ? t('common.loading') : t('chat.noMessages')}</Text>
-                <Text style={[styles.emptyText, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('chat.startConversation')}</Text>
+                <Text style={[styles.emptyTitle, { color: theme.text, textAlign: 'auto'}]}>{isLoading ? t('common.loading') : t('chat.noMessages')}</Text>
+                <Text style={[styles.emptyText, { color: theme.textMuted, textAlign: 'auto'}]}>{t('chat.startConversation')}</Text>
               </View>
             }
           />
@@ -277,6 +281,7 @@ export default function ChatDetailScreen() {
 
         <View style={[
           styles.inputContainer,
+          rowDirection,
           {
             backgroundColor: theme.card,
             borderTopColor: theme.border,
@@ -284,7 +289,7 @@ export default function ChatDetailScreen() {
           }
         ]}>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#1f2937' : '#FFFFFF', color: theme.text, borderColor: theme.border, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}
+            style={[styles.input, { backgroundColor: isDark ? '#1f2937' : '#FFFFFF', color: theme.text, borderColor: theme.border, textAlign: 'auto'}]}
             placeholder={t('chat.messagePlaceholder')}
             value={inputText}
             onChangeText={setInputText}
@@ -315,7 +320,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   header: {
-    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -342,20 +346,22 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     flex: 1,
-    alignItems: 'flex-end',
     paddingHorizontal: 12,
+    alignItems: 'center',
   },
   headerName: {
     fontSize: 16,
     fontWeight: '700',
     color: '#D4AF37',
     width: '100%',
+    textAlign: 'center',
   },
   headerStatus: {
     fontSize: 12,
     color: '#34D399',
     marginTop: 2,
     width: '100%',
+    textAlign: 'center',
   },
   headerAction: {
     padding: 4,
@@ -418,20 +424,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     marginBottom: 4,
-    writingDirection: 'rtl',
   },
   myMessageText: {
     color: '#FFFFFF',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   theirMessageText: {
     color: '#1E293B',
-    textAlign: 'right',
-    writingDirection: 'rtl',
   },
   messageFooter: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: 3,
@@ -450,7 +450,6 @@ const styles = StyleSheet.create({
     marginStart: 4,
   },
   inputContainer: {
-    flexDirection: 'row',
     alignItems: 'flex-end',
     padding: 8,
     paddingHorizontal: 12,
@@ -471,8 +470,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     maxHeight: 120, // Increased max height slightly
     minHeight: 48, // Increased min height
-    textAlign: 'right',
-    writingDirection: 'rtl',
     marginHorizontal: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',

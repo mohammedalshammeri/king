@@ -19,8 +19,6 @@ import {
   ActivityIndicator,
   Platform,
   AppState,
-  Text,
-  TextInput,
   Dimensions,
 } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
@@ -46,18 +44,6 @@ if (Platform.OS === 'web') {
 
 const DIRECTION_RELOAD_KEY = 'app.direction.reload-target';
 
-type TextComponentWithDefaults = typeof Text & {
-  defaultProps?: {
-    style?: any;
-  };
-};
-
-type TextInputComponentWithDefaults = typeof TextInput & {
-  defaultProps?: {
-    style?: any;
-  };
-};
-
 const syncAppDirection = async (language: AppLanguage) => {
   const shouldBeRTL = language === 'ar';
 
@@ -66,13 +52,12 @@ const syncAppDirection = async (language: AppLanguage) => {
   }
 
   I18nManager.allowRTL(true);
+  I18nManager.forceRTL(shouldBeRTL);
 
   if (I18nManager.isRTL === shouldBeRTL) {
     await AsyncStorage.removeItem(DIRECTION_RELOAD_KEY);
     return true;
   }
-
-  I18nManager.forceRTL(shouldBeRTL);
 
   const nextTarget = shouldBeRTL ? 'rtl' : 'ltr';
   const reloadedTarget = await AsyncStorage.getItem(DIRECTION_RELOAD_KEY);
@@ -89,11 +74,6 @@ const syncAppDirection = async (language: AppLanguage) => {
 
   return true;
 };
-
-const TextWithDefaults = Text as TextComponentWithDefaults;
-const TextInputWithDefaults = TextInput as TextInputComponentWithDefaults;
-const initialTextDefaultStyle = TextWithDefaults.defaultProps?.style;
-const initialTextInputDefaultStyle = TextInputWithDefaults.defaultProps?.style;
 
 SplashScreen.preventAutoHideAsync();
 
@@ -113,7 +93,7 @@ function RootLayoutContent({
   sloganFadeAnim: Animated.Value;
 }) {
   const { isDark } = useTheme();
-  const { ready: languageReady, language, isRTL } = useLanguage();
+  const { ready: languageReady, language } = useLanguage();
   const insets = useSafeAreaInsets();
   const [directionReady, setDirectionReady] = useState(Platform.OS === 'web');
 
@@ -135,18 +115,6 @@ function RootLayoutContent({
       mounted = false;
     };
   }, [languageReady, language]);
-
-  useEffect(() => {
-    if (!languageReady) return;
-
-    const directionalStyle = [{ writingDirection: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }];
-
-    TextWithDefaults.defaultProps = TextWithDefaults.defaultProps || {};
-    TextWithDefaults.defaultProps.style = [...directionalStyle, initialTextDefaultStyle];
-
-    TextInputWithDefaults.defaultProps = TextInputWithDefaults.defaultProps || {};
-    TextInputWithDefaults.defaultProps.style = [...directionalStyle, initialTextInputDefaultStyle];
-  }, [languageReady, isRTL]);
 
   useEffect(() => {
     if (Platform.OS !== 'android') return;
@@ -177,9 +145,9 @@ function RootLayoutContent({
 
   return (
     <NavigationThemeProvider value={DefaultTheme}>
-      <View style={{ flex: 1, backgroundColor: contentBackground, direction: isRTL ? 'rtl' : 'ltr' }}>
+      <View style={{ flex: 1, backgroundColor: contentBackground }}>
         {/* SafeArea top padding */}
-        <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: contentBackground, direction: isRTL ? 'rtl' : 'ltr' }}>
+        <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: contentBackground }}>
           <Stack
             screenOptions={{
               headerShown: false,

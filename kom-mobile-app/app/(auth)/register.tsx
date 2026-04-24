@@ -212,16 +212,16 @@ export default function RegisterScreen() {
         <View style={s.blob2} />
 
         <TouchableOpacity
-          style={[s.backBtn, isRTL ? s.backBtnRtl : s.backBtnLtr, { top: insets.top + 12 }]}
+          style={[s.backBtn, { top: insets.top + 12 }, isRTL ? s.backBtnEnd : s.backBtnStart]}
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
         >
           <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color="#FFFFFF" />
         </TouchableOpacity>
 
-        <View style={[s.heroContent, isRTL ? s.heroContentRtl : s.heroContentLtr]}>
+        <View style={s.heroContent}>
           <Image source={require('../../assets/images/logo.png')} style={s.logo} contentFit="contain" />
-          <Text style={[s.heroTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.registerTitle')}</Text>
-          <Text style={[s.heroSub, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('auth.registerSubtitle')}</Text>
+          <Text style={s.heroTitle}>{t('auth.registerTitle')}</Text>
+          <Text style={s.heroSub}>{t('auth.registerSubtitle')}</Text>
         </View>
       </LinearGradient>
 
@@ -235,8 +235,8 @@ export default function RegisterScreen() {
 
           {/* User type selector */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.userType')}</Text>
-            <View style={[s.segmentRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.userType')}</Text>
+            <View style={[s.segmentRow, { flexDirection: 'row' }]}>
               {(['INDIVIDUAL', 'SHOWROOM'] as const).map((type) => (
                 <TouchableOpacity
                   key={type}
@@ -255,8 +255,8 @@ export default function RegisterScreen() {
           {/* Merchant type picker */}
           {userType === 'SHOWROOM' && (
             <View style={s.inputGroup}>
-              <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.merchantType')}</Text>
-              <View style={[s.merchantGrid, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+              <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.merchantType')}</Text>
+              <View style={[s.merchantGrid, { flexDirection: 'row' }]}>
                 {MERCHANT_TYPES.map((mt) => (
                   <TouchableOpacity
                     key={mt.value}
@@ -278,7 +278,7 @@ export default function RegisterScreen() {
             <Text style={[s.label, { color: labelColor }]}>
               {userType === 'INDIVIDUAL' ? t('auth.fullName') : t('auth.showroomName')}
             </Text>
-            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="person" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
@@ -286,17 +286,15 @@ export default function RegisterScreen() {
                 placeholderTextColor="#94A3B8"
                 value={userType === 'INDIVIDUAL' ? fullName : showroomName}
                 onChangeText={userType === 'INDIVIDUAL' ? setFullName : setShowroomName}
-                textAlign={isRTL ? 'right' : 'left'}
-                writingDirection={isRTL ? 'rtl' : 'ltr'}
-              />
+                              />
             </View>
           </View>
 
           {/* CR Number */}
           {userType === 'SHOWROOM' && (
             <View style={s.inputGroup}>
-              <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.crNumber')}</Text>
-              <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+              <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.crNumber')}</Text>
+              <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
                 <Ionicons name="document-text" size={18} color="#94A3B8" style={s.icon} />
                 <TextInput
                   style={[s.input, { color: inputColor }]}
@@ -304,17 +302,15 @@ export default function RegisterScreen() {
                   placeholderTextColor="#94A3B8"
                   value={crNumber}
                   onChangeText={setCrNumber}
-                  textAlign={isRTL ? 'right' : 'left'}
-                  writingDirection={isRTL ? 'rtl' : 'ltr'}
-                />
+                                  />
               </View>
             </View>
           )}
 
           {/* Email */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.email')}</Text>
-            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.email')}</Text>
+            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="mail" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
@@ -324,16 +320,14 @@ export default function RegisterScreen() {
                 onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
-                textAlign={isRTL ? 'right' : 'left'}
-                writingDirection={isRTL ? 'rtl' : 'ltr'}
-              />
+                              />
             </View>
           </View>
 
           {/* Phone */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.phoneOptional')}</Text>
-            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.phoneOptional')}</Text>
+            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="call" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
@@ -342,16 +336,14 @@ export default function RegisterScreen() {
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
-                textAlign={isRTL ? 'right' : 'left'}
-                writingDirection={isRTL ? 'rtl' : 'ltr'}
-              />
+                              />
             </View>
           </View>
 
           {/* Password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.password')}</Text>
-            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.password')}</Text>
+            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="lock-closed" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
@@ -362,22 +354,20 @@ export default function RegisterScreen() {
                 secureTextEntry={!showPass}
                 autoCapitalize="none"
                 selectionColor={inputColor}
-                textAlign={isRTL ? 'right' : 'left'}
-                writingDirection={isRTL ? 'rtl' : 'ltr'}
-              />
+                              />
               <TouchableOpacity onPress={() => setShowPass((v) => !v)} style={{ paddingHorizontal: 8 }}>
                 <Ionicons name={showPass ? 'eye' : 'eye-off'} size={18} color="#94A3B8" />
               </TouchableOpacity>
             </View>
-            <Text style={[s.hint, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+            <Text style={[s.hint, { textAlign: 'auto'}]}>
               {t('auth.passwordHint')}
             </Text>
           </View>
 
           {/* Confirm password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.confirmPassword')}</Text>
-            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.confirmPassword')}</Text>
+            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="lock-closed" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
                 style={[s.input, { color: inputColor }]}
@@ -388,9 +378,7 @@ export default function RegisterScreen() {
                 secureTextEntry={!showConfirmPass}
                 autoCapitalize="none"
                 selectionColor={inputColor}
-                textAlign={isRTL ? 'right' : 'left'}
-                writingDirection={isRTL ? 'rtl' : 'ltr'}
-              />
+                              />
               <TouchableOpacity onPress={() => setShowConfirmPass((v) => !v)} style={{ paddingHorizontal: 8 }}>
                 <Ionicons name={showConfirmPass ? 'eye' : 'eye-off'} size={18} color="#94A3B8" />
               </TouchableOpacity>
@@ -416,7 +404,7 @@ export default function RegisterScreen() {
           <SocialAuthSection mode="register" disabled={isLoading} onAuthenticate={handleSocialRegister} />
 
           {/* Login link */}
-          <View style={[s.footer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          <View style={[s.footer, { flexDirection: 'row' }]}>
             <Text style={s.footerNote}>{t('auth.haveAccount')}</Text>
             <Link href="/(auth)/login" asChild>
               <TouchableOpacity>
@@ -467,14 +455,12 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center', alignItems: 'center',
   },
-  backBtnRtl: { right: 20 },
-  backBtnLtr: { left: 20 },
-  heroContent: { paddingTop: 70, width: '100%' },
-  heroContentRtl: { alignItems: 'flex-end' },
-  heroContentLtr: { alignItems: 'flex-start' },
+  backBtnStart: { left: 20 },
+  backBtnEnd: { right: 20 },
+  heroContent: { paddingTop: 70, width: '100%', alignItems: 'center' },
   logo: { width: 110, height: 42, marginBottom: 20 },
-  heroTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', marginBottom: 6, width: '100%' },
-  heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.6)', width: '100%' },
+  heroTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', marginBottom: 6, width: '100%', textAlign: 'center' },
+  heroSub: { fontSize: 14, color: 'rgba(255,255,255,0.6)', width: '100%', textAlign: 'center' },
 
   // scroll + card
   scrollContent: { flexGrow: 1, paddingHorizontal: 16, marginTop: 24 },

@@ -48,7 +48,7 @@ export default function ProfileScreen() {
   const { user, isAuthenticated, logout, refreshUser } = useAuthStore();
   const { isDark } = useTheme();
   const { t } = useAppTranslation();
-  const { isRTL } = useLanguage();
+  const { language, setLanguage, isRTL } = useLanguage();
 
   const menuItems = getMenuItems(user?.role, t);
   const [luckEntry, setLuckEntry] = useState<{ myCode: string | null; isWinner: boolean } | null>(null);
@@ -142,8 +142,34 @@ export default function ProfileScreen() {
         </LinearGradient>
 
         <View style={[s.guestBody, { backgroundColor: bg }]}>
-          <Text style={[s.guestTitle, { color: textColor, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('profile.guestTitle')}</Text>
-          <Text style={[s.guestSub, { color: mutedColor, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('profile.guestSubtitle')}</Text>
+          <Text style={[s.guestTitle, { color: textColor }]}>{t('profile.guestTitle')}</Text>
+          <Text style={[s.guestSub, { color: mutedColor }]}>{t('profile.guestSubtitle')}</Text>
+
+          <View style={[s.guestLanguageCard, { backgroundColor: cardBg, borderColor, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            {([
+              { value: 'ar' as const, label: t('common.arabic') },
+              { value: 'en' as const, label: t('common.english') },
+            ]).map(({ value, label }) => {
+              const isActive = language === value;
+
+              return (
+                <TouchableOpacity
+                  key={value}
+                  style={[
+                    s.guestLanguageButton,
+                    {
+                      backgroundColor: isActive ? 'rgba(212,175,55,0.14)' : 'transparent',
+                      borderColor: isActive ? '#D4AF37' : borderColor,
+                    },
+                  ]}
+                  activeOpacity={0.85}
+                  onPress={() => setLanguage(value)}
+                >
+                  <Text style={[s.guestLanguageText, { color: isActive ? '#B78D12' : textColor }]}>{label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
           <TouchableOpacity style={s.goldBtn} activeOpacity={0.85} onPress={() => router.push('/(auth)/login')}>
             <LinearGradient colors={['#E8C84A', '#D4AF37', '#A8860E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.goldBtnGrad}>
@@ -190,11 +216,11 @@ export default function ProfileScreen() {
             )}
           </View>
 
-          <Text style={[s.heroName, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{displayName}</Text>
-          <Text style={[s.heroEmail, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{user?.email}</Text>
+          <Text style={s.heroName}>{displayName}</Text>
+          <Text style={s.heroEmail}>{user?.email}</Text>
 
           {/* Stats */}
-          <View style={[s.statsRow, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
+          <View style={s.statsRow}>
             <View style={s.statBox}><Text style={s.statNum}>0</Text><Text style={s.statLabel}>{t('tabs.myListings')}</Text></View>
             <View style={[s.statDivider, { backgroundColor: 'rgba(255,255,255,0.2)' }]} />
             <View style={s.statBox}><Text style={s.statNum}>0</Text><Text style={s.statLabel}>{t('favorites.title')}</Text></View>
@@ -215,12 +241,12 @@ export default function ProfileScreen() {
               <Text style={s.luckEmoji}>{luckEntry.isWinner ? '🎉' : '🎁'}</Text>
             </View>
             <View style={[s.luckRight, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-              <Text style={[s.luckTitle, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>
+              <Text style={[s.luckTitle, { textAlign: 'auto'}]}>
                 {luckEntry.isWinner ? t('profile.luckWinnerTitle') : t('profile.luckCodeTitle')}
               </Text>
-              <Text style={[s.luckCode, { textAlign: isRTL ? 'right' : 'left' }]}>{luckEntry.myCode}</Text>
+              <Text style={[s.luckCode, { textAlign: 'auto' }]}>{luckEntry.myCode}</Text>
               {luckEntry.isWinner && (
-                <Text style={[s.luckWinnerNote, { textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{t('profile.luckWinnerNote')}</Text>
+                <Text style={[s.luckWinnerNote, { textAlign: 'auto'}]}>{t('profile.luckWinnerNote')}</Text>
               )}
             </View>
           </LinearGradient>
@@ -231,7 +257,11 @@ export default function ProfileScreen() {
           {menuItems.map((item, idx) => (
             <TouchableOpacity
               key={item.route}
-              style={[s.menuRow, idx < menuItems.length - 1 && { borderBottomWidth: 1, borderBottomColor: borderColor }]}
+              style={[
+                s.menuRow,
+                { direction: isRTL ? 'rtl' : 'ltr' },
+                idx < menuItems.length - 1 && { borderBottomWidth: 1, borderBottomColor: borderColor },
+              ]}
               activeOpacity={0.75}
               onPress={() =>
                 router.push(
@@ -241,11 +271,11 @@ export default function ProfileScreen() {
                 )
               }
             >
-              <View style={[s.menuLabelRow, { flexDirection: isRTL ? 'row' : 'row-reverse' }]}>
+              <View style={[s.menuLabelRow, { direction: isRTL ? 'rtl' : 'ltr' }]}>
                 <View style={[s.iconPill, { backgroundColor: item.bg }]}>
                   <Ionicons name={item.icon as any} size={18} color={item.color} />
                 </View>
-                <Text style={[s.menuText, { color: textColor, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{item.label}</Text>
+                <Text style={[s.menuText, { color: textColor, textAlign: isRTL ? 'right' : 'left' }]}>{item.label}</Text>
               </View>
               <Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={18} color={mutedColor} />
             </TouchableOpacity>
@@ -254,12 +284,12 @@ export default function ProfileScreen() {
 
         {/* Logout */}
         <TouchableOpacity
-          style={[s.logoutBtn, { backgroundColor: isDark ? '#2D1515' : '#FEF2F2', borderColor: isDark ? '#5C2222' : '#FECACA' }]}
+          style={[s.logoutBtn, { flexDirection: 'row', backgroundColor: isDark ? '#2D1515' : '#FEF2F2', borderColor: isDark ? '#5C2222' : '#FECACA' }]}
           activeOpacity={0.8}
           onPress={handleLogout}
         >
           <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-          <Text style={s.logoutText}>{t('settings.logout')}</Text>
+          <Text style={[s.logoutText, { textAlign: 'auto'}]}>{t('settings.logout')}</Text>
         </TouchableOpacity>
 
         <AdsBanner />
@@ -287,8 +317,8 @@ const s = StyleSheet.create({
   avatarImg: { width: '100%', height: '100%' },
   avatarFallback: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   avatarLetter: { fontSize: 40, fontWeight: '900', color: '#D4AF37' },
-  heroName: { fontSize: 22, fontWeight: '800', color: '#FFFFFF', textAlign: 'right', width: '100%', writingDirection: 'rtl', marginBottom: 4 },
-  heroEmail: { fontSize: 13, color: 'rgba(255,255,255,0.55)', textAlign: 'right', width: '100%', marginBottom: 24 },
+  heroName: { fontSize: 22, fontWeight: '800', color: '#FFFFFF', width: '100%', marginBottom: 4, textAlign: 'center' },
+  heroEmail: { fontSize: 13, color: 'rgba(255,255,255,0.55)', width: '100%', marginBottom: 24, textAlign: 'center' },
 
   // stats
   statsRow: {
@@ -310,9 +340,9 @@ const s = StyleSheet.create({
   luckLeft: { alignItems: 'center', justifyContent: 'center' },
   luckEmoji: { fontSize: 38 },
   luckRight: { flex: 1, alignItems: 'flex-end' },
-  luckTitle: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginBottom: 6, textAlign: 'right' },
-  luckCode: { fontSize: 30, fontWeight: '900', color: '#D4AF37', letterSpacing: 4, textAlign: 'right' },
-  luckWinnerNote: { fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 6, textAlign: 'right' },
+  luckTitle: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginBottom: 6 },
+  luckCode: { fontSize: 30, fontWeight: '900', color: '#D4AF37', letterSpacing: 4 },
+  luckWinnerNote: { fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 6 },
 
   // menu card
   menuCard: {
@@ -322,14 +352,14 @@ const s = StyleSheet.create({
   menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, paddingHorizontal: 16 },
   menuLabelRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14 },
   iconPill: { width: 42, height: 42, borderRadius: 13, justifyContent: 'center', alignItems: 'center' },
-  menuText: { fontSize: 15, fontWeight: '600', textAlign: 'right', writingDirection: 'rtl' },
+  menuText: { fontSize: 15, fontWeight: '600', flex: 1 },
 
   // logout
   logoutBtn: {
     marginHorizontal: 16, marginTop: 14, flexDirection: 'row', alignItems: 'center',
     justifyContent: 'center', paddingVertical: 16, borderRadius: 18, gap: 8, borderWidth: 1,
   },
-  logoutText: { fontSize: 15, fontWeight: '700', color: '#EF4444', textAlign: 'right' },
+  logoutText: { fontSize: 15, fontWeight: '700', color: '#EF4444' },
 
   // guest
   guestHeader: { alignItems: 'center', paddingTop: 72, paddingBottom: 52, overflow: 'hidden', position: 'relative', width: '100%' },
@@ -337,7 +367,7 @@ const s = StyleSheet.create({
   backBtn: {
     position: 'absolute',
     top: 12,
-    right: 12,
+    start: 12,
     width: 44,
     height: 44,
     borderRadius: 10,
@@ -347,8 +377,28 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)'
   },
   guestBody: { flex: 1, alignItems: 'center', padding: 32, paddingTop: 36 },
-  guestTitle: { fontSize: 24, fontWeight: '800', textAlign: 'right', width: '100%', writingDirection: 'rtl', marginBottom: 10 },
-  guestSub: { fontSize: 15, textAlign: 'right', width: '100%', writingDirection: 'rtl', marginBottom: 36, lineHeight: 22 },
+  guestTitle: { fontSize: 24, fontWeight: '800', width: '100%', marginBottom: 10, textAlign: 'center' },
+  guestSub: { fontSize: 15, width: '100%', marginBottom: 22, lineHeight: 22, textAlign: 'center' },
+  guestLanguageCard: {
+    width: '100%',
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 6,
+    gap: 8,
+    marginBottom: 18,
+  },
+  guestLanguageButton: {
+    flex: 1,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestLanguageText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
   goldBtn: {
     width: '100%', borderRadius: 28, overflow: 'hidden', marginBottom: 14,
     ...Platform.select({ default: { shadowColor: '#C9A227', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 14, elevation: 8 } }),

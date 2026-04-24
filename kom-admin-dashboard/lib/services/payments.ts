@@ -13,6 +13,8 @@ export interface UserSubscriptionInfo {
   startDate: string;
   endDate: string;
   listingsUsed: number;
+  activeListingsCount?: number;
+  listingsRemaining?: number;
   package: { name: string; maxListings: number; durationDays: number };
 }
 

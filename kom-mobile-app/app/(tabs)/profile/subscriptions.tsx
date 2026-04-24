@@ -39,6 +39,8 @@ interface Subscription {
   startDate: string;
   endDate: string;
   listingsUsed: number;
+  activeListingsCount?: number;
+  listingsRemaining?: number;
   paidAmount: number;
   package: SubscriptionPackage;
 }
@@ -64,8 +66,8 @@ export default function SubscriptionsScreen() {
   const cardBg = isDark ? '#111827' : '#FFFFFF';
   const textColor = isDark ? '#F8FAFC' : '#0A0B14';
   const mutedColor = isDark ? '#94A3B8' : '#64748B';
-  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
-  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
+  const dirText = { textAlign: 'auto' as const};
+  const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
 
   const fetchData = async () => {
     try {
@@ -145,7 +147,7 @@ export default function SubscriptionsScreen() {
               const payload =
                 res.data && (res.data as any).data !== undefined ? (res.data as any).data : res.data;
               const { transaction } = payload || {};
-              if (!transaction) throw new Error('No transaction returned from server');
+              if (!transaction) throw new Error(t('subscriptions.missingTransaction'));
               router.push({
                 pathname: '/(tabs)/profile/payment-proof' as any,
                 params: {
@@ -179,6 +181,7 @@ export default function SubscriptionsScreen() {
   const daysLeft = subscription
     ? Math.max(0, Math.ceil((new Date(subscription.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
+  const activeListingsCount = subscription?.activeListingsCount ?? subscription?.listingsUsed ?? 0;
 
   const isActive = subscription?.status === 'ACTIVE' && daysLeft > 0;
 
@@ -223,7 +226,7 @@ export default function SubscriptionsScreen() {
               <StatBox
                 label={t('subscriptions.listingsUsed')}
                 // ✅ ثبّت الاتجاه لأن فيه " / " وأرقام
-                value={`${RLM}${subscription.listingsUsed} / ${subscription.package.maxListings ?? 0}${RLM}`}
+                value={`${RLM}${activeListingsCount} / ${subscription.package.maxListings ?? 0}${RLM}`}
                 color="#3B82F6"
                 isRTL={isRTL}
               />
@@ -241,7 +244,7 @@ export default function SubscriptionsScreen() {
               <View
                 style={[
                   styles.progressFill,
-                  { width: `${Math.min(100, (subscription.listingsUsed / (subscription.package.maxListings || 1)) * 100)}%` },
+                  { width: `${Math.min(100, (activeListingsCount / (subscription.package.maxListings || 1)) * 100)}%` },
                 ]}
               />
             </View>
@@ -430,7 +433,7 @@ export default function SubscriptionsScreen() {
 }
 
 function StatBox({ label, value, color, isRTL }: { label: string; value: string; color: string; isRTL: boolean }) {
-  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
+  const dirText = { textAlign: 'auto' as const};
   return (
     <View style={statStyles.box}>
       <Text style={[statStyles.value, { color }, dirText]}>{value}</Text>

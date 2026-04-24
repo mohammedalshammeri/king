@@ -1,4 +1,4 @@
-import type { TextStyle, ViewStyle } from 'react-native';
+import { I18nManager, type TextStyle, type ViewStyle } from 'react-native';
 import i18n, { AppLanguage, fallbackLanguage, normalizeLanguage } from './i18n';
 
 export type LayoutDirection = 'rtl' | 'ltr';
@@ -8,23 +8,30 @@ export function getLanguage(value?: string | null): AppLanguage {
 }
 
 export function isLanguageRTL(value?: string | null): boolean {
-  return getLanguage(value) === 'ar';
+  if (value !== undefined && value !== null) {
+    return getLanguage(value) === 'ar';
+  }
+
+  return I18nManager.isRTL;
 }
 
 export function getLayoutDirection(value?: string | null): LayoutDirection {
   return isLanguageRTL(value) ? 'rtl' : 'ltr';
 }
 
-export function getRowDirection(value?: string | null): 'row' | 'row-reverse' {
-  return isLanguageRTL(value) ? 'row-reverse' : 'row';
+export function getRowDirection(value?: string | null): 'row' {
+  void value;
+  return 'row';
 }
 
-export function getTextAlignStart(value?: string | null): 'left' | 'right' {
-  return isLanguageRTL(value) ? 'right' : 'left';
+export function getTextAlignStart(value?: string | null): 'auto' {
+  void value;
+  return 'auto';
 }
 
-export function getTextAlignEnd(value?: string | null): 'left' | 'right' {
-  return isLanguageRTL(value) ? 'left' : 'right';
+export function getTextAlignEnd(value?: string | null): 'auto' {
+  void value;
+  return 'auto';
 }
 
 export function getStartEdge(value?: string | null): 'left' | 'right' {
@@ -36,10 +43,8 @@ export function getEndEdge(value?: string | null): 'left' | 'right' {
 }
 
 export function getDirectionalTextStyle(value?: string | null): TextStyle {
-  const isRTL = isLanguageRTL(value);
   return {
-    writingDirection: isRTL ? 'rtl' : 'ltr',
-    textAlign: isRTL ? 'right' : 'left',
+    textAlign: getTextAlignStart(value),
   };
 }
 

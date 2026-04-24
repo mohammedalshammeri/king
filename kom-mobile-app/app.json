@@ -2,7 +2,7 @@
   "expo": {
     "name": "King of the Market",
     "slug": "kom-mobile-app",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "kotm",
@@ -25,7 +25,7 @@
     },
     "ios": {
       "bundleIdentifier": "app.kotm.kom",
-      "buildNumber": "36",
+      "buildNumber": "39",
       "supportsTablet": false,
       "requireFullScreen": true,
       "infoPlist": {

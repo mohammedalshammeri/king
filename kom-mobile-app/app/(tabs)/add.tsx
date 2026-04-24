@@ -20,15 +20,8 @@ interface TypeOption {
   icon: keyof typeof Ionicons.glyphMap;
 }
 
-const typeOptions: TypeOption[] = [
-  { type: 'CAR', title: '', summary: '', fields: '', icon: 'car-sport' },
-  { type: 'MOTORCYCLE', title: '', summary: '', fields: '', icon: 'bicycle' },
-  { type: 'PLATE', title: '', summary: '', fields: '', icon: 'document-text' },
-  { type: 'PART', title: '', summary: '', fields: '', icon: 'settings' },
-];
-
 export default function AddListingScreen() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const { t } = useAppTranslation();
   const { isRTL } = useLanguage();
   const { isDark } = useTheme();
@@ -56,8 +49,8 @@ export default function AddListingScreen() {
     primary: Colors.primary,
   };
 
-  const dirText = { textAlign: isRTL ? 'right' as const : 'left' as const, writingDirection: isRTL ? 'rtl' as const : 'ltr' as const };
-  const rowDirection = { flexDirection: isRTL ? 'row-reverse' as const : 'row' as const };
+  const dirText = { textAlign: 'center' as const };
+  const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
 
   const getDraftTitle = (type: ListingType) => {
     switch (type) {
@@ -126,6 +119,7 @@ export default function AddListingScreen() {
               key={option.type}
               style={[
                 styles.typeChip,
+                rowDirection,
                 { backgroundColor: theme.card, borderColor: theme.border },
                 (selectedType ?? 'CAR') === option.type && [styles.typeChipActive, { borderColor: theme.primary, backgroundColor: isDark ? '#0b1835' : '#eff6ff' }],
               ]}
@@ -185,30 +179,24 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 22,
     fontWeight: '700',
-    textAlign: 'right',
-    writingDirection: 'rtl',
-    alignSelf: 'flex-end',
     width: '100%',
     marginBottom: 8,
   },
   heroDescription: {
     fontSize: 15,
     lineHeight: 24,
-    textAlign: 'right',
-    writingDirection: 'rtl',
-    alignSelf: 'flex-end',
     width: '100%',
   },
   chipsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
   },
   typeChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
     borderRadius: 999,
@@ -221,7 +209,7 @@ const styles = StyleSheet.create({
   typeChipText: {
     fontSize: 15,
     fontWeight: '600',
-    textAlign: 'right',
+    textAlign: 'center',
   },
   previewCard: {
     borderWidth: 1,
@@ -231,9 +219,6 @@ const styles = StyleSheet.create({
   previewTitle: {
     fontSize: 20,
     fontWeight: '700',
-    textAlign: 'right',
-    writingDirection: 'rtl',
-    alignSelf: 'flex-end',
     width: '100%',
     marginBottom: 6,
   },
@@ -241,26 +226,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 14,
-    textAlign: 'right',
-    writingDirection: 'rtl',
-    alignSelf: 'flex-end',
     width: '100%',
   },
   previewFieldsLabel: {
     fontSize: 14,
     fontWeight: '700',
     marginBottom: 6,
-    textAlign: 'right',
-    writingDirection: 'rtl',
-    alignSelf: 'flex-end',
     width: '100%',
   },
   previewFields: {
     fontSize: 14,
     lineHeight: 22,
-    textAlign: 'right',
-    writingDirection: 'rtl',
-    alignSelf: 'flex-end',
     width: '100%',
   },
   startButton: {
@@ -279,6 +255,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
-    textAlign: 'right',
   },
 });

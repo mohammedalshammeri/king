@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,10 +10,8 @@ import {
   RefreshControl,
   Dimensions,
   Platform,
-  I18nManager,
   ScrollView,
   Modal,
-  ImageBackground,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,7 +19,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { useTheme } from '@/context/ThemeContext';
@@ -156,30 +154,22 @@ function formatTimeAgo(
   if (!dateString) return '';
   
   const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '';
+
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) return t('notifications.justNow');
 
-  const formatter = new Intl.RelativeTimeFormat(language === 'ar' ? 'ar' : 'en', {
-    numeric: 'auto',
-    style: language === 'ar' ? 'long' : 'short',
-  });
-
   const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) return formatter.format(-diffInMinutes, 'minute');
+  if (diffInMinutes < 60) return t('notifications.minutesAgo', { count: diffInMinutes });
 
   const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return formatter.format(-diffInHours, 'hour');
+  if (diffInHours < 24) return t('notifications.hoursAgo', { count: diffInHours });
 
   const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) return formatter.format(-diffInDays, 'day');
-
-  const diffInWeeks = Math.floor(diffInDays / 7);
-  if (diffInWeeks < 4) return formatter.format(-diffInWeeks, 'week');
-
-  const diffInMonths = Math.floor(diffInDays / 30);
-  if (diffInMonths < 12) return formatter.format(-diffInMonths, 'month');
+  if (diffInDays === 1) return t('notifications.yesterday');
+  if (diffInDays < 7) return t('notifications.daysAgo', { count: diffInDays });
 
   return date.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB');
 }
@@ -228,19 +218,125 @@ const styles = StyleSheet.create({
   },
   searchPlaceholder: {
     flex: 1,
-    textAlign: 'right',
+    textAlign: 'auto',
     marginEnd: 10,
     fontSize: 14,
     fontWeight: '500',
-    writingDirection: 'rtl',
   },
   filterContainer: {
-    paddingVertical: 16,
-    paddingStart: 12, // Maintain padding
+    paddingHorizontal: 14,
+    paddingTop: 18,
+    paddingBottom: 14,
+  },
+  filterPanel: {
+    borderRadius: 28,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 18,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  filterPanelAccent: {
+    position: 'absolute',
+    top: -26,
+    left: -10,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: 'rgba(212, 175, 55, 0.12)',
+  },
+  filterHeaderBlock: {
+    marginBottom: 18,
+  },
+  filterEyebrow: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    marginBottom: 10,
+  },
+  filterEyebrowText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  filterTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    textAlign: 'auto',
+  },
+  filterSubtitle: {
+    marginTop: 6,
+    fontSize: 13,
+    lineHeight: 20,
+    textAlign: 'auto',
   },
   filterScroll: {
     paddingEnd: 16,
     gap: 12,
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    rowGap: 22,
+  },
+  categoryTile: {
+    width: '33.333%',
+    alignItems: 'center',
+  },
+  categoryCircle: {
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    shadowColor: '#1A2050',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  categoryCircleActive: {
+    shadowColor: '#D4AF37',
+    shadowOpacity: 0.18,
+    transform: [{ translateY: -2 }],
+  },
+  categoryCircleImage: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+  },
+  categoryInnerGlow: {
+    position: 'absolute',
+    top: 9,
+    left: 9,
+    right: 9,
+    bottom: 9,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+  },
+  categoryActiveBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoryLabel: {
+    marginTop: 12,
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: '700',
+    textAlign: 'center',
+    minHeight: 44,
+  },
+  categoryLabelActive: {
+    fontWeight: '800',
   },
   categoryCard: {
     width: 85,
@@ -285,7 +381,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '800',
-    textAlign: 'right',
+    textAlign: 'auto',
   },
   listContainer: {
     paddingBottom: 160,
@@ -345,7 +441,7 @@ const styles = StyleSheet.create({
     color: '#D4AF37',
     fontSize: 18,
     fontWeight: '900',
-    textAlign: 'right',
+    textAlign: 'auto',
     textShadowColor: 'rgba(0,0,0,0.7)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 5,
@@ -353,10 +449,15 @@ const styles = StyleSheet.create({
   typeBadge: {
     position: 'absolute',
     top: 8,
-    right: 8,
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 10,
+  },
+  typeBadgeLtr: {
+    right: 8,
+  },
+  typeBadgeRtl: {
+    left: 8,
   },
   typeText: {
     fontSize: 10,
@@ -372,8 +473,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 13,
     fontWeight: '700',
-    textAlign: 'right',
-    writingDirection: 'rtl',
+    textAlign: 'auto',
     marginBottom: 6,
     width: '100%',
   },
@@ -398,7 +498,7 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 10,
     fontWeight: '500',
-    textAlign: 'right',
+    textAlign: 'auto',
   },
   emptyContainer: {
     flex: 1,
@@ -439,7 +539,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    textAlign: 'right',
+    textAlign: 'auto',
   },  
   closeButton: {
     padding: 4,
@@ -487,7 +587,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginStart: 6,
-    textAlign: 'right',
+    textAlign: 'auto',
   },
   modelList: {
     paddingBottom: 30,
@@ -503,7 +603,7 @@ const styles = StyleSheet.create({
   modelName: {
     fontSize: 16,
     fontWeight: '500',
-    textAlign: 'right',
+    textAlign: 'auto',
   },
   badgeContainer: {
     position: 'absolute',
@@ -528,7 +628,6 @@ const styles = StyleSheet.create({
   imageCountBadge: {
     position: 'absolute',
     top: 8,
-    right: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
@@ -537,6 +636,12 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 8,
     zIndex: 3,
+  },
+  imageCountBadgeLtr: {
+    right: 8,
+  },
+  imageCountBadgeRtl: {
+    left: 8,
   },
   imageCountText: {
     color: '#FFFFFF',
@@ -554,53 +659,89 @@ const styles = StyleSheet.create({
   }
 });
 
-const FilterHeader = React.memo(({ selectedFilter, onSelect, theme, options, isRTL }: { selectedFilter: any, onSelect: any, theme: any, options: { label: string; value: FilterType; image: any }[], isRTL: boolean }) => {
-  const scrollRef = useRef<any>(null);
-
-
-
+const FilterHeader = React.memo(({
+  selectedFilter,
+  onSelect,
+  theme,
+  options,
+  title,
+  subtitle,
+  eyebrow,
+}: {
+  selectedFilter: any,
+  onSelect: any,
+  theme: any,
+  options: { label: string; value: FilterType; image: any }[],
+  title: string,
+  subtitle: string,
+  eyebrow: string,
+}) => {
   return (
     <View style={[styles.filterContainer, { backgroundColor: theme.surface }]}>
-        <ScrollView 
-          ref={scrollRef}
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.filterScroll,
-            { flexDirection: isRTL ? 'row-reverse' : 'row' },
-          ]}
-        >
+      <View style={[styles.filterPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={styles.filterPanelAccent} pointerEvents="none" />
+
+        <View style={styles.filterHeaderBlock}>
+          <View style={[styles.filterEyebrow, { backgroundColor: 'rgba(212, 175, 55, 0.14)' }]}>
+            <Text style={[styles.filterEyebrowText, { color: Colors.primary }]}>{eyebrow}</Text>
+          </View>
+          <Text style={[styles.filterTitle, { color: theme.text }]}>{title}</Text>
+          <Text style={[styles.filterSubtitle, { color: theme.subText }]}>{subtitle}</Text>
+        </View>
+
+        <View style={styles.categoryGrid}>
           {options.map((option) => {
             const isActive = selectedFilter === option.value;
+
             return (
               <TouchableOpacity
                 key={option.value}
-                style={[styles.categoryCard, isActive && styles.categoryCardActive]}
+                style={styles.categoryTile}
                 onPress={() => onSelect(option.value)}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
               >
-                <Image
-                  source={typeof option.image === 'string' ? { uri: option.image } : option.image}
-                  style={styles.categoryImage}
-                  contentFit="cover"
-                  pointerEvents="none"
-                />
-                <View style={[styles.categoryOverlay, isActive && { backgroundColor: 'rgba(212, 175, 55, 0.4)' }]} pointerEvents="none" />
-                
-                <Text style={styles.categoryText} pointerEvents="none">
+                <View
+                  style={[
+                    styles.categoryCircle,
+                    { backgroundColor: theme.cardBg, borderColor: isActive ? '#D4AF37' : 'rgba(15,23,42,0.06)' },
+                    isActive && styles.categoryCircleActive,
+                  ]}
+                >
+                  <View style={styles.categoryInnerGlow} pointerEvents="none" />
+                  <Image
+                    source={typeof option.image === 'string' ? { uri: option.image } : option.image}
+                    style={styles.categoryCircleImage}
+                    contentFit="contain"
+                    pointerEvents="none"
+                  />
+                  {isActive && (
+                    <View style={[styles.categoryActiveBadge, { backgroundColor: Colors.primary }]} pointerEvents="none">
+                      <Ionicons name="checkmark" size={12} color="#fff" />
+                    </View>
+                  )}
+                </View>
+
+                <Text
+                  style={[
+                    styles.categoryLabel,
+                    { color: isActive ? theme.primary : theme.text },
+                    isActive && styles.categoryLabelActive,
+                  ]}
+                  numberOfLines={2}
+                >
                   {option.label}
                 </Text>
               </TouchableOpacity>
             );
           })}
-        </ScrollView>
+        </View>
       </View>
+    </View>
   );
 });
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const queryClient = useQueryClient();
   const { t } = useAppTranslation();
   const { language, isRTL } = useLanguage();
 
@@ -612,7 +753,7 @@ export default function HomeScreen() {
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('ALL');
   // Store previous filter to revert on cancel
   const [previousFilter, setPreviousFilter] = useState<FilterType>('ALL');
-  const [activeParams, setActiveParams] = useState<any>({});
+  const [, setActiveParams] = useState<any>({});
   
   // Filter Modal States
   const [modalVisible, setModalVisible] = useState(false);
@@ -633,6 +774,18 @@ export default function HomeScreen() {
   const { isDark } = useTheme();
   const { isAuthenticated } = useAuthStore();
   const filterOptions = getFilterOptions(t as any);
+  const categoryHeaderTitle = t('home.browseCategoriesTitle');
+  const categoryHeaderSubtitle = t('home.browseCategoriesSubtitle');
+  const categoryHeaderEyebrow = t('home.marketEyebrow');
+  const fetchLuckStatus = useCallback(async () => {
+    try {
+      const res = await api.get('/luck/status');
+      const data = res.data?.data ?? res.data;
+      setLuckWinner(data?.winner ?? null);
+    } catch {
+      setLuckWinner(null);
+    }
+  }, []);
 
   // ─── React Query: cached listings fetch ──────────────────────────────────
   const { data: listings = [], isLoading: loading, refetch } = useQuery<any[]>({
@@ -665,18 +818,15 @@ export default function HomeScreen() {
       } else {
         setUnreadCount(0);
       }
+
+      void fetchLuckStatus();
     }, [isAuthenticated])
   );
 
   // Fetch luck winner for banner
   useEffect(() => {
-    api.get('/luck/status')
-      .then((res) => {
-        const data = res.data?.data ?? res.data;
-        if (data?.winner) setLuckWinner(data.winner);
-      })
-      .catch(() => {});
-  }, []);
+    void fetchLuckStatus();
+  }, [fetchLuckStatus]);
 
   const sectionData = React.useMemo(() => {
     const data: any[] = [];
@@ -754,7 +904,6 @@ export default function HomeScreen() {
   };
 
   const toText = safeString;
-  const getLocalizedText = safeString;
   const getListingTitle = (item: any) => safeString(item?.title, '');
   const getListingCity = (item: any) => safeString(item?.city, t('common.bahrain'));
   const getBrandLabel = (brand: any) => language === 'ar' ? (brand?.nameAr || brand?.name || '') : (brand?.name || brand?.nameAr || '');
@@ -842,7 +991,7 @@ export default function HomeScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     setStoriesRefreshTrigger(prev => prev + 1);
-    refetch().finally(() => setRefreshing(false));
+    Promise.allSettled([refetch(), fetchLuckStatus()]).finally(() => setRefreshing(false));
   };
 
   const handleAddStory = () => setAddStoryVisible(true);
@@ -881,11 +1030,6 @@ export default function HomeScreen() {
     return [];
   };
 
-  const getImageUri = (item: any) => {
-    const uris = getImageUris(item);
-    return uris.length > 0 ? uris[0] : null;
-  };
-
   // ============================================
   // NEW LUXURY CARD DESIGN
   // ============================================
@@ -908,7 +1052,7 @@ export default function HomeScreen() {
         onPress={() =>
           router.push({
             pathname: '/listing/[id]',
-            params: { id: String(item.id), backLink: '/(tabs)/index' },
+            params: { id: String(item.id), backLink: '/' },
           })
         }
         activeOpacity={0.88}
@@ -933,7 +1077,7 @@ export default function HomeScreen() {
           )}
           {/* Image count badge */}
           {imageUris.length > 1 && (
-            <View style={styles.imageCountBadge}>
+            <View style={[styles.imageCountBadge, isRTL ? styles.imageCountBadgeRtl : styles.imageCountBadgeLtr]}>
               <Ionicons name="images-outline" size={10} color="#FFF" />
               <Text style={styles.imageCountText}>{imageUris.length}</Text>
             </View>
@@ -943,9 +1087,9 @@ export default function HomeScreen() {
             colors={['transparent', 'rgba(0,0,0,0.72)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
-            style={styles.priceOverlay}
+            style={[styles.priceOverlay, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}
           >
-            <Text style={styles.priceText}>
+            <Text style={[styles.priceText, { textAlign: 'auto'}]}>
               {toText(
                 typeof item.price === 'number'
                   ? item.price.toLocaleString()
@@ -955,26 +1099,26 @@ export default function HomeScreen() {
           </LinearGradient>
 
           {/* Type badge — colored pill */}
-          <View style={[styles.typeBadge, { backgroundColor: typeAccent }]}>
+          <View style={[styles.typeBadge, isRTL ? styles.typeBadgeRtl : styles.typeBadgeLtr, { backgroundColor: typeAccent }]}>
             <Text style={styles.typeText}>{typeLabel}</Text>
           </View>
         </View>
 
-        <View style={styles.cardContent} pointerEvents="none">
-          <Text style={[styles.cardTitle, { color: theme.text }]} numberOfLines={1}>
+        <View style={[styles.cardContent, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]} pointerEvents="none">
+          <Text style={[styles.cardTitle, { color: theme.text, textAlign: 'auto'}]} numberOfLines={1}>
             {toText(getListingTitle(item))}
           </Text>
 
           <View style={[styles.separator, { backgroundColor: theme.border }]} />
 
-          <View style={styles.cardFooter}>
-            <View style={styles.metaRow}>
+          <View style={[styles.cardFooter, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <View style={[styles.metaRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
               <Ionicons name="location-sharp" size={11} color={typeAccent} />
-              <Text style={[styles.metaText, { color: theme.subText }]}>{toText(getListingCity(item), t('common.bahrain'))}</Text>
+              <Text style={[styles.metaText, { color: theme.subText, textAlign: 'auto'}]}>{toText(getListingCity(item), t('common.bahrain'))}</Text>
             </View>
-            <View style={styles.metaRow}>
+            <View style={[styles.metaRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
               <Ionicons name="time-outline" size={11} color={theme.muted} />
-              <Text style={[styles.metaText, { color: theme.muted }]}>{toText(formatTimeAgo(item.postedAt || item.createdAt, language, t))}</Text>
+              <Text style={[styles.metaText, { color: theme.muted, textAlign: 'auto'}]}>{toText(formatTimeAgo(item.postedAt || item.createdAt, language, t))}</Text>
             </View>
           </View>
         </View>
@@ -1010,7 +1154,7 @@ export default function HomeScreen() {
           end={{ x: 1, y: 1 }}
           style={[styles.logoContainer, { width: '100%', alignSelf: 'stretch' }]}
         >
-          <View style={styles.headerTopRow}>
+          <View style={[styles.headerTopRow, { direction: (isRTL ? 'rtl' : 'ltr') as 'rtl' | 'ltr' }]}>
             {/* Logo absolutely centered */}
             <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 0 }} pointerEvents="none">
               <Image
@@ -1055,24 +1199,6 @@ export default function HomeScreen() {
           </View>
         </LinearGradient>
 
-        {/* Stories Rail */}
-        <StoriesRail
-          onAddStory={handleAddStory}
-          onPressStory={handleStoryPress}
-          refreshTrigger={storiesRefreshTrigger}
-        />
-
-        {/* FilterHeader خارج SectionList */}
-        <View style={{ backgroundColor: theme.surface, zIndex: 20, elevation: 6 }}>
-          <FilterHeader 
-            selectedFilter={selectedFilter} 
-            onSelect={handleFilterChange} 
-            theme={theme} 
-            options={filterOptions}
-            isRTL={isRTL}
-          />
-        </View>
-
         <SectionList
           sections={sectionData}
           stickySectionHeadersEnabled={false}
@@ -1089,14 +1215,34 @@ export default function HomeScreen() {
               paddingBottom: Math.max(160, 32 + Math.max(insets.bottom, 16)),
             }
           ]}
-          ListHeaderComponent={luckWinner ? <LuckWinnerBanner winner={luckWinner} /> : undefined}
+          ListHeaderComponent={(
+            <>
+              <StoriesRail
+                onAddStory={handleAddStory}
+                onPressStory={handleStoryPress}
+                refreshTrigger={storiesRefreshTrigger}
+              />
+              <View style={{ backgroundColor: theme.surface, zIndex: 20, elevation: 6 }}>
+                <FilterHeader 
+                  selectedFilter={selectedFilter} 
+                  onSelect={handleFilterChange} 
+                  theme={theme} 
+                  options={filterOptions}
+                  title={categoryHeaderTitle}
+                  subtitle={categoryHeaderSubtitle}
+                  eyebrow={categoryHeaderEyebrow}
+                />
+              </View>
+              {luckWinner ? <LuckWinnerBanner winner={luckWinner} /> : null}
+            </>
+          )}
           renderSectionHeader={undefined}
           renderItem={({ item }) => {
             if (item.type === 'HEADER_TITLE') {
               return (
-                <View style={{ width: '100%', paddingHorizontal: 16, paddingVertical: 16, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                <View style={{ width: '100%', paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', direction: (isRTL ? 'rtl' : 'ltr') as 'rtl' | 'ltr' }}>
                   <View>
-                    <Text style={{ fontSize: 20, fontWeight: '800', textAlign: isRTL ? 'right' : 'left', color: theme.text, writingDirection: isRTL ? 'rtl' : 'ltr' }}>{t('home.latestOffers')}</Text>
+                    <Text style={{ fontSize: 20, fontWeight: '800', textAlign: 'auto', color: theme.text}}>{t('home.latestOffers')}</Text>
                     <View style={{ height: 3, width: 40, backgroundColor: Colors.primary, borderRadius: 2, marginTop: 4 }} />
                   </View>
                 </View>
@@ -1107,27 +1253,28 @@ export default function HomeScreen() {
               return (
                 <View style={{ marginBottom: 4 }}>
                   <View style={{
-                    flexDirection: isRTL ? 'row' : 'row-reverse',
+                    flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     paddingHorizontal: 16,
                     paddingTop: 20,
                     paddingBottom: 12,
+                    direction: (isRTL ? 'rtl' : 'ltr') as 'rtl' | 'ltr',
                   }}>
                     <View>
-                      <Text style={{ fontSize: 18, fontWeight: '800', textAlign: isRTL ? 'right' : 'left', color: theme.text, writingDirection: isRTL ? 'rtl' : 'ltr' }}>{item.title}</Text>
+                      <Text style={{ fontSize: 18, fontWeight: '800', textAlign: 'auto', color: theme.text}}>{item.title}</Text>
                       <View style={{ height: 3, width: 36, backgroundColor: Colors.primary, borderRadius: 2, marginTop: 4 }} />
                     </View>
                     {item.filterType && (
                       <TouchableOpacity onPress={() => handleFilterChange(item.filterType)}>
-                        <Text style={{ color: Colors.primary, fontSize: 13, fontWeight: '600', textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }}>{t('home.showAll')}</Text>
+                        <Text style={{ color: Colors.primary, fontSize: 13, fontWeight: '600', textAlign: 'auto'}}>{t('home.showAll')}</Text>
                       </TouchableOpacity>
                     )}
                   </View>
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+                    contentContainerStyle={{ paddingHorizontal: 16, gap: 12, direction: (isRTL ? 'rtl' : 'ltr') as 'rtl' | 'ltr' }}
                   >
                     {item.items.map((listing: any) => (
                       <View key={listing.id}>
@@ -1145,7 +1292,7 @@ export default function HomeScreen() {
 
             if (item.type === 'ROW') {
               return (
-                <View style={[styles.row, { paddingHorizontal: 16 }]}> 
+                <View style={[styles.row, { paddingHorizontal: 16, direction: (isRTL ? 'rtl' : 'ltr') as 'rtl' | 'ltr' }]}> 
                     {item.items && item.items[0] && renderListingCard({ item: item.items[0] })}
                     {item.items && item.items[1] ? (
                       renderListingCard({ item: item.items[1] })
@@ -1175,8 +1322,8 @@ export default function HomeScreen() {
         >
           <View style={styles.modalOverlay}>
             <View style={[styles.modalContent, { backgroundColor: theme.surface }]}> 
-              <View style={styles.modalHeader}>
-                <Text style={[styles.modalTitle, { color: theme.text }]}> 
+              <View style={[styles.modalHeader, { flexDirection: 'row' }]}>
+                <Text style={[styles.modalTitle, { color: theme.text, textAlign: 'auto'}]}> 
                   {filterStep === 'BRAND' ? t('home.chooseBrand') : 
                   filterStep === 'MOTO_BRAND' ? t('home.chooseManufacturer') :
                   filterStep === 'PLATE_TYPE' ? t('home.choosePlateType') :
@@ -1247,10 +1394,10 @@ export default function HomeScreen() {
                   ].map((pt) => (
                     <TouchableOpacity 
                         key={pt.id}
-                        style={[styles.modelItem, { borderBottomColor: theme.border }]} 
+                        style={[styles.modelItem, { borderBottomColor: theme.border, flexDirection: 'row' }]} 
                         onPress={() => handlePlateTypeSelect(pt.id)}
                       >
-                        <Text style={[styles.modelName, { color: theme.text }]}>{pt.label}</Text>
+                        <Text style={[styles.modelName, { color: theme.text, textAlign: 'auto'}]}>{pt.label}</Text>
                         <Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={20} color={theme.muted} />
                       </TouchableOpacity>
                   ))}
@@ -1259,9 +1406,9 @@ export default function HomeScreen() {
 
               {filterStep === 'MODEL' && (
                 <View style={{ flex: 1 }}>
-                  <TouchableOpacity onPress={() => setFilterStep('BRAND')} style={styles.backButton}>
+                  <TouchableOpacity onPress={() => setFilterStep('BRAND')} style={[styles.backButton, { flexDirection: 'row' }]}>
                   <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color={theme.primary} />
-                  <Text style={[styles.backText, { color: theme.primary }]}>{t('home.backToBrands')}</Text>
+                  <Text style={[styles.backText, { color: theme.primary, textAlign: 'auto'}]}>{t('home.backToBrands')}</Text>
                   </TouchableOpacity>
                   <FlatList<SafeModelItem>
                     data={buildSafeModelItems(selectedBrand, language, t as any)}
@@ -1269,10 +1416,10 @@ export default function HomeScreen() {
                     contentContainerStyle={styles.modelList}
                     renderItem={({ item }: { item: SafeModelItem }) => (
                       <TouchableOpacity 
-                        style={[styles.modelItem, { borderBottomColor: theme.border }]} 
+                        style={[styles.modelItem, { borderBottomColor: theme.border, flexDirection: 'row' }]} 
                         onPress={() => handleModelSelect(item)}
                       >
-                        <Text style={[styles.modelName, { color: theme.text }]}> 
+                        <Text style={[styles.modelName, { color: theme.text, textAlign: 'auto'}]}> 
                           {item.label}
                         </Text>
                         <Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={20} color={theme.muted} />

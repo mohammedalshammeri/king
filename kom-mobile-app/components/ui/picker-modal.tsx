@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
+import { useAppTranslation } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 
 interface PickerModalProps {
@@ -15,7 +15,6 @@ interface PickerModalProps {
 
 export const PickerModal = ({ visible, title, items, selectedValue, onSelect, onClose, hasOther = true }: PickerModalProps) => {
   const { isDark } = useTheme();
-  const { isRTL } = useLanguage();
   const { t } = useAppTranslation();
   
   // Ensure "أخرى" (Other) is in the list if hasOther is true
@@ -48,8 +47,8 @@ export const PickerModal = ({ visible, title, items, selectedValue, onSelect, on
     >
       <View style={[styles.modalOverlay, { backgroundColor: theme.overlay }]}>
         <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-          <View style={[styles.modalHeader, { borderBottomColor: theme.border, flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-            <Text style={[styles.modalTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }]}>{title}</Text>
+          <View style={[styles.modalHeader, { borderBottomColor: theme.border, flexDirection: 'row' }]}>
+            <Text style={[styles.modalTitle, { color: theme.text, textAlign: 'auto'}]}>{title}</Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={24} color={theme.textMuted} />
             </TouchableOpacity>
@@ -66,7 +65,7 @@ export const PickerModal = ({ visible, title, items, selectedValue, onSelect, on
                 key={`${item.value}-${index}`}
                 style={[
                   styles.modalItem,
-                  { flexDirection: isRTL ? 'row-reverse' : 'row' },
+                  { flexDirection: 'row' },
                   { borderBottomColor: theme.border },
                   isSelected && styles.modalItemSelected,
                   isSelected && { backgroundColor: theme.selectedBg },
@@ -78,7 +77,7 @@ export const PickerModal = ({ visible, title, items, selectedValue, onSelect, on
               >
                 <Text style={[
                   styles.modalItemText,
-                  { color: theme.text, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' },
+                  { color: theme.text, textAlign: 'auto'},
                   isSelected && styles.modalItemTextSelected,
                 ]}>
                   {displayLabel}

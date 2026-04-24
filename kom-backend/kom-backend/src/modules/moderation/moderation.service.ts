@@ -195,7 +195,8 @@ export class ModerationService {
     // Get before state for audit log
     const beforeState = { status: listing.status };
 
-    const expiresAt = new Date();
+    const now = new Date();
+    const expiresAt = new Date(now);
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 days from now
 
     // Approve listing
@@ -203,10 +204,13 @@ export class ModerationService {
       where: { id: listingId },
       data: {
         status: ListingStatus.APPROVED,
-        approvedAt: new Date(),
+        approvedAt: now,
+        postedAt: now,
         expiresAt: expiresAt,
         rejectedAt: null,
         rejectionReason: null,
+        soldCheckCount: 0,
+        lastSoldCheckAt: null,
       },
     });
 
@@ -243,15 +247,6 @@ export class ModerationService {
       this.emailService
         .sendListingApproved(ownerUser.email, listing.title, listing.id)
         .catch(() => {});
-    }
-
-    // If owner is a showroom merchant, increment their subscription listings used counter
-    const owner = await this.prisma.user.findUnique({
-      where: { id: listing.ownerId },
-      select: { role: true },
-    });
-    if (owner?.role === UserRole.USER_SHOWROOM) {
-      await this.packagesService.incrementListingsUsed(listing.ownerId);
     }
 
     return updated;
@@ -326,7 +321,8 @@ export class ModerationService {
       throw new NotFoundException('Listing not found');
     }
 
-    const expiresAt = new Date();
+    const now = new Date();
+    const expiresAt = new Date(now);
     expiresAt.setDate(expiresAt.getDate() + 30); // Reset for another 30 days
 
     // Reactivate listing
@@ -334,7 +330,11 @@ export class ModerationService {
       where: { id: listingId },
       data: {
         status: ListingStatus.APPROVED,
+        approvedAt: now,
+        postedAt: now,
         expiresAt: expiresAt,
+        soldCheckCount: 0,
+        lastSoldCheckAt: null,
       },
     });
 

@@ -18,7 +18,6 @@ export default function TermsScreen() {
     text: isDark ? '#e5e7eb' : '#0f172a',
     body: isDark ? '#cbd5e1' : '#334155',
   };
-  const textDirection = isRTL ? 'rtl' : 'ltr';
   const textAlign = isRTL ? 'right' : 'left';
 
   return (
@@ -31,48 +30,48 @@ export default function TermsScreen() {
         borderColor={theme.border}
         textColor={theme.text}
         variant="light"
-        onBack={() => router.replace('/settings')}
+        onBack={() => router.replace('/(tabs)/settings')}
       />
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.contentWrapper}>
-          <Text style={[styles.title, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.heading')}</Text>
+          <Text style={[styles.title, { color: theme.text, textAlign}]}>{t('terms.heading')}</Text>
 
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.intro')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('terms.intro')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.acceptTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.acceptBody')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('terms.acceptTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('terms.acceptBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.serviceTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.serviceBody')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('terms.serviceTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('terms.serviceBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.accountTitle')}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.accountBullet1')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.accountBullet2')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.accountBullet3')}`}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('terms.accountTitle')}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('terms.accountBullet1')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('terms.accountBullet2')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('terms.accountBullet3')}`}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.listingsTitle')}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.listingsBullet1')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.listingsBullet2')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.listingsBullet3')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.listingsBullet4')}`}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('terms.listingsTitle')}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('terms.listingsBullet1')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('terms.listingsBullet2')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('terms.listingsBullet3')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('terms.listingsBullet4')}`}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.liabilityTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.liabilityBody')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('terms.liabilityTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('terms.liabilityBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.ipTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.ipBody')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('terms.ipTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('terms.ipBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.terminationTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.terminationBody')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('terms.terminationTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('terms.terminationBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.changesTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.changesBody')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('terms.changesTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('terms.changesBody')}</Text>
 
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign, writingDirection: textDirection }]}>{t('terms.contactTitle')}</Text>
-          <Text style={[styles.paragraph, { color: theme.body, textAlign, writingDirection: textDirection }]}>{t('terms.contactIntro')}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.email')}`}</Text>
-          <Text style={[styles.bullet, { color: theme.body, textAlign, writingDirection: textDirection }]}>{`• ${t('terms.website')}`}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign}]}>{t('terms.contactTitle')}</Text>
+          <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('terms.contactIntro')}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('terms.email')}`}</Text>
+          <Text style={[styles.bullet, { color: theme.body, textAlign}]}>{`• ${t('terms.website')}`}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

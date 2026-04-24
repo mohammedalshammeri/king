@@ -3,8 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ViewStyle, TextStyle } from '
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLanguage } from '../../context/LanguageContext';
-import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 type PageHeaderProps = {
   title: string;
@@ -33,7 +32,6 @@ export function PageHeader({
   variant = 'gradient',
 }: PageHeaderProps) {
   const router = useRouter();
-  const { isDark } = useTheme();
   const { isRTL } = useLanguage();
 
   const isLight = variant === 'light';
@@ -50,7 +48,7 @@ export function PageHeader({
   const backButton = showBack ? (
     <TouchableOpacity
       onPress={() => (onBack ? onBack() : router.back())}
-      style={[styles.backBtn, isRTL ? styles.backBtnRtl : styles.backBtnLtr]}
+      style={styles.backBtn}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
       <View style={[styles.backCircle, backCircleStyle]}>
@@ -58,18 +56,18 @@ export function PageHeader({
       </View>
     </TouchableOpacity>
   ) : (
-    <View style={[styles.backBtnPlaceholder, isRTL ? styles.backBtnPlaceholderRtl : styles.backBtnPlaceholderLtr]} />
+    <View style={styles.backBtnPlaceholder} />
   );
 
   const content = (
     <>
       {backButton}
-      <View style={[styles.titleWrap, isRTL ? styles.titleWrapRtl : styles.titleWrapLtr]}>
-        <Text style={[styles.title, { color: resolvedTextColor, textAlign: isRTL ? 'right' : 'left', writingDirection: isRTL ? 'rtl' : 'ltr' }, titleStyle]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+      <View style={styles.titleWrap}>
+        <Text style={[styles.title, { color: resolvedTextColor}, titleStyle]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
           {title}
         </Text>
       </View>
-      <View style={[styles.rightSlot, isRTL ? styles.rightSlotRtl : styles.rightSlotLtr]}>{rightSlot}</View>
+      <View style={styles.rightSlot}>{rightSlot}</View>
     </>
   );
 
@@ -120,6 +118,7 @@ const styles = StyleSheet.create({
   backBtn: {
     position: 'absolute',
     top: 16,
+    start: 16,
     width: 44,
     minWidth: 44,
     justifyContent: 'center',
@@ -127,24 +126,13 @@ const styles = StyleSheet.create({
     height: 44,
     zIndex: 2,
   },
-  backBtnRtl: {
-    right: 16,
-  },
-  backBtnLtr: {
-    left: 16,
-  },
   backBtnPlaceholder: {
     position: 'absolute',
     top: 16,
+    end: 16,
     width: 44,
     minWidth: 44,
     height: 44,
-  },
-  backBtnPlaceholderRtl: {
-    left: 16,
-  },
-  backBtnPlaceholderLtr: {
-    right: 16,
   },
   backCircle: {
     width: 36,
@@ -169,13 +157,8 @@ const styles = StyleSheet.create({
   titleWrap: {
     width: '100%',
     justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 56,
-  },
-  titleWrapRtl: {
-    alignItems: 'flex-end',
-  },
-  titleWrapLtr: {
-    alignItems: 'flex-start',
   },
   title: {
     fontSize: 18,
@@ -183,21 +166,16 @@ const styles = StyleSheet.create({
     width: '100%',
     flexShrink: 1,
     letterSpacing: 0.3,
+    textAlign: 'center',
   },
   rightSlot: {
     position: 'absolute',
     top: 16,
+    end: 16,
     minWidth: 44,
     width: 44,
     height: 44,
     justifyContent: 'center',
-  },
-  rightSlotRtl: {
-    left: 16,
-    alignItems: 'flex-start',
-  },
-  rightSlotLtr: {
-    right: 16,
     alignItems: 'flex-end',
   },
 });

@@ -85,7 +85,7 @@ export default function AdsBanner({ onPress }: AdsBannerProps) {
           api.post(`/advertisements/${ad.id}/view`).catch(() => {});
         });
       }
-    } catch (e) {
+    } catch {
       // Silent fail — ads are optional
     } finally {
       setLoading(false);
