@@ -235,7 +235,7 @@ export default function RegisterScreen() {
 
           {/* User type selector */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.userType')}</Text>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.userType')}</Text>
             <View style={[s.segmentRow, { flexDirection: 'row' }]}>
               {(['INDIVIDUAL', 'SHOWROOM'] as const).map((type) => (
                 <TouchableOpacity
@@ -255,7 +255,7 @@ export default function RegisterScreen() {
           {/* Merchant type picker */}
           {userType === 'SHOWROOM' && (
             <View style={s.inputGroup}>
-              <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.merchantType')}</Text>
+              <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.merchantType')}</Text>
               <View style={[s.merchantGrid, { flexDirection: 'row' }]}>
                 {MERCHANT_TYPES.map((mt) => (
                   <TouchableOpacity
@@ -278,10 +278,10 @@ export default function RegisterScreen() {
             <Text style={[s.label, { color: labelColor }]}>
               {userType === 'INDIVIDUAL' ? t('auth.fullName') : t('auth.showroomName')}
             </Text>
-            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="person" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
-                style={[s.input, { color: inputColor }]}
+                style={[s.input, { color: inputColor, textAlign: isRTL ? 'right' : 'left' }]}
                 placeholder={userType === 'INDIVIDUAL' ? t('auth.fullNamePlaceholder') : t('auth.showroomNamePlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={userType === 'INDIVIDUAL' ? fullName : showroomName}
@@ -293,11 +293,11 @@ export default function RegisterScreen() {
           {/* CR Number */}
           {userType === 'SHOWROOM' && (
             <View style={s.inputGroup}>
-              <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.crNumber')}</Text>
-              <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+              <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.crNumber')}</Text>
+              <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
                 <Ionicons name="document-text" size={18} color="#94A3B8" style={s.icon} />
                 <TextInput
-                  style={[s.input, { color: inputColor }]}
+                  style={[s.input, { color: inputColor, textAlign: isRTL ? 'right' : 'left' }]}
                   placeholder={t('auth.crNumberPlaceholder')}
                   placeholderTextColor="#94A3B8"
                   value={crNumber}
@@ -309,11 +309,11 @@ export default function RegisterScreen() {
 
           {/* Email */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.email')}</Text>
-            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.email')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="mail" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
-                style={[s.input, { color: inputColor }]}
+                style={[s.input, { color: inputColor, textAlign: isRTL ? 'right' : 'left' }]}
                 placeholder={t('auth.emailPlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={email}
@@ -326,11 +326,11 @@ export default function RegisterScreen() {
 
           {/* Phone */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.phoneOptional')}</Text>
-            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.phoneOptional')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="call" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
-                style={[s.input, { color: inputColor }]}
+                style={[s.input, { color: inputColor, textAlign: isRTL ? 'right' : 'left' }]}
                 placeholder={t('auth.phonePlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={phone}
@@ -342,11 +342,11 @@ export default function RegisterScreen() {
 
           {/* Password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.password')}</Text>
-            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.password')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="lock-closed" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
-                style={[s.input, { color: inputColor }]}
+                style={[s.input, { color: inputColor, textAlign: isRTL ? 'right' : 'left' }]}
                 placeholder={t('auth.passwordPlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={password}
@@ -359,18 +359,18 @@ export default function RegisterScreen() {
                 <Ionicons name={showPass ? 'eye' : 'eye-off'} size={18} color="#94A3B8" />
               </TouchableOpacity>
             </View>
-            <Text style={[s.hint, { textAlign: 'auto'}]}>
+            <Text style={[s.hint, { textAlign: isRTL ? 'right' : 'left'}]}>
               {t('auth.passwordHint')}
             </Text>
           </View>
 
           {/* Confirm password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.confirmPassword')}</Text>
-            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.confirmPassword')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }]}>
               <Ionicons name="lock-closed" size={18} color="#94A3B8" style={s.icon} />
               <TextInput
-                style={[s.input, { color: inputColor }]}
+                style={[s.input, { color: inputColor, textAlign: isRTL ? 'right' : 'left' }]}
                 placeholder={t('auth.passwordPlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={confirmPassword}
@@ -404,7 +404,7 @@ export default function RegisterScreen() {
           <SocialAuthSection mode="register" disabled={isLoading} onAuthenticate={handleSocialRegister} />
 
           {/* Login link */}
-          <View style={[s.footer, { flexDirection: 'row' }]}>
+          <View style={[s.footer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
             <Text style={s.footerNote}>{t('auth.haveAccount')}</Text>
             <Link href="/(auth)/login" asChild>
               <TouchableOpacity>

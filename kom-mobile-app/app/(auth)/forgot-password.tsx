@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import AdsBanner from '@/components/ads/AdsBanner';
 import {
-  I18nManager,
   View,
   Text,
   TextInput,
@@ -19,7 +18,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAppTranslation } from '../../context/LanguageContext';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 
@@ -33,7 +32,7 @@ export default function ForgotPasswordScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const { t } = useAppTranslation();
-  const isRTL = I18nManager.isRTL;
+  const { isRTL } = useLanguage();
 
   const inputBg     = isDark ? '#1E2A40' : '#F8FAFC';
   const inputBorder = isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0';
@@ -85,8 +84,8 @@ export default function ForgotPasswordScreen() {
 
         <View style={[s.heroContent, isRTL ? s.heroContentRtl : s.heroContentLtr]}>
           <Image source={require('../../assets/images/logo.png')} style={s.logo} contentFit="contain" />
-          <Text style={[s.heroTitle, { textAlign: 'auto'}]}>{t('auth.forgotTitle')}</Text>
-          <Text style={[s.heroSub, { textAlign: 'auto'}]}>{t('auth.forgotSubtitle')}</Text>
+          <Text style={[s.heroTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.forgotTitle')}</Text>
+          <Text style={[s.heroSub, { textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.forgotSubtitle')}</Text>
         </View>
       </LinearGradient>
 
@@ -102,11 +101,11 @@ export default function ForgotPasswordScreen() {
           {!emailSent ? (
             <>
               <View style={s.inputGroup}>
-                <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.email')}</Text>
-                <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }, emailFocused && s.inputWrapFocused]}>
+                <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.email')}</Text>
+                <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }, emailFocused && s.inputWrapFocused]}>
                   <Ionicons name="mail" size={18} color={emailFocused ? '#D4AF37' : '#94A3B8'} style={s.icon} />
                   <TextInput
-                    style={[s.input, { color: inputColor }]}
+                    style={[s.input, { color: inputColor, textAlign: isRTL ? 'right' : 'left' }]}
                     placeholder={t('auth.emailPlaceholder')}
                     placeholderTextColor="#94A3B8"
                     value={email}

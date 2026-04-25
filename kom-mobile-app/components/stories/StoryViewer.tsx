@@ -23,7 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StoryUser } from './StoriesRail';
 import { storiesService } from '@/services/stories';
 import { useAuthStore } from '@/store/authStore';
-import { useAppTranslation } from '@/context/LanguageContext';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -40,6 +40,7 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
   const { user } = useAuthStore();
   const safeInsets = useSafeAreaInsets();
   const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
   const [userIndex, setUserIndex] = useState(() => {
     if (initialUserId) {
@@ -435,7 +436,7 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
             >
               <TouchableOpacity activeOpacity={1} style={[styles.commentsContainer, { backgroundColor: '#1e1e1e' }]}>
                 <View style={styles.dragHandle} />
-                <Text style={[styles.commentsTitle, { textAlign: 'auto'}]}>{t('stories.commentsTitle')}</Text>
+                <Text style={[styles.commentsTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('stories.commentsTitle')}</Text>
 
                 {loadingComments ? (
                   <ActivityIndicator style={{ marginTop: 20 }} color="#fff" />
@@ -464,8 +465,8 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
                           ]}
                         />
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.commentUser, { textAlign: 'auto'}]}>{item.userName || t('feed.defaultStoryUser')}</Text>
-                          <Text style={[styles.commentText, { textAlign: 'auto'}]}>{item.text}</Text>
+                          <Text style={[styles.commentUser, { textAlign: isRTL ? 'right' : 'left' }]}>{item.userName || t('feed.defaultStoryUser')}</Text>
+                          <Text style={[styles.commentText, { textAlign: isRTL ? 'right' : 'left' }]}>{item.text}</Text>
                         </View>
                       </View>
                     )}
@@ -474,7 +475,7 @@ export default function StoryViewer({ visible, storyUsers, initialUserIndex, ini
 
                 <View style={[styles.inputContainer, { flexDirection: 'row' }]}>
                   <TextInput
-                    style={[styles.commentInput, { textAlign: 'auto'}]}
+                    style={[styles.commentInput, { textAlign: isRTL ? 'right' : 'left' }]}
                     placeholder={t('stories.addCommentPlaceholder')}
                     placeholderTextColor="#999"
                     value={newComment}

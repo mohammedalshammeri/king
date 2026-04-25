@@ -676,17 +676,18 @@ const FilterHeader = React.memo(({
   subtitle: string,
   eyebrow: string,
 }) => {
+  const { isRTL: filterIsRTL } = useLanguage();
   return (
     <View style={[styles.filterContainer, { backgroundColor: theme.surface }]}>
       <View style={[styles.filterPanel, { backgroundColor: theme.card, borderColor: theme.border }]}>
         <View style={styles.filterPanelAccent} pointerEvents="none" />
 
-        <View style={styles.filterHeaderBlock}>
+        <View style={[styles.filterHeaderBlock, { alignItems: filterIsRTL ? 'flex-end' : 'flex-start' }]}>
           <View style={[styles.filterEyebrow, { backgroundColor: 'rgba(212, 175, 55, 0.14)' }]}>
             <Text style={[styles.filterEyebrowText, { color: Colors.primary }]}>{eyebrow}</Text>
           </View>
-          <Text style={[styles.filterTitle, { color: theme.text }]}>{title}</Text>
-          <Text style={[styles.filterSubtitle, { color: theme.subText }]}>{subtitle}</Text>
+          <Text style={[styles.filterTitle, { color: theme.text, textAlign: filterIsRTL ? 'right' : 'left' }]}>{title}</Text>
+          <Text style={[styles.filterSubtitle, { color: theme.subText, textAlign: filterIsRTL ? 'right' : 'left' }]}>{subtitle}</Text>
         </View>
 
         <View style={styles.categoryGrid}>
@@ -791,7 +792,7 @@ export default function HomeScreen() {
   const { data: listings = [], isLoading: loading, refetch } = useQuery<any[]>({
     queryKey: ['listings', queryFilter, queryParams],
     queryFn: async () => {
-      const params: any = { status: 'APPROVED', limit: 30, ...queryParams };
+      const params: any = { status: 'APPROVED', limit: queryFilter === 'ALL' ? 100 : 30, ...queryParams };
       Object.keys(params).forEach((k) => {
         if (params[k] === undefined || params[k] === null || params[k] === '') delete params[k];
       });
@@ -1089,7 +1090,7 @@ export default function HomeScreen() {
             end={{ x: 0, y: 1 }}
             style={[styles.priceOverlay, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}
           >
-            <Text style={[styles.priceText, { textAlign: 'auto'}]}>
+            <Text style={[styles.priceText, { textAlign: isRTL ? 'right' : 'left' }]}>
               {toText(
                 typeof item.price === 'number'
                   ? item.price.toLocaleString()
@@ -1105,7 +1106,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={[styles.cardContent, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]} pointerEvents="none">
-          <Text style={[styles.cardTitle, { color: theme.text, textAlign: 'auto'}]} numberOfLines={1}>
+          <Text style={[styles.cardTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={1}>
             {toText(getListingTitle(item))}
           </Text>
 
@@ -1114,11 +1115,11 @@ export default function HomeScreen() {
           <View style={[styles.cardFooter, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
             <View style={[styles.metaRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
               <Ionicons name="location-sharp" size={11} color={typeAccent} />
-              <Text style={[styles.metaText, { color: theme.subText, textAlign: 'auto'}]}>{toText(getListingCity(item), t('common.bahrain'))}</Text>
+              <Text style={[styles.metaText, { color: theme.subText, textAlign: isRTL ? 'right' : 'left' }]}>{toText(getListingCity(item), t('common.bahrain'))}</Text>
             </View>
             <View style={[styles.metaRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
               <Ionicons name="time-outline" size={11} color={theme.muted} />
-              <Text style={[styles.metaText, { color: theme.muted, textAlign: 'auto'}]}>{toText(formatTimeAgo(item.postedAt || item.createdAt, language, t))}</Text>
+              <Text style={[styles.metaText, { color: theme.muted, textAlign: isRTL ? 'right' : 'left' }]}>{toText(formatTimeAgo(item.postedAt || item.createdAt, language, t))}</Text>
             </View>
           </View>
         </View>
@@ -1242,7 +1243,7 @@ export default function HomeScreen() {
               return (
                 <View style={{ width: '100%', paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', direction: (isRTL ? 'rtl' : 'ltr') as 'rtl' | 'ltr' }}>
                   <View>
-                    <Text style={{ fontSize: 20, fontWeight: '800', textAlign: 'auto', color: theme.text}}>{t('home.latestOffers')}</Text>
+                    <Text style={{ fontSize: 20, fontWeight: '800', textAlign: isRTL ? 'right' : 'left', color: theme.text}}>{t('home.latestOffers')}</Text>
                     <View style={{ height: 3, width: 40, backgroundColor: Colors.primary, borderRadius: 2, marginTop: 4 }} />
                   </View>
                 </View>
@@ -1262,12 +1263,12 @@ export default function HomeScreen() {
                     direction: (isRTL ? 'rtl' : 'ltr') as 'rtl' | 'ltr',
                   }}>
                     <View>
-                      <Text style={{ fontSize: 18, fontWeight: '800', textAlign: 'auto', color: theme.text}}>{item.title}</Text>
+                      <Text style={{ fontSize: 18, fontWeight: '800', textAlign: isRTL ? 'right' : 'left', color: theme.text}}>{item.title}</Text>
                       <View style={{ height: 3, width: 36, backgroundColor: Colors.primary, borderRadius: 2, marginTop: 4 }} />
                     </View>
                     {item.filterType && (
                       <TouchableOpacity onPress={() => handleFilterChange(item.filterType)}>
-                        <Text style={{ color: Colors.primary, fontSize: 13, fontWeight: '600', textAlign: 'auto'}}>{t('home.showAll')}</Text>
+                        <Text style={{ color: Colors.primary, fontSize: 13, fontWeight: '600', textAlign: isRTL ? 'right' : 'left'}}>{t('home.showAll')}</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -1323,7 +1324,7 @@ export default function HomeScreen() {
           <View style={styles.modalOverlay}>
             <View style={[styles.modalContent, { backgroundColor: theme.surface }]}> 
               <View style={[styles.modalHeader, { flexDirection: 'row' }]}>
-                <Text style={[styles.modalTitle, { color: theme.text, textAlign: 'auto'}]}> 
+                <Text style={[styles.modalTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}> 
                   {filterStep === 'BRAND' ? t('home.chooseBrand') : 
                   filterStep === 'MOTO_BRAND' ? t('home.chooseManufacturer') :
                   filterStep === 'PLATE_TYPE' ? t('home.choosePlateType') :
@@ -1397,7 +1398,7 @@ export default function HomeScreen() {
                         style={[styles.modelItem, { borderBottomColor: theme.border, flexDirection: 'row' }]} 
                         onPress={() => handlePlateTypeSelect(pt.id)}
                       >
-                        <Text style={[styles.modelName, { color: theme.text, textAlign: 'auto'}]}>{pt.label}</Text>
+                        <Text style={[styles.modelName, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{pt.label}</Text>
                         <Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={20} color={theme.muted} />
                       </TouchableOpacity>
                   ))}
@@ -1408,7 +1409,7 @@ export default function HomeScreen() {
                 <View style={{ flex: 1 }}>
                   <TouchableOpacity onPress={() => setFilterStep('BRAND')} style={[styles.backButton, { flexDirection: 'row' }]}>
                   <Ionicons name={isRTL ? 'arrow-forward' : 'arrow-back'} size={20} color={theme.primary} />
-                  <Text style={[styles.backText, { color: theme.primary, textAlign: 'auto'}]}>{t('home.backToBrands')}</Text>
+                  <Text style={[styles.backText, { color: theme.primary, textAlign: isRTL ? 'right' : 'left' }]}>{t('home.backToBrands')}</Text>
                   </TouchableOpacity>
                   <FlatList<SafeModelItem>
                     data={buildSafeModelItems(selectedBrand, language, t as any)}
@@ -1419,7 +1420,7 @@ export default function HomeScreen() {
                         style={[styles.modelItem, { borderBottomColor: theme.border, flexDirection: 'row' }]} 
                         onPress={() => handleModelSelect(item)}
                       >
-                        <Text style={[styles.modelName, { color: theme.text, textAlign: 'auto'}]}> 
+                        <Text style={[styles.modelName, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}> 
                           {item.label}
                         </Text>
                         <Ionicons name={isRTL ? 'chevron-back' : 'chevron-forward'} size={20} color={theme.muted} />

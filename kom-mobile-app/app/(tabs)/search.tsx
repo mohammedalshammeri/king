@@ -502,14 +502,14 @@ export default function SearchScreen() {
                 <TouchableOpacity onPress={() => setModalVisible(false)}>
                     <Ionicons name="close" size={24} color={theme.text} />
                 </TouchableOpacity>
-              <Text style={[styles.modalTitle, { color: theme.text, textAlign: 'auto'}]}>{t('search.filterTitle')}</Text>
+              <Text style={[styles.modalTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.filterTitle')}</Text>
                 <View style={{ width: 24 }} />
             </View>
 
             <ScrollView contentContainerStyle={styles.modalContent}>
                 
                 {/* Categories */}
-                <Text style={[styles.sectionTitle, { color: theme.text, textAlign: 'auto' }]}>{t('search.category')}</Text>
+                <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.category')}</Text>
                 <View style={[styles.tabsContainer, { flexDirection: 'row' }]}>
                   {renderCategoryTab(t('search.categoryAll'), 'ALL')}
                   {renderCategoryTab(t('search.categoryCars'), 'CAR')}
@@ -519,7 +519,7 @@ export default function SearchScreen() {
                 </View>
 
                 {/* Sort By */}
-                <Text style={[styles.sectionTitle, { color: theme.text, textAlign: 'auto' }]}>{t('search.sort')}</Text>
+                <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.sort')}</Text>
                 <View style={[styles.radioGroup, { flexDirection: 'row' }]}>
                   {renderSortOption(t('search.sortDateNewest'), 'date_desc')}
                   {renderSortOption(t('search.sortDateOldest'), 'date_asc')}
@@ -530,7 +530,7 @@ export default function SearchScreen() {
                 {/* Make & Model (Only for Car/Moto) */}
                 {(tempCategory === 'CAR' || tempCategory === 'MOTORCYCLE') && (
                     <>
-                        <Text style={[styles.sectionTitle, { color: theme.text, textAlign: 'auto' }]}>{t('search.make')}</Text>
+                        <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.make')}</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
                           {visibleBrands.map((brand) => (
                                 <TouchableOpacity
@@ -546,7 +546,7 @@ export default function SearchScreen() {
                                     }}
                                 >
                                     <Image source={{ uri: brand.logo }} style={styles.brandLogo} contentFit="contain" />
-                                    <Text style={[styles.brandName, { color: selectedBrand?.id === brand.id ? '#fff' : theme.text, textAlign: 'auto' }]}>
+                                    <Text style={[styles.brandName, { color: selectedBrand?.id === brand.id ? '#fff' : theme.text, textAlign: isRTL ? 'right' : 'left' }]}>
                                       {getBrandLabel(brand)}
                                     </Text>
                                 </TouchableOpacity>
@@ -556,7 +556,7 @@ export default function SearchScreen() {
                         {/* Models */}
                         {selectedBrand && (
                            <>
-                              <Text style={[styles.sectionTitle, { color: theme.text, textAlign: 'auto' }]}>{t('search.model')}</Text>
+                              <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.model')}</Text>
                              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
                                 {buildSafeModelItems(selectedBrand, language, t as any).map((model) => (
                                     <TouchableOpacity
@@ -568,7 +568,7 @@ export default function SearchScreen() {
                                         ]}
                                         onPress={() => setSelectedModel(model)}
                                     >
-                                        <Text style={[styles.chipText, { color: selectedModel?.key === model.key ? '#fff' : theme.text, textAlign: 'auto' }]}>
+                                        <Text style={[styles.chipText, { color: selectedModel?.key === model.key ? '#fff' : theme.text, textAlign: isRTL ? 'right' : 'left' }]}>
                                             {model.label}
                                         </Text>
                                     </TouchableOpacity>
@@ -578,13 +578,13 @@ export default function SearchScreen() {
                         )}
                         
                         {/* Year */}
-                        <Text style={[styles.sectionTitle, { color: theme.text, textAlign: 'auto' }]}>{t('search.year')}</Text>
+                        <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.year')}</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
                             <TouchableOpacity
                                 style={[styles.chip, { borderColor: theme.border }, selectedYear === '' && styles.chipSelected]}
                                 onPress={() => setSelectedYear('')}
                             >
-                                <Text style={[styles.chipText, { color: selectedYear === '' ? '#fff' : theme.text, textAlign: 'auto' }]}>{t('search.categoryAll')}</Text>
+                                <Text style={[styles.chipText, { color: selectedYear === '' ? '#fff' : theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.categoryAll')}</Text>
                             </TouchableOpacity>
                             {years.map(year => (
                                 <TouchableOpacity
@@ -602,13 +602,13 @@ export default function SearchScreen() {
                         </ScrollView>
 
                         {/* Color */}
-                        <Text style={[styles.sectionTitle, { color: theme.text, textAlign: 'auto' }]}>{t('search.color')}</Text>
+                        <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.color')}</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
                              <TouchableOpacity
                                 style={[styles.chip, { borderColor: theme.border }, selectedColor === '' && styles.chipSelected]}
                                 onPress={() => setSelectedColor('')}
                             >
-                                <Text style={[styles.chipText, { color: selectedColor === '' ? '#fff' : theme.text, textAlign: 'auto' }]}>{t('search.categoryAll')}</Text>
+                                <Text style={[styles.chipText, { color: selectedColor === '' ? '#fff' : theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('search.categoryAll')}</Text>
                             </TouchableOpacity>
                             {VehicleColors.map(color => (
                                  <TouchableOpacity

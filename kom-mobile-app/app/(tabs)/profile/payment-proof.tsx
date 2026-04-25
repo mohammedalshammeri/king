@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 
-import { useAppTranslation } from '../../../context/LanguageContext';
+import { useAppTranslation, useLanguage } from '../../../context/LanguageContext';
 import { useTheme } from '../../../context/ThemeContext';
 import api from '../../../services/api';
 import PageHeader from '../../../components/ui/page-header';
@@ -31,6 +31,7 @@ export default function PaymentProofScreen() {
   const navigation = useNavigation();
   const { isDark } = useTheme();
   const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
   const { transactionId, amount, currency, paymentType, returnToListingId } = useLocalSearchParams<{
     transactionId: string;
@@ -49,9 +50,9 @@ export default function PaymentProofScreen() {
   const textColor = isDark ? '#F8FAFC' : '#0A0B14';
   const mutedColor = isDark ? '#94A3B8' : '#64748B';
   const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
-  const dirText = { textAlign: 'auto' as const };
+  const dirText = { textAlign: (isRTL ? 'right' : 'left') as 'left' | 'right' };
   const centerDirText = { textAlign: 'center' as const };
-  const rowDirection = { flexDirection: 'row' as const };
+  const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
 
   // Hide bottom tabs on this screen only
   useEffect(() => {

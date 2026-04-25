@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
-import { useAppTranslation } from '../../context/LanguageContext';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 
 interface FavoriteListing {
   id: string;
@@ -27,6 +27,7 @@ export default function FavoritesScreen() {
   const { source } = useLocalSearchParams<{ source?: string }>();
   const { isDark } = useTheme();
   const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
   const { isAuthenticated } = useAuthStore();
   const [favorites, setFavorites] = useState<FavoriteListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,15 +140,15 @@ export default function FavoritesScreen() {
         </TouchableOpacity>
 
         <View style={styles.cardContent}>
-          <Text style={[styles.price, { textAlign: 'auto' }]}>
+          <Text style={[styles.price, { textAlign: isRTL ? 'right' : 'left' }]}>
             {Number(item.price).toLocaleString()} <Text style={styles.currency}>{t('common.bhd')}</Text>
           </Text>
 
-          <Text style={[styles.title, { color: theme.text, textAlign: 'auto'}]} numberOfLines={2}>{item.title}</Text>
+          <Text style={[styles.title, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={2}>{item.title}</Text>
           
           <View style={[styles.locationContainer, { flexDirection: 'row' }]}>
             <Ionicons name="location-sharp" size={12} color="#9BA3B2" />
-            <Text style={[styles.location, { color: theme.textMuted, textAlign: 'auto'}]} numberOfLines={1}>{item.location}</Text>
+            <Text style={[styles.location, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={1}>{item.location}</Text>
           </View>
         </View>
 

@@ -7,7 +7,7 @@ import { Image } from 'expo-image';
 import { Colors } from '@/constants/Colors';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
-import { useAppTranslation } from '@/context/LanguageContext';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
 import { PageHeader } from '@/components/ui/page-header';
 
@@ -34,6 +34,7 @@ export default function MyListingsScreen() {
   const { isAuthenticated } = useAuthStore();
   const { isDark } = useTheme();
   const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -50,8 +51,8 @@ export default function MyListingsScreen() {
     primary: Colors.primary,
   };
 
-  const dirText = { textAlign: 'auto' as const};
-  const rowDirection = { flexDirection: 'row' as const };
+  const dirText = { textAlign: (isRTL ? 'right' : 'left') as 'left' | 'right' };
+  const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
 
   const statusLabels: Record<string, { label: string; color: string; bg: string }> = {
     DRAFT: { label: t('myListings.statusDraft'), color: '#64748B', bg: '#F1F5F9' },

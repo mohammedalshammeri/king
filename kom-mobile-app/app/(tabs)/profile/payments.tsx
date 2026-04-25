@@ -48,7 +48,7 @@ export default function PaymentsScreen() {
   const textColor = isDark ? '#F8FAFC' : '#0A0B14';
   const mutedColor = isDark ? '#94A3B8' : '#64748B';
   const borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  const dirText = { textAlign: 'auto' as const};
+  const dirText = { textAlign: (isRTL ? 'right' : 'left') as 'left' | 'right' };
   const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
 
   const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
 
 // ─── Invoice header constants ────────────────────────────────────
 function InvRow({ k, v, isRTL }: { k: string; v: string; isRTL: boolean }) {
-  const dirText = { textAlign: 'auto' as const};
+  const dirText = { textAlign: (isRTL ? 'right' : 'left') as 'left' | 'right' };
   const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
   return (
     <View style={[inv.row, rowDirection]}>

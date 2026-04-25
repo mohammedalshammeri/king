@@ -174,11 +174,11 @@ export default function LoginScreen() {
         <View style={[s.card, { backgroundColor: isDark ? '#111827' : '#FFFFFF' }]}>
           {/* Email */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.email')}</Text>
-            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }, emailFocused && s.inputWrapFocused]}>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.email')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }, emailFocused && s.inputWrapFocused]}>
               <Ionicons name="mail" size={18} color={emailFocused ? '#D4AF37' : '#94A3B8'} style={s.icon} />
               <TextInput
-                style={[s.input, { color: inputColor }]}
+                style={[s.input, { color: inputColor, textAlign: isRTL ? 'right' : 'left' }]}
                 placeholder={t('auth.emailPlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={email}
@@ -196,11 +196,11 @@ export default function LoginScreen() {
 
           {/* Password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.password')}</Text>
-            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }, passFocused && s.inputWrapFocused]}>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.password')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }, passFocused && s.inputWrapFocused]}>
               <Ionicons name="lock-closed" size={18} color={passFocused ? '#D4AF37' : '#94A3B8'} style={s.icon} />
               <TextInput
-                style={[s.input, { color: inputColor }]}
+                style={[s.input, { color: inputColor, textAlign: isRTL ? 'right' : 'left' }]}
                 placeholder={t('auth.passwordPlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={password}
@@ -222,13 +222,13 @@ export default function LoginScreen() {
           {loginError ? (
             <View style={[s.errorBox, { flexDirection: 'row' }]}>
               <Ionicons name="alert-circle" size={18} color="#B42318" style={s.errorIcon} />
-              <Text style={[s.errorText, { textAlign: 'auto'}]}>{loginError}</Text>
+              <Text style={[s.errorText, { textAlign: isRTL ? 'right' : 'left' }]}>{loginError}</Text>
             </View>
           ) : null}
 
           {/* Forgot password */}
           <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')} style={[s.forgotRow, { alignSelf: isRTL ? 'flex-end' : 'flex-start' }]}>
-            <Text style={[s.forgotText, { textAlign: 'auto'}]}>{t('auth.forgotQuestion')}</Text>
+            <Text style={[s.forgotText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.forgotQuestion')}</Text>
           </TouchableOpacity>
 
           {/* Login CTA */}
@@ -245,7 +245,7 @@ export default function LoginScreen() {
           <SocialAuthSection mode="login" disabled={isLoading} onAuthenticate={handleSocialAuth} />
 
           {/* Register link */}
-          <View style={[s.footer, { flexDirection: 'row' }]}>
+          <View style={[s.footer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
             <Text style={s.footerNote}>{t('auth.noAccount')}</Text>
             <Link href="/(auth)/register" asChild>
               <TouchableOpacity>

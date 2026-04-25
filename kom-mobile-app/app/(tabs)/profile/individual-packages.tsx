@@ -59,8 +59,8 @@ export default function IndividualPackagesScreen() {
   const cardBg = isDark ? '#111827' : '#FFFFFF';
   const textColor = isDark ? '#F8FAFC' : '#0A0B14';
   const mutedColor = isDark ? '#94A3B8' : '#64748B';
-  const dirText = { textAlign: 'auto' as const};
-  const rowDirection = { flexDirection: 'row' as const };
+  const dirText = { textAlign: (isRTL ? 'right' : 'left') as 'left' | 'right' };
+  const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
 
   const totalCredits = purchases.reduce((sum, p) => sum + (p.creditsTotal - p.creditsUsed), 0);
 
@@ -322,7 +322,7 @@ export default function IndividualPackagesScreen() {
 }
 
 function StatBox({ label, value, color, isRTL }: { label: string; value: string; color: string; isRTL: boolean }) {
-  const dirText = { textAlign: 'auto' as const};
+  const dirText = { textAlign: (isRTL ? 'right' : 'left') as 'left' | 'right' };
   return (
     <View style={statStyles.box}>
       <Text style={[statStyles.value, { color }, dirText]}>{value}</Text>

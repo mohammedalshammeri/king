@@ -1,9 +1,9 @@
 import React from 'react';
-import { I18nManager, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAppTranslation } from '@/context/LanguageContext';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 interface ListingCardProps {
   id: string;
@@ -23,7 +23,7 @@ const typeColor = (t: string) =>
   t === 'CAR' ? '#3B82F6' : t === 'MOTORCYCLE' ? '#8B5CF6' : t === 'PLATE' ? '#059669' : '#F59E0B';
 
 export default function ListingCard({ id, title, price, image, location, type, viewsCount }: ListingCardProps) {
-  const isRTL = I18nManager.isRTL;
+  const { isRTL } = useLanguage();
   const { t } = useAppTranslation();
   const accent = typeColor(type);
   return (
@@ -65,17 +65,17 @@ export default function ListingCard({ id, title, price, image, location, type, v
 
         {/* ── Content Section ── */}
         <View style={[styles.content, isRTL ? styles.contentEndInset : styles.contentStartInset]}>
-          <Text style={[styles.title, { textAlign: 'auto'}]} numberOfLines={2}>{title}</Text>
+          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={2}>{title}</Text>
 
           <View style={[styles.metaRow, { flexDirection: 'row' }]}>
             <View style={[styles.metaItem, { flexDirection: 'row' }]}>
               <Ionicons name="location-sharp" size={13} color="#9BA3B2" />
-              <Text style={[styles.metaText, { textAlign: 'auto'}]}>{location || t('common.bahrain')}</Text>
+              <Text style={[styles.metaText, { textAlign: isRTL ? 'right' : 'left' }]}>{location || t('common.bahrain')}</Text>
             </View>
 
             <View style={[styles.metaItem, { flexDirection: 'row' }]}>
               <Ionicons name="eye-outline" size={13} color="#9BA3B2" />
-              <Text style={[styles.metaText, { textAlign: 'auto'}]}>{viewsCount || 0}</Text>
+              <Text style={[styles.metaText, { textAlign: isRTL ? 'right' : 'left' }]}>{viewsCount || 0}</Text>
             </View>
           </View>
         </View>

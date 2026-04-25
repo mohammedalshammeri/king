@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  I18nManager,
   View,
   Text,
   TextInput,
@@ -18,7 +17,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAppTranslation } from '../../context/LanguageContext';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 
@@ -52,7 +51,7 @@ export default function ResetPasswordScreen() {
   const [confirmFocused, setConfirmFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useAppTranslation();
-  const isRTL = I18nManager.isRTL;
+  const { isRTL } = useLanguage();
 
   const inputBg     = isDark ? '#1E2A40' : '#F8FAFC';
   const inputBorder = isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0';
@@ -102,13 +101,13 @@ export default function ResetPasswordScreen() {
   };
 
   const CheckRow = ({ ok, label }: { ok: boolean; label: string }) => (
-    <View style={[s.reqRow, { flexDirection: 'row' }]}>
+    <View style={[s.reqRow, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
       <Ionicons
         name={ok ? 'checkmark-circle' : 'ellipse-outline'}
         size={16}
         color={ok ? '#10B981' : '#9CA3AF'}
       />
-      <Text style={[s.reqText, { color: mutedColor, textAlign: 'auto'}]}>{label}</Text>
+      <Text style={[s.reqText, { color: mutedColor, textAlign: isRTL ? 'right' : 'left' }]}>{label}</Text>
     </View>
   );
 
@@ -138,8 +137,8 @@ export default function ResetPasswordScreen() {
 
         <View style={[s.heroContent, isRTL ? s.heroContentRtl : s.heroContentLtr]}>
           <Image source={require('../../assets/images/logo.png')} style={s.logo} contentFit="contain" />
-          <Text style={[s.heroTitle, { textAlign: 'auto'}]}>{t('auth.resetPassword')}</Text>
-          <Text style={[s.heroSub, { textAlign: 'auto'}]}>{t('auth.resetSubtitle')}</Text>
+          <Text style={[s.heroTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.resetPassword')}</Text>
+          <Text style={[s.heroSub, { textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.resetSubtitle')}</Text>
         </View>
       </LinearGradient>
 
@@ -153,13 +152,13 @@ export default function ResetPasswordScreen() {
 
           {/* New password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.newPassword')}</Text>
-            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }, newPassFocused && s.inputWrapFocused]}>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.newPassword')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }, newPassFocused && s.inputWrapFocused]}>
               <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={s.icon}>
                 <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={18} color={newPassFocused ? '#D4AF37' : '#94A3B8'} />
               </TouchableOpacity>
               <TextInput
-                style={[s.input, { color: inputColor }]}
+                style={[s.input, { color: inputColor, textAlign: isRTL ? 'right' : 'left' }]}
                 placeholder={t('auth.passwordPlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={newPassword}
@@ -175,13 +174,13 @@ export default function ResetPasswordScreen() {
 
           {/* Confirm password */}
           <View style={s.inputGroup}>
-            <Text style={[s.label, { color: labelColor, textAlign: 'auto' }]}>{t('auth.confirmPassword')}</Text>
-            <View style={[s.inputWrap, { flexDirection: 'row', backgroundColor: inputBg, borderColor: inputBorder }, confirmFocused && s.inputWrapFocused]}>
+            <Text style={[s.label, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.confirmPassword')}</Text>
+            <View style={[s.inputWrap, { flexDirection: isRTL ? 'row-reverse' : 'row', backgroundColor: inputBg, borderColor: inputBorder }, confirmFocused && s.inputWrapFocused]}>
               <TouchableOpacity onPress={() => setShowConfirm(v => !v)} style={s.icon}>
                 <Ionicons name={showConfirm ? 'eye' : 'eye-off'} size={18} color={confirmFocused ? '#D4AF37' : '#94A3B8'} />
               </TouchableOpacity>
               <TextInput
-                style={[s.input, { color: inputColor }]}
+                style={[s.input, { color: inputColor, textAlign: isRTL ? 'right' : 'left' }]}
                 placeholder={t('auth.passwordPlaceholder')}
                 placeholderTextColor="#94A3B8"
                 value={confirmPassword}
@@ -197,7 +196,7 @@ export default function ResetPasswordScreen() {
 
           {/* Requirements */}
           <View style={[s.reqBox, { backgroundColor: reqBg }]}>
-            <Text style={[s.reqTitle, { color: labelColor, textAlign: 'auto' }]}>{t('auth.passwordRequirements')}</Text>
+            <Text style={[s.reqTitle, { color: labelColor, textAlign: isRTL ? 'right' : 'left' }]}>{t('auth.passwordRequirements')}</Text>
             <CheckRow ok={checks.length}  label={t('auth.passwordReqLength')} />
             <CheckRow ok={checks.upper}   label={t('auth.passwordReqUpper')} />
             <CheckRow ok={checks.lower}   label={t('auth.passwordReqLower')} />

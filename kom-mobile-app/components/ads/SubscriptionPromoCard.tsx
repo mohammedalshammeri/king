@@ -4,11 +4,11 @@
  * Fetches the cheapest active package and promotes it with a CTA.
  */
 import React, { useEffect, useState } from 'react';
-import { I18nManager, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAppTranslation } from '@/context/LanguageContext';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
 
@@ -24,8 +24,8 @@ interface PromoPackage {
 
 export default function SubscriptionPromoCard() {
   const { isAuthenticated, user } = useAuthStore();
-  const isRTL = I18nManager.isRTL;
   const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
   const [promoPackage, setPromoPackage] = useState<PromoPackage | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasSubscription, setHasSubscription] = useState<boolean | null>(null); // null = not checked yet
@@ -116,25 +116,25 @@ export default function SubscriptionPromoCard() {
           <View style={styles.priceBlock}>
             <Text style={styles.priceAmount}>{Number(price).toFixed(3)}</Text>
             <View>
-              <Text style={[styles.priceCurrency, { textAlign: 'auto'}]}>{t('common.bhd')}</Text>
-              <Text style={[styles.priceFreq, { textAlign: 'auto'}]}>{t('common.perMonth')}</Text>
+              <Text style={[styles.priceCurrency, { textAlign: isRTL ? 'right' : 'left' }]}>{t('common.bhd')}</Text>
+              <Text style={[styles.priceFreq, { textAlign: isRTL ? 'right' : 'left' }]}>{t('common.perMonth')}</Text>
             </View>
           </View>
 
-          <Text style={[styles.pkgName, { textAlign: 'auto'}]} numberOfLines={1}>{promoPackage.name}</Text>
+          <Text style={[styles.pkgName, { textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={1}>{promoPackage.name}</Text>
 
           {/* Features */}
           <View style={styles.features}>
             <View style={styles.featureRow}>
               <Ionicons name="checkmark-circle" size={14} color="#4ADE80" />
-              <Text style={[styles.featureText, { textAlign: 'auto'}]}>
+              <Text style={[styles.featureText, { textAlign: isRTL ? 'right' : 'left' }]}>
                 {t('promo.activeListings', { count: promoPackage.maxListings })}
               </Text>
             </View>
             {promoPackage.maxStories !== undefined && promoPackage.maxStories > 0 && (
               <View style={styles.featureRow}>
                 <Ionicons name="checkmark-circle" size={14} color="#4ADE80" />
-                <Text style={[styles.featureText, { textAlign: 'auto'}]}>
+                <Text style={[styles.featureText, { textAlign: isRTL ? 'right' : 'left' }]}>
                   {t('promo.featuredStories', { count: promoPackage.maxStories })}
                 </Text>
               </View>

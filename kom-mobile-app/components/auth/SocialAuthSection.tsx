@@ -287,6 +287,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
     backgroundColor: '#FFFFFF',
     borderColor: '#DADCE0',
     shadowColor: '#000000',
@@ -315,9 +316,9 @@ const styles = StyleSheet.create({
   googleButtonText: {
     fontSize: 15,
     fontWeight: '800',
-    marginStart: 12,
     color: '#1F1F1F',
     letterSpacing: 0.1,
+    flexShrink: 1,
   },
   appleButtonContainer: {
     minHeight: 56,

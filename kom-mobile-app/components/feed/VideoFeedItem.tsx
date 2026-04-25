@@ -119,12 +119,12 @@ export default function VideoFeedItem({ video, isActive = false, height }: Video
                   style={{ width: '100%', height: '100%', borderRadius: 16 }}
                 />
             </View>
-          <Text style={[styles.authorName, { textAlign: 'auto'}]}>{t('feed.adminAuthor')}</Text>
+          <Text style={[styles.authorName, { textAlign: isRTL ? 'right' : 'left' }]}>{t('feed.adminAuthor')}</Text>
          </View>
          
-        {video.title && <Text style={[styles.title, { textAlign: 'auto'}]}>{video.title}</Text>}
+        {video.title && <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left' }]}>{video.title}</Text>}
          {video.description && (
-           <Text numberOfLines={2} style={[styles.description, { textAlign: 'auto'}]}>
+           <Text numberOfLines={2} style={[styles.description, { textAlign: isRTL ? 'right' : 'left' }]}>
                 {video.description}
              </Text>
          )}

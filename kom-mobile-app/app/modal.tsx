@@ -14,7 +14,7 @@ export default function ModalScreen() {
       <TouchableOpacity onPress={() => router.back()} style={[styles.closeButton, { right: isRTL ? 20 : undefined, left: isRTL ? undefined : 20 }]}>
         <Ionicons name="close" size={24} color="#000" />
       </TouchableOpacity>
-      <Text style={[styles.title, { textAlign: 'auto'}]}>{t('modalScreen.title')}</Text>
+      <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left' }]}>{t('modalScreen.title')}</Text>
       <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
       <EditScreenInfo path="app/modal.tsx" />
 

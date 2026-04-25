@@ -89,13 +89,13 @@ export default function ChatScreen() {
 
       <View style={[styles.chatContent, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
         <View style={[styles.chatHeader, { flexDirection: 'row' }]}>
-          <Text style={[styles.userName, { color: theme.text, textAlign: 'auto'}]}>{item.otherUserName}</Text>
+          <Text style={[styles.userName, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{item.otherUserName}</Text>
           {item.lastMessageTime && (
             <Text style={[styles.time]}>{formatTime(item.lastMessageTime)}</Text>
           )}
         </View>
 
-        <Text style={[styles.listingTitle, { textAlign: 'auto'}]} numberOfLines={1}>
+        <Text style={[styles.listingTitle, { textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={1}>
           {item.listingTitle}
         </Text>
 
@@ -103,7 +103,7 @@ export default function ChatScreen() {
           <Text
             style={[
               styles.lastMessage,
-              { color: theme.textMuted, textAlign: 'auto'},
+              { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' },
               item.unreadCount > 0 && [styles.lastMessageUnread, { color: theme.text }],
             ]}
             numberOfLines={1}

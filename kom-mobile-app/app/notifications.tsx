@@ -185,11 +185,11 @@ export default function NotificationsScreen() {
         />
       </View>
       <View style={[styles.contentContainer, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-        <Text style={[styles.title, { color: theme.text, textAlign: 'auto'}]}>{item.title}</Text>
-        <Text style={[styles.message, { color: theme.textSecondary, textAlign: 'auto'}]}>
+        <Text style={[styles.title, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{item.title}</Text>
+        <Text style={[styles.message, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
           {item.message}
         </Text>
-        <Text style={[styles.time, { color: theme.textSecondary, textAlign: 'auto'}]}>
+        <Text style={[styles.time, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
           {formatDate(item.createdAt)}
         </Text>
       </View>
@@ -217,8 +217,8 @@ export default function NotificationsScreen() {
       {!isAuthenticated ? (
         <View style={[styles.centered]}>
           <Ionicons name="lock-closed-outline" size={64} color={theme.textSecondary} />
-          <Text style={[styles.emptyText, { color: theme.textSecondary, textAlign: 'auto'}]}>{t('notifications.loginRequired')}</Text>
-          <Text style={[styles.loginHint, { color: theme.textSecondary, textAlign: 'auto'}]}>
+          <Text style={[styles.emptyText, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{t('notifications.loginRequired')}</Text>
+          <Text style={[styles.loginHint, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
             {t('notifications.loginRequiredMessage')}
           </Text>
           <TouchableOpacity 
@@ -231,7 +231,7 @@ export default function NotificationsScreen() {
       ) : notifications.length === 0 ? (
         <View style={[styles.centered]}>
           <Ionicons name="notifications-off-outline" size={64} color={theme.textSecondary} />
-          <Text style={[styles.emptyText, { color: theme.textSecondary, textAlign: 'auto'}]}>
+          <Text style={[styles.emptyText, { color: theme.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
             {t('notifications.noNotifications')}
           </Text>
         </View>

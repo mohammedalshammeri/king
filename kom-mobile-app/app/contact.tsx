@@ -56,8 +56,8 @@ export default function ContactScreen() {
         >
           <Ionicons name="mail-outline" size={22} color="#D4AF37" />
           <View style={[styles.cardText, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-            <Text style={[styles.title, { color: theme.text, textAlign: 'auto'}]}>{t('contact.email')}</Text>
-            <Text style={[styles.value, { color: theme.subText, textAlign: 'auto'}]}>{CONTACT.email}</Text>
+            <Text style={[styles.title, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('contact.email')}</Text>
+            <Text style={[styles.value, { color: theme.subText, textAlign: isRTL ? 'right' : 'left' }]}>{CONTACT.email}</Text>
           </View>
         </TouchableOpacity>
 
@@ -68,8 +68,8 @@ export default function ContactScreen() {
           >
             <Ionicons name="call-outline" size={22} color="#D4AF37" />
             <View style={[styles.cardText, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-              <Text style={[styles.title, { color: theme.text, textAlign: 'auto'}]}>{t('contact.phone')}</Text>
-              <Text style={[styles.value, { color: theme.subText, textAlign: 'auto'}]}>{CONTACT.phone}</Text>
+              <Text style={[styles.title, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('contact.phone')}</Text>
+              <Text style={[styles.value, { color: theme.subText, textAlign: isRTL ? 'right' : 'left' }]}>{CONTACT.phone}</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -81,8 +81,8 @@ export default function ContactScreen() {
           >
             <Ionicons name="logo-whatsapp" size={22} color="#22c55e" />
             <View style={[styles.cardText, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-              <Text style={[styles.title, { color: theme.text, textAlign: 'auto'}]}>{t('contact.whatsapp')}</Text>
-              <Text style={[styles.value, { color: theme.subText, textAlign: 'auto'}]}>{CONTACT.whatsapp}</Text>
+              <Text style={[styles.title, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('contact.whatsapp')}</Text>
+              <Text style={[styles.value, { color: theme.subText, textAlign: isRTL ? 'right' : 'left' }]}>{CONTACT.whatsapp}</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -94,8 +94,8 @@ export default function ContactScreen() {
           >
             <Ionicons name="logo-instagram" size={22} color="#ec4899" />
             <View style={[styles.cardText, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-              <Text style={[styles.title, { color: theme.text, textAlign: 'auto'}]}>{t('contact.instagram')}</Text>
-              <Text style={[styles.value, { color: theme.subText, textAlign: 'auto'}]}>{CONTACT.instagram}</Text>
+              <Text style={[styles.title, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('contact.instagram')}</Text>
+              <Text style={[styles.value, { color: theme.subText, textAlign: isRTL ? 'right' : 'left' }]}>{CONTACT.instagram}</Text>
             </View>
           </TouchableOpacity>
         )}

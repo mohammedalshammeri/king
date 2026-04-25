@@ -255,7 +255,7 @@ export default function ListingDetailScreen() {
   const insets = useSafeAreaInsets();
   const mainListRef = useRef<FlatList>(null);
   const thumbsListRef = useRef<FlatList>(null);
-  const dirText = { textAlign: 'auto' as const};
+  const dirText = { textAlign: (isRTL ? 'right' : 'left') as 'left' | 'right' };
   const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
 
   const checkFavoriteStatus = useCallback(async () => {
@@ -664,7 +664,7 @@ export default function ListingDetailScreen() {
 
           {/* ── Title & Meta row ── */}
           <View style={[styles.titleBlock, { backgroundColor: cardBg, borderColor }]}>
-            <Text style={[styles.titleTxt, { color: theme.text }, dirText]}>{listing.title}</Text>
+            <Text style={[styles.titleTxt, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{listing.title}</Text>
             <View style={[styles.metaRow, rowDirection]}>
               {!!listing.location && (
                 <View style={[styles.metaItem, rowDirection]}>
@@ -707,7 +707,7 @@ export default function ListingDetailScreen() {
             <View style={[styles.specsBlock, { backgroundColor: cardBg, borderColor }]}>
               <View style={[styles.blockHeader, { borderBottomColor: borderColor }]}>
                 <View style={[styles.blockAccent, { backgroundColor: accentColor }]} />
-                <Text style={[styles.blockTitle, { color: theme.text }, dirText]}>{t('listing.infoTitle')}</Text>
+                <Text style={[styles.blockTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('listing.infoTitle')}</Text>
               </View>
               {allSpecs.map((spec, i) => (
   <View
@@ -718,9 +718,8 @@ export default function ListingDetailScreen() {
       i === allSpecs.length - 1 && styles.specRowLast,
     ]}
   >
-    <View style={rowDirection}>
     <Text
-      style={[styles.specLbl, { color: theme.textMuted }, dirText]}
+      style={[styles.specLbl, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}
       numberOfLines={1}
     >
       {spec.label}
@@ -728,7 +727,7 @@ export default function ListingDetailScreen() {
 
     {spec.isLink ? (
       <Text
-        style={[styles.specVal, { color: accentColor }, dirText]}
+        style={[styles.specVal, { color: accentColor, textAlign: isRTL ? 'right' : 'left' }]}
         numberOfLines={2}
         onPress={() =>
           Linking.openURL(`https://maps.google.com/?q=${listing.location}`)
@@ -738,13 +737,12 @@ export default function ListingDetailScreen() {
       </Text>
     ) : (
       <Text
-        style={[styles.specVal, { color: theme.text }, dirText]}
+        style={[styles.specVal, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}
         numberOfLines={2}
       >
         {spec.value}
       </Text>
     )}
-    </View>
   </View>
 ))}
             </View>
@@ -757,7 +755,7 @@ export default function ListingDetailScreen() {
                 <View style={[styles.blockAccent, { backgroundColor: accentColor }]} />
                 <Text style={[styles.blockTitle, { color: theme.text }, dirText]}>{t('listing.descriptionTitle')}</Text>
               </View>
-              <Text style={[styles.descTxt, { color: theme.textMuted }, dirText]}>{listing.description}</Text>
+              <Text style={[styles.descTxt, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>{listing.description}</Text>
             </View>
           )}
 
@@ -1054,6 +1052,7 @@ const styles = StyleSheet.create({
   specRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 13,
     borderBottomWidth: StyleSheet.hairlineWidth,

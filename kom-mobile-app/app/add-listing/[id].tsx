@@ -1660,13 +1660,14 @@ export default function AddListingDetailScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={[styles.label, { color: theme.text, textAlign: 'auto' }]}>{t('addListing.descriptionLabel')}</Text>
+        <Text style={[styles.label, { color: theme.text, textAlign }]}>{t('addListing.descriptionLabel')}</Text>
         <TextInput
           style={[inputStyle, styles.textArea]}
           value={formData.description}
           onChangeText={(text) => setFormData({ ...formData, description: text })}
           placeholder={t('addListing.descriptionPlaceholder')}
-                    multiline
+          {...inputDirectionProps}
+          multiline
           numberOfLines={4}
           maxLength={5000}
           placeholderTextColor={theme.textMuted}
@@ -2461,14 +2462,14 @@ const MOTORCYCLE_BODY_TYPES = MotorcycleBodyTypes;
 
   const renderImagesStep = () => (
     <View style={styles.form}>
-      <Text style={[styles.sectionTitle, { color: theme.text, textAlign: 'auto' }]}>{t('addListing.imagesTitle')}</Text>
-      <Text style={[styles.subtitle, { color: theme.textMuted, textAlign: 'auto' }]}> 
+      <Text style={[styles.sectionTitle, { color: theme.text, textAlign }]}>{t('addListing.imagesTitle')}</Text>
+      <Text style={[styles.subtitle, { color: theme.textMuted, textAlign }]}> 
         {type === 'CAR' ? t('addListing.imagesCarSubtitle') : t('addListing.imagesGenericSubtitle')}
       </Text>
 
       {existingMedia.length > 0 && (
         <View style={styles.existingMediaSection}>
-          <Text style={[styles.sectionSubtitle, { color: theme.textMuted, textAlign: 'auto' }]}>{t('addListing.currentMedia')}</Text>
+          <Text style={[styles.sectionSubtitle, { color: theme.textMuted, textAlign }]}>{t('addListing.currentMedia')}</Text>
           <View style={styles.imageGrid}>
             {existingMedia.map((media) => (
               <View key={media.id} style={styles.imageContainer}>

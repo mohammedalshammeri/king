@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { I18nManager, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppTranslation } from '@/context/LanguageContext';
+import { useAppTranslation, useLanguage } from '@/context/LanguageContext';
 
 interface LuckWinnerBannerProps {
   winner: {
@@ -15,7 +15,7 @@ interface LuckWinnerBannerProps {
 export default function LuckWinnerBanner({ winner }: LuckWinnerBannerProps) {
   const [dismissed, setDismissed] = useState(false);
   const { t } = useAppTranslation();
-  const isRTL = I18nManager.isRTL;
+  const { isRTL } = useLanguage();
 
   if (dismissed) return null;
 
@@ -33,9 +33,9 @@ export default function LuckWinnerBanner({ winner }: LuckWinnerBannerProps) {
       <View style={styles.content}>
         <Text style={styles.trophy}>🏆</Text>
         <View style={styles.textBlock}>
-          <Text style={[styles.title, { textAlign: 'auto'}]}>{t('luck.winnerTitle')}</Text>
-          <Text style={[styles.code, { textAlign: 'auto' }]}>{winner.code}</Text>
-          <Text style={[styles.name, { textAlign: 'auto'}]}>{t('luck.winnerName', { name: winner.userName })}</Text>
+          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left' }]}>{t('luck.winnerTitle')}</Text>
+          <Text style={[styles.code, { textAlign: isRTL ? 'right' : 'left' }]}>{winner.code}</Text>
+          <Text style={[styles.name, { textAlign: isRTL ? 'right' : 'left' }]}>{t('luck.winnerName', { name: winner.userName })}</Text>
         </View>
       </View>
     </LinearGradient>

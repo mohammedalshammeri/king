@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAppTranslation } from '../../context/LanguageContext';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 
 interface PickerModalProps {
@@ -16,6 +16,7 @@ interface PickerModalProps {
 export const PickerModal = ({ visible, title, items, selectedValue, onSelect, onClose, hasOther = true }: PickerModalProps) => {
   const { isDark } = useTheme();
   const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
   
   // Ensure "أخرى" (Other) is in the list if hasOther is true
   const displayItems = items.map((item) => typeof item === 'string' ? { value: item, label: item } : item);
@@ -48,7 +49,7 @@ export const PickerModal = ({ visible, title, items, selectedValue, onSelect, on
       <View style={[styles.modalOverlay, { backgroundColor: theme.overlay }]}>
         <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
           <View style={[styles.modalHeader, { borderBottomColor: theme.border, flexDirection: 'row' }]}>
-            <Text style={[styles.modalTitle, { color: theme.text, textAlign: 'auto'}]}>{title}</Text>
+            <Text style={[styles.modalTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{title}</Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={24} color={theme.textMuted} />
             </TouchableOpacity>
@@ -77,7 +78,7 @@ export const PickerModal = ({ visible, title, items, selectedValue, onSelect, on
               >
                 <Text style={[
                   styles.modalItemText,
-                  { color: theme.text, textAlign: 'auto'},
+                  { color: theme.text, textAlign: isRTL ? 'right' : 'left' },
                   isSelected && styles.modalItemTextSelected,
                 ]}>
                   {displayLabel}

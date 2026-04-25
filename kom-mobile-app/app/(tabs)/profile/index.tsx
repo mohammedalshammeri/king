@@ -241,12 +241,12 @@ export default function ProfileScreen() {
               <Text style={s.luckEmoji}>{luckEntry.isWinner ? '🎉' : '🎁'}</Text>
             </View>
             <View style={[s.luckRight, { alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
-              <Text style={[s.luckTitle, { textAlign: 'auto'}]}>
+              <Text style={[s.luckTitle, { textAlign: isRTL ? 'right' : 'left' }]}>
                 {luckEntry.isWinner ? t('profile.luckWinnerTitle') : t('profile.luckCodeTitle')}
               </Text>
-              <Text style={[s.luckCode, { textAlign: 'auto' }]}>{luckEntry.myCode}</Text>
+              <Text style={[s.luckCode, { textAlign: isRTL ? 'right' : 'left' }]}>{luckEntry.myCode}</Text>
               {luckEntry.isWinner && (
-                <Text style={[s.luckWinnerNote, { textAlign: 'auto'}]}>{t('profile.luckWinnerNote')}</Text>
+                <Text style={[s.luckWinnerNote, { textAlign: isRTL ? 'right' : 'left' }]}>{t('profile.luckWinnerNote')}</Text>
               )}
             </View>
           </LinearGradient>
@@ -289,7 +289,7 @@ export default function ProfileScreen() {
           onPress={handleLogout}
         >
           <Ionicons name="log-out-outline" size={20} color="#EF4444" />
-          <Text style={[s.logoutText, { textAlign: 'auto'}]}>{t('settings.logout')}</Text>
+          <Text style={[s.logoutText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('settings.logout')}</Text>
         </TouchableOpacity>
 
         <AdsBanner />

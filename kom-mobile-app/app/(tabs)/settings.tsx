@@ -102,7 +102,7 @@ export default function SettingsScreen() {
 
       <View style={[styles.menuLabelContainer, { flexDirection: 'row' }]}>
         <Ionicons name={icon} size={24} color={theme.subText} style={styles.menuIcon} />
-        <Text style={[styles.menuText, { color: theme.text, textAlign: 'auto'}]}>{title}</Text>
+        <Text style={[styles.menuText, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{title}</Text>
         {rightElement ? rightElement : null}
       </View>
     </TouchableOpacity>
@@ -130,14 +130,14 @@ export default function SettingsScreen() {
               <Text style={[styles.avatarText, { color: theme.primary }]}>{avatarLetter}</Text>
             )}
           </View>
-          <Text style={[styles.name, { color: theme.text, textAlign: 'auto'}]}>{displayName || t('profile.defaultUser')}</Text>
-          <Text style={[styles.email, { color: theme.subText, textAlign: 'auto'}]}>{user?.email}</Text>
+          <Text style={[styles.name, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{displayName || t('profile.defaultUser')}</Text>
+          <Text style={[styles.email, { color: theme.subText, textAlign: isRTL ? 'right' : 'left' }]}>{user?.email}</Text>
 
           <TouchableOpacity
             style={[styles.editButton, { borderColor: theme.border, backgroundColor: theme.surface }]}
             onPress={() => router.push('/profile/edit')}
           >
-            <Text style={[styles.editButtonText, { color: theme.primary, textAlign: 'auto'}]}>{t('settings.editProfile')}</Text>
+            <Text style={[styles.editButtonText, { color: theme.primary, textAlign: isRTL ? 'right' : 'left' }]}>{t('settings.editProfile')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -163,7 +163,7 @@ export default function SettingsScreen() {
         <View style={[styles.section, { backgroundColor: theme.surface }]}>
           <View style={[styles.menuItem, { flexDirection: 'row', borderBottomWidth: 0 }]}> 
             <Ionicons name="moon-outline" size={24} color={theme.subText} style={styles.menuIcon} />
-            <Text style={[styles.menuText, { color: theme.text, textAlign: 'auto'}]}>{t('settings.appearance')}</Text>
+            <Text style={[styles.menuText, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('settings.appearance')}</Text>
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 8 }}>
             {([
@@ -201,7 +201,7 @@ export default function SettingsScreen() {
         <View style={[styles.section, { backgroundColor: theme.surface }]}>
           <View style={[styles.menuItem, { flexDirection: 'row', borderBottomWidth: 0 }]}> 
             <Ionicons name="language-outline" size={24} color={theme.subText} style={styles.menuIcon} />
-            <Text style={[styles.menuText, { color: theme.text, textAlign: 'auto'}]}>{t('settings.languageSection')}</Text>
+            <Text style={[styles.menuText, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('settings.languageSection')}</Text>
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 8 }}>
             {([
@@ -256,19 +256,19 @@ export default function SettingsScreen() {
         <View style={styles.logoutContainer}>
           <TouchableOpacity style={[styles.logoutButton, { flexDirection: 'row' }]} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={20} color={theme.danger} style={styles.menuIcon} />
-            <Text style={[styles.logoutText, { color: theme.danger, textAlign: 'auto'}]}>{t('settings.logout')}</Text>
+            <Text style={[styles.logoutText, { color: theme.danger, textAlign: isRTL ? 'right' : 'left' }]}>{t('settings.logout')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.logoutButton, { flexDirection: 'row', marginTop: 8, backgroundColor: theme.danger + '12', borderRadius: 12, borderWidth: 1, borderColor: theme.danger + '30' }]}
             onPress={handleDeleteAccount}
           >
             <Ionicons name="trash-outline" size={20} color={theme.danger} style={styles.menuIcon} />
-            <Text style={[styles.logoutText, { color: theme.danger, textAlign: 'auto'}]}>{t('settings.deleteAccount')}</Text>
+            <Text style={[styles.logoutText, { color: theme.danger, textAlign: isRTL ? 'right' : 'left' }]}>{t('settings.deleteAccount')}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.versionContainer}>
-          <Text style={[styles.versionText, { color: theme.subText, textAlign: 'auto'}]}>{t('settings.version', { version: '1.0.0' })}</Text>
+          <Text style={[styles.versionText, { color: theme.subText, textAlign: isRTL ? 'right' : 'left' }]}>{t('settings.version', { version: '1.0.0' })}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

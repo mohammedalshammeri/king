@@ -56,7 +56,7 @@ export default function ChatDetailScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const rowDirection = { flexDirection: (isRTL ? 'row-reverse' : 'row') as 'row' | 'row-reverse' };
-  const dirText = { textAlign: 'auto' as const};
+  const dirText = { textAlign: (isRTL ? 'right' : 'left') as 'left' | 'right' };
 
   useEffect(() => {
     const fullApiUrl = getApiBaseUrl();
@@ -272,8 +272,8 @@ export default function ChatDetailScreen() {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Ionicons name="chatbubbles-outline" size={48} color={theme.textMuted} />
-                <Text style={[styles.emptyTitle, { color: theme.text, textAlign: 'auto'}]}>{isLoading ? t('common.loading') : t('chat.noMessages')}</Text>
-                <Text style={[styles.emptyText, { color: theme.textMuted, textAlign: 'auto'}]}>{t('chat.startConversation')}</Text>
+                <Text style={[styles.emptyTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{isLoading ? t('common.loading') : t('chat.noMessages')}</Text>
+                <Text style={[styles.emptyText, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>{t('chat.startConversation')}</Text>
               </View>
             }
           />
@@ -289,7 +289,7 @@ export default function ChatDetailScreen() {
           }
         ]}>
           <TextInput
-            style={[styles.input, { backgroundColor: isDark ? '#1f2937' : '#FFFFFF', color: theme.text, borderColor: theme.border, textAlign: 'auto'}]}
+            style={[styles.input, { backgroundColor: isDark ? '#1f2937' : '#FFFFFF', color: theme.text, borderColor: theme.border, textAlign: isRTL ? 'right' : 'left' }]}
             placeholder={t('chat.messagePlaceholder')}
             value={inputText}
             onChangeText={setInputText}

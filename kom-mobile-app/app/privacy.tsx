@@ -18,6 +18,7 @@ export default function PrivacyScreen() {
     body: isDark ? '#cbd5e1' : '#334155',
   };
   const textAlign = isRTL ? 'right' : 'left';
+  const dir = isRTL ? 'rtl' : 'ltr';
 
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.container, { backgroundColor: theme.background }]}>
@@ -33,7 +34,7 @@ export default function PrivacyScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.contentWrapper}>
+        <View style={[styles.contentWrapper, { direction: dir }]}>
           <Text style={[styles.title, { color: theme.text, textAlign}]}>{t('privacy.heading')}</Text>
 
           <Text style={[styles.paragraph, { color: theme.body, textAlign}]}>{t('privacy.intro')}</Text>

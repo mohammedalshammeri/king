@@ -21,7 +21,7 @@ export default function ComplaintsScreen() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const { t } = useAppTranslation();
-  const { language } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const { isDark } = useTheme();
   const [title, setTitle] = useState('');
   const [details, setDetails] = useState('');
@@ -116,23 +116,23 @@ export default function ComplaintsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
         >
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign: 'auto'}]}>{t('complaints.newComplaintTitle')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('complaints.newComplaintTitle')}</Text>
           <TextInput
             placeholder={t('complaints.complaintTitlePlaceholder')}
             value={title}
             onChangeText={setTitle}
-            style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
+            style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}
             placeholderTextColor={theme.textMuted}
-                      />
+          />
           <TextInput
             placeholder={t('complaints.complaintDetailsPlaceholder')}
             value={details}
             onChangeText={setDetails}
-            style={[styles.input, styles.textArea, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
+            style={[styles.input, styles.textArea, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}
             placeholderTextColor={theme.textMuted}
             multiline
             textAlignVertical="top"
-                      />
+          />
           <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={submitting}>
             {submitting ? (
               <ActivityIndicator color="#fff" />
@@ -143,34 +143,34 @@ export default function ComplaintsScreen() {
         </View>
 
         <View style={[styles.card, styles.cardSpacing, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionTitle, { color: theme.text, textAlign: 'auto'}]}>{t('complaints.trackTitle')}</Text>
+          <Text style={[styles.sectionTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('complaints.trackTitle')}</Text>
           {loading ? (
             <View style={[styles.loadingRow, { flexDirection: 'row' }]}>
               <ActivityIndicator style={styles.loadingIcon} />
               <Text style={[styles.loadingText, { color: theme.textMuted }]}>{t('complaints.loading')}</Text>
             </View>
           ) : items.length === 0 ? (
-            <Text style={[styles.emptyText, { color: theme.textMuted, textAlign: 'auto'}]}>{t('complaints.empty')}</Text>
+            <Text style={[styles.emptyText, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>{t('complaints.empty')}</Text>
           ) : (
             items.map((item) => {
               const status = statusMap[item.status] || statusMap.OPEN;
               return (
                 <View key={item.id} style={[styles.ticketCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                   <View style={[styles.ticketHeader, { flexDirection: 'row' }]}>
-                    <Text style={[styles.ticketTitle, { color: theme.text, textAlign: 'auto'}]} numberOfLines={2}>{item.reason}</Text>
+                    <Text style={[styles.ticketTitle, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={2}>{item.reason}</Text>
                     <View style={[styles.badge, { backgroundColor: status.bg }]}
                       >
                       <Text style={[styles.badgeText, { color: status.color }]}>{status.label}</Text>
                     </View>
                   </View>
-                  <Text style={[styles.ticketDate, { color: theme.textMuted, textAlign: 'auto'}]}>{new Date(item.createdAt).toLocaleDateString(language === 'ar' ? 'ar' : 'en-US')}</Text>
+                  <Text style={[styles.ticketDate, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]}>{new Date(item.createdAt).toLocaleDateString(language === 'ar' ? 'ar' : 'en-US')}</Text>
                   {item.details ? (
-                    <Text style={[styles.ticketDetails, { color: theme.textMuted, textAlign: 'auto'}]} numberOfLines={3}>{item.details}</Text>
+                    <Text style={[styles.ticketDetails, { color: theme.textMuted, textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={3}>{item.details}</Text>
                   ) : null}
                   {item.resolution ? (
                     <View style={[styles.resolutionBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                      <Text style={[styles.resolutionLabel, { color: theme.primary, textAlign: 'auto'}]}>{t('complaints.adminReply')}</Text>
-                      <Text style={[styles.resolutionText, { color: theme.text, textAlign: 'auto'}]}>{item.resolution}</Text>
+                      <Text style={[styles.resolutionLabel, { color: theme.primary, textAlign: isRTL ? 'right' : 'left' }]}>{t('complaints.adminReply')}</Text>
+                      <Text style={[styles.resolutionText, { color: theme.text, textAlign: isRTL ? 'right' : 'left' }]}>{item.resolution}</Text>
                     </View>
                   ) : null}
                 </View>

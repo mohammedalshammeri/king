@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { Colors } from '../../constants/Colors';
-import { useAppTranslation } from '../../context/LanguageContext';
+import { useAppTranslation, useLanguage } from '../../context/LanguageContext';
 
 // Mock types - align with API response later
 interface StoryGroup {
@@ -21,10 +21,11 @@ interface StoryListProps {
 export default function StoryList({ stories, onStoryPress }: StoryListProps) {
   const { isDark } = useTheme();
   const { t } = useAppTranslation();
+  const { isRTL } = useLanguage();
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#121212' : '#fff' }]}>
-      <Text style={[styles.title, { color: isDark ? '#fff' : '#000', textAlign: 'auto'}]}>{t('stories.title')}</Text>
+      <Text style={[styles.title, { color: isDark ? '#fff' : '#000', textAlign: isRTL ? 'right' : 'left' }]}>{t('stories.title')}</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
